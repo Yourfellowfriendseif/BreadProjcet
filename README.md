@@ -37,44 +37,49 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 - GeoJSON location handling
 
 ## Project Structure
-bread-project/
-├── dist/                   # Production build (auto-generated)
-├── node_modules/           # Dependencies (auto-generated)
-├── public/                 # Static assets
-│   ├── images/             # Store all images here
-│   └── favicon.ico         # Website icon
+PROJECTFINAL/
+├── .dist/ # Production build
+├── node_modules/ # Dependencies
+├── public/ # Static assets
+│ └── images/ # Image storage
 ├── src/
-│   ├── api/                # API service layer
-│   │   ├── apiClient.js    # Axios instance
-│   │   ├── breadAPI.js     # Bread endpoints
-│   │   └── userAPI.js      # Auth endpoints
-│   ├── assets/             # Generated assets (fonts, etc.)
-│   ├── components/
-│   │   ├── auth/
-│   │   │   ├── LoginForm.jsx
-│   │   │   └── RegisterForm.jsx
-│   │   ├── bread/
-│   │   │   ├── BreadCard.jsx
-│   │   │   └── CreateForm.jsx
-│   │   └── layout/
-│   │       ├── Header.jsx
-│   │       └── Footer.jsx
-│   ├── pages/
-│   │   ├── Home.jsx
-│   │   ├── Dashboard.jsx
-│   │   └── NotFound.jsx
-│   ├── styles/
-│   │   ├── main.css        # Tailwind imports
-│   │   └── animations.css  # Custom animations
-│   ├── App.jsx
-│   └── main.jsx            # Entry point
-├── .env                    # Environment variables
-├── .eslintrc.js            # ESLint config
+│ ├── api/ # API handlers
+│ │ ├── apiClient.js # Axios configuration
+│ │ ├── breadAPI.js # Bread endpoints
+│ │ └── userAPI.js # User endpoints
+│ ├── assets/ # Static assets
+│ ├── components/
+│ │ ├── auth/
+│ │ │ ├── LoginForm.jsx
+│ │ │ └── RegisterForm.jsx
+│ │ ├── bread/
+│ │ │ ├── BreadListing.jsx
+│ │ │ └── CreateBreadForm.jsx
+│ │ ├── ProtectedRoute.jsx
+│ │ └── UserProfile.jsx
+│ ├── context/
+│ │ └── AppContext.jsx # Global state
+│ ├── mocks/
+│ │ └── data.js # Mock data
+│ ├── pages/
+│ │ ├── About.jsx
+│ │ ├── Home.jsx
+│ │ └── NotFound.jsx
+│ ├── types/
+│ │ ├── dbTypes.js # Type definitions
+│ │ └── schema.js # Data schemas
+│ ├── App.jsx # Root component
+│ ├── App.css # Global styles
+│ ├── index.css # Base styles
+│ └── main.jsx # Entry point
+├── .env # Environment vars
 ├── .gitignore
-├── index.html
+├── eslint.config.js # ESLint config
+├── index.html # HTML template
 ├── package.json
-├── tailwind.config.js      # Tailwind configuration
-└── vite.config.js          # Vite configuration
+├── package-lock.json
+├── tailwindcss.config.js # Tailwind config
+└── vite.config.js # Vite config
 
 ## Setup Instructions
 1. **Clone the repository**
