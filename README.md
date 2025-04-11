@@ -37,7 +37,7 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 - GeoJSON location handling
 
 ## Project Structure
-breadProject/
+bread-project/
 ├── dist/                   # Production build (auto-generated)
 ├── node_modules/           # Dependencies (auto-generated)
 ├── public/                 # Static assets
@@ -77,7 +77,6 @@ breadProject/
 └── vite.config.js          # Vite configuration
 
 ## Setup Instructions
-
 1. **Clone the repository**
    ```bash
    git clone https://github.com/yourusername/anti-wast.git
@@ -86,19 +85,22 @@ breadProject/
    npm run dev 
 
 ## Available Scripts
-npm run dev - Start Vite dev server
-npm run build - Production build
-npm run lint - Run ESLint
-npm run preview - Preview production build 
+- `npm run dev` - Start Vite dev server
+- `npm run build` - Create production build
+- `npm run lint` - Run ESLint checks
+- `npm run preview` - Preview production build locally
 
 ## API Documentation
-  Authentication
-Endpoint	Method	Description
-/auth/register	POST	User registration
-/auth/login	POST	User login
-/auth/logout	POST	User logout
-  Bread Posts
-Endpoint	Method	Description
-/bread/create	POST	Create new bread post
-/bread/all	GET	Get all bread posts
-/bread/delete/:id	DELETE	Delete a bread post
+#### Authentication
+| Endpoint          | Method | Description          |
+|-------------------|--------|----------------------|
+| `/auth/register`  | POST   | User registration    |
+| `/auth/login`     | POST   | User login           |
+| `/auth/logout`    | POST   | User logout          |
+
+#### Bread Posts
+| Endpoint              | Method  | Description                |
+|-----------------------|---------|----------------------------|
+| `/bread/create`       | POST    | Create new bread post      |
+| `/bread/all`          | GET     | Get all bread posts        |
+| `/bread/delete/:id`   | DELETE  | Delete a bread post        |
