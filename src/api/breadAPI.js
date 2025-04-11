@@ -1,36 +1,20 @@
 import { apiClient } from './apiClient';
-import { BreadStates } from '../types/dbTypes';
 
 export const breadAPI = {
-  // Bread CRUD
-  create: (breadData) => 
-    apiClient.post('/breads', {
-      ...breadData,
-      state: BreadStates.DAY_OLD,
-      createdAt: new Date().toISOString()
-    }),
-  
-  getById: (breadId) => 
-    apiClient.get(`/breads/${breadId}`),
-    
-  updateState: (breadId, newState) => 
-    apiClient.patch(`/breads/${breadId}`, { 
-      state: newState,
-      updatedAt: new Date().toISOString() 
+  // Bread Posts
+  create: ({ post_type, bread_status, photo_url, quantity, location }) =>
+    apiClient.post('/bread/create', {
+      post_type,
+      bread_status,
+      photo_url,
+      quantity,
+      location: {
+        type: 'Point',
+        coordinates: [location.lng, location.lat]
+      }
     }),
 
-  // Listings Integration
-  createListing: (breadId, listingData) => 
-    apiClient.post('/listings', {
-      breadId,
-      type: 'sell', // or 'request'
-      ...listingData,
-      status: 'active'
-    }),
-    
-  getBreadListings: (breadId) => 
-    apiClient.get(`/breads/${breadId}/listings`),
-    
-  searchBreads: (filters) => 
-    apiClient.get('/breads/search', { params: filters })
+  getAll: () => apiClient.get('/bread/all'),
+
+  delete: (id) => apiClient.delete(`/bread/delete/${id}`)
 };

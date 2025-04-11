@@ -9,12 +9,23 @@ export const apiClient = axios.create({
   }
 });
 
-// Add auth token interceptor (prepared for future auth)
+// Add JWT interceptor
+apiClient.interceptors.request.use(config => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Handle errors
 apiClient.interceptors.response.use(
-  (response) => response.data, // ← Directly return .data
-  (error) => {
-    // MongoDB errors often come in .data.error
-    console.error('Error:', error.response?.data?.error || error.message);
-    return Promise.reject(error);
+  response => response.data,
+  error => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error.response?.data || error.message);
   }
 );

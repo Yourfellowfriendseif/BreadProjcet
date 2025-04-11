@@ -1,34 +1,21 @@
 import { apiClient } from './apiClient';
-import { UserRoles } from '../types/dbTypes';
 
 export const userAPI = {
-  // Auth
+  // Authentication
   login: (email, password) => 
     apiClient.post('/auth/login', { email, password }),
   
-  register: (userData) => 
-    apiClient.post('/users', { 
-      ...userData,
-      role: UserRoles.BUYER,
-      createdAt: new Date().toISOString() 
+  register: ({ username, email, password, phone_number, photo_url }) => 
+    apiClient.post('/auth/register', { 
+      username,
+      email,
+      password,
+      phone_number,
+      photo_url 
     }),
+
+  logout: () => apiClient.post('/auth/logout'),
 
   // User Management
-  getProfile: (userId) => 
-    apiClient.get(`/users/${userId}`),
-    
-  updateRole: (userId, newRole) => 
-    apiClient.patch(`/users/${userId}`, { 
-      role: newRole,
-      updatedAt: new Date().toISOString() 
-    }),
-
-  // Listings (MongoDB references)
-  getUserListings: (userId) => 
-    apiClient.get(`/users/${userId}/listings`),
-    
-  deactivateUser: (userId) => 
-    apiClient.patch(`/users/${userId}/status`, { 
-      active: false 
-    })
+  getProfile: () => apiClient.get('/users/me'), // Assuming protected route
 };
