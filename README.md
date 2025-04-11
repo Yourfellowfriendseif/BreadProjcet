@@ -1,12 +1,104 @@
-# React + Vite
+# Anti-Wast: Bread Marketplace Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![Project Banner](https://example.com/path-to-your-banner.jpg) <!-- Add your banner image later -->
 
-Currently, two official plugins are available:
+A platform connecting bakeries and consumers to reduce bread waste by selling or donating day-old bread.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- **User Authentication**
+  - Secure JWT-based login/logout
+  - Role-based access (buyers/sellers)
+  - Protected routes
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Bread Listings**
+  - Create/list bread posts with freshness status
+  - Geo-location based listings
+  - Image upload support
+
+- **Core Functionality**
+  - Responsive Tailwind CSS design
+  - MongoDB database integration
+  - React Router navigation
+
+## Tech Stack
+
+### Frontend
+- React 18 + Vite
+- Tailwind CSS with `@tailwindcss/forms` plugin
+- React Router 6
+- Axios for API calls
+- React Hook Form (optional)
+
+### Backend
+- Node.js + Express
+- MongoDB + Mongoose
+- JWT Authentication
+- GeoJSON location handling
+
+## Project Structure
+breadProject/
+├── dist/                   # Production build (auto-generated)
+├── node_modules/           # Dependencies (auto-generated)
+├── public/                 # Static assets
+│   ├── images/             # Store all images here
+│   └── favicon.ico         # Website icon
+├── src/
+│   ├── api/                # API service layer
+│   │   ├── apiClient.js    # Axios instance
+│   │   ├── breadAPI.js     # Bread endpoints
+│   │   └── userAPI.js      # Auth endpoints
+│   ├── assets/             # Generated assets (fonts, etc.)
+│   ├── components/
+│   │   ├── auth/
+│   │   │   ├── LoginForm.jsx
+│   │   │   └── RegisterForm.jsx
+│   │   ├── bread/
+│   │   │   ├── BreadCard.jsx
+│   │   │   └── CreateForm.jsx
+│   │   └── layout/
+│   │       ├── Header.jsx
+│   │       └── Footer.jsx
+│   ├── pages/
+│   │   ├── Home.jsx
+│   │   ├── Dashboard.jsx
+│   │   └── NotFound.jsx
+│   ├── styles/
+│   │   ├── main.css        # Tailwind imports
+│   │   └── animations.css  # Custom animations
+│   ├── App.jsx
+│   └── main.jsx            # Entry point
+├── .env                    # Environment variables
+├── .eslintrc.js            # ESLint config
+├── .gitignore
+├── index.html
+├── package.json
+├── tailwind.config.js      # Tailwind configuration
+└── vite.config.js          # Vite configuration
+
+## Setup Instructions
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/anti-wast.git
+   cd breadproject$
+   npm install
+   npm run dev 
+
+## Available Scripts
+npm run dev - Start Vite dev server
+npm run build - Production build
+npm run lint - Run ESLint
+npm run preview - Preview production build 
+
+## API Documentation
+  Authentication
+Endpoint	Method	Description
+/auth/register	POST	User registration
+/auth/login	POST	User login
+/auth/logout	POST	User logout
+  Bread Posts
+Endpoint	Method	Description
+/bread/create	POST	Create new bread post
+/bread/all	GET	Get all bread posts
+/bread/delete/:id	DELETE	Delete a bread post
