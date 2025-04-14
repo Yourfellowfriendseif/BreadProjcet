@@ -1,58 +1,151 @@
-// src/components/CreateBreadForm.jsx
 import { useState } from 'react';
 import { breadAPI } from '../../api/breadAPI';
 
+/**
+ * @typedef {import('../../types/schema').BreadPost} BreadPost
+ * @typedef {import('../../types/schema').ApiError} ApiError
+ */
+
 export default function CreateBreadForm() {
+  /** @type {[{
+   *   post_type: 'sell'|'request',
+   *   bread_status: 'fresh'|'day_old'|'stale',
+   *   photo_url: string,
+   *   quantity: number,
+   *   location: {
+   *     type: 'Point',
+   *     coordinates: [number, number]
+   *   }
+   * }, function]} */
   const [formData, setFormData] = useState({
     post_type: 'sell',
     bread_status: 'day_old',
     photo_url: '',
     quantity: 1,
-    location: { lng: 0, lat: 0 }
+    location: {
+      type: 'Point',
+      coordinates: [0, 0]
+    }
   });
-  const [success, setSuccess] = useState(false);
 
+  /** @type {[string, function]} */
+  const [error, setError] = useState('');
+
+  /**
+   * Handles form submission
+   * @param {React.FormEvent} e 
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await breadAPI.create(formData);
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
-      console.error('Creation failed:', err);
+      alert('Bread post created successfully!');
+    } catch (error) {
+      /** @type {ApiError} */
+      const apiError = error;
+      setError(apiError.message || 'Failed to create bread post');
+      console.error('Creation failed:', apiError);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <select
-        value={formData.post_type}
-        onChange={(e) => setFormData({...formData, post_type: e.target.value})}
-      >
-        <option value="sell">Selling</option>
-        <option value="request">Looking For</option>
-      </select>
-
-      <select
-        value={formData.bread_status}
-        onChange={(e) => setFormData({...formData, bread_status: e.target.value})}
-      >
-        <option value="fresh">Fresh</option>
-        <option value="day_old">Day Old</option>
-        <option value="stale">Stale</option>
-      </select>
-
-      <input
-        type="number"
-        value={formData.quantity}
-        onChange={(e) => setFormData({...formData, quantity: +e.target.value})}
-        min="1"
-      />
-
-      {/* Location picker would go here */}
+    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-6">Create Bread Post</h2>
+      {error && (
+        <div className="text-red-500 mb-4">{error}</div>
+      )}
       
-      {success && <div className="success">Post created!</div>}
-      <button type="submit">Submit</button>
-    </form>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Post Type</label>
+          <select
+            value={formData.post_type}
+            onChange={(e) => setFormData({
+              ...formData, 
+              post_type: /** @type {'sell'|'request'} */ (e.target.value)
+            })}
+            className="w-full p-2 border rounded"
+          >
+            <option value="sell">Selling</option>
+            <option value="request">Looking For</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Bread Condition</label>
+          <select
+            value={formData.bread_status}
+            onChange={(e) => setFormData({
+              ...formData, 
+              bread_status: /** @type {'fresh'|'day_old'|'stale'} */ (e.target.value)
+            })}
+            className="w-full p-2 border rounded"
+          >
+            <option value="fresh">Fresh</option>
+            <option value="day_old">Day Old</option>
+            <option value="stale">Stale</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Quantity</label>
+          <input
+            type="number"
+            min="1"
+            value={formData.quantity}
+            onChange={(e) => setFormData({
+              ...formData, 
+              quantity: parseInt(e.target.value) || 1
+            })}
+            className="w-full p-2 border rounded"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Location (Lat/Lng)</label>
+          <div className="flex space-x-2">
+            <input
+              type="number"
+              step="0.000001"
+              placeholder="Latitude"
+              onChange={(e) => setFormData({
+                ...formData,
+                location: {
+                  ...formData.location,
+                  coordinates: [
+                    formData.location.coordinates[0], 
+                    parseFloat(e.target.value) || 0
+                  ]
+                }
+              })}
+              className="w-full p-2 border rounded"
+            />
+            <input
+              type="number"
+              step="0.000001"
+              placeholder="Longitude"
+              onChange={(e) => setFormData({
+                ...formData,
+                location: {
+                  ...formData.location,
+                  coordinates: [
+                    parseFloat(e.target.value) || 0,
+                    formData.location.coordinates[1]
+                  ]
+                }
+              })}
+              className="w-full p-2 border rounded"
+            />
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600"
+        >
+          Create Post
+        </button>
+      </form>
+    </div>
   );
 }

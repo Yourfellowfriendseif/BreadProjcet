@@ -1,20 +1,55 @@
 /**
- * @typedef {Object} BreadProduct
- * @property {string} _id
- * @property {string} name
- * @property {'baguette' | 'sourdough' | 'ciabatta'} type
- * @property {number} price
- * @property {'fresh' | 'day_old' | 'stale'} state
- * @property {string} sellerId
- * @property {string} createdAt - ISO date string
- * @property {string[]} [images]
+ * @typedef {Object} User
+ * @property {string} _id - MongoDB ID
+ * @property {string} username - Unique username
+ * @property {string} email - Unique email
+ * @property {string} [phone_number] - Optional phone number
+ * @property {string} [photo_url] - Profile picture URL
+ * @property {'buyer' | 'seller' | 'both'} role - User role
+ * @property {string} createdAt - ISO creation date
+ * @property {string} [updatedAt] - ISO update date
  */
 
 /**
- * @typedef {Object} User
- * @property {string} _id
- * @property {string} name
+ * @typedef {Object} BreadPost
+ * @property {string} _id - MongoDB ID
+ * @property {'sell' | 'request'} post_type - Listing type
+ * @property {'fresh' | 'day_old' | 'stale'} bread_status - Condition
+ * @property {string} photo_url - Bread image URL
+ * @property {number} quantity - Available quantity
+ * @property {Object} location - GeoJSON location
+ * @property {'Point'} location.type - Always 'Point'
+ * @property {[number, number]} location.coordinates - [longitude, latitude]
+ * @property {string} sellerId - Reference to User._id
+ * @property {string} createdAt - ISO creation date
+ * @property {User} [user] - Populated user data (from backend)
+ */
+
+/**
+ * @typedef {Object} ApiError
+ * @property {string} message - Error message
+ * @property {number} [status] - HTTP status code
+ * @property {Array<{field: string, message: string}>} [errors] - Validation errors
+ * @property {string} [conflictField] - 'email' or 'username' for 409 errors
+ * @property {boolean} [isNetworkError] - True for network errors
+ */
+
+/**
+ * @typedef {Object} RegisterFormData
+ * @property {string} username
  * @property {string} email
- * @property {'buyer' | 'seller' | 'both'} role
- * @property {string} createdAt
+ * @property {string} password
+ * @property {string} [phone_number]
+ * @property {string} [photo_url]
+ */
+
+/**
+ * @typedef {Object} BreadPostFormData
+ * @property {'sell'|'request'} post_type
+ * @property {'fresh'|'day_old'|'stale'} bread_status
+ * @property {string} photo_url
+ * @property {number} quantity
+ * @property {Object} location
+ * @property {'Point'} location.type
+ * @property {[number, number]} location.coordinates [lng, lat]
  */
