@@ -37,49 +37,50 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 - GeoJSON location handling
 
 ## Project Structure
+
 PROJECTFINAL/
-.dist/ # Production build
-node_modules/ # Dependencies
-public/
-  images/ # Image storage
-src/
-  api/
-    apiClient.js # Axios configuration
-    breadAPI.js # Bread endpoints
-    userAPI.js # User endpoints
-  assets/ # Static assets
-  components/
-    auth/
-      LoginForm.jsx
-      RegisterForm.jsx
-    bread/
-      BreadListing.jsx
-      CreateBreadForm.jsx
-    ProtectedRoute.jsx
-    UserProfile.jsx
-  context/
-    AppContext.jsx # Global state
-  mocks/
-    data.js # Mock data
-  pages/
-    About.jsx
-    Home.jsx
-    NotFound.jsx
-  types/
-    dbTypes.js # Type definitions
-    schema.js # Data schemas
-  App.jsx # Root component
-  App.css # Global styles
-  index.css # Base styles
-  main.jsx # Entry point
-.env # Environment vars
-.gitignore
-eslint.config.js # ESLint config
-index.html # HTML template
-package.json
-package-lock.json
-tailwind.config.js # Tailwind config
-vite.config.js # Vite config
+├── .dist/ # Production build
+├── node_modules/ # Dependencies
+├── public/
+│   └── images/ # Image storage
+├── src/
+│   ├── api/
+│   │   ├── apiClient.js # Axios configuration
+│   │   ├── breadAPI.js # Bread endpoints
+│   │   └── userAPI.js # User endpoints
+│   ├── assets/ # Static assets
+│   ├── components/
+│   │   ├── auth/
+│   │   │   ├── LoginForm.jsx
+│   │   │   └── RegisterForm.jsx
+│   │   ├── bread/
+│   │   │   ├── BreadListing.jsx
+│   │   │   └── CreateBreadForm.jsx
+│   │   ├── ProtectedRoute.jsx
+│   │   └── UserProfile.jsx
+│   ├── context/
+│   │   └── AppContext.jsx # Global state
+│   ├── mocks/
+│   │   └── data.js # Mock data
+│   ├── pages/
+│   │   ├── About.jsx
+│   │   ├── Home.jsx
+│   │   └── NotFound.jsx
+│   ├── types/
+│   │   ├── dbTypes.js # Type definitions
+│   │   └── schema.js # Data schemas
+│   ├── App.jsx # Root component
+│   ├── App.css # Global styles
+│   ├── index.css # Base styles
+│   └── main.jsx # Entry point
+├── .env # Environment vars
+├── .gitignore
+├── eslint.config.js # ESLint config
+├── index.html # HTML template
+├── package.json
+├── package-lock.json
+├── tailwind.config.js # Tailwind config
+└── vite.config.js # Vite config
 
 ## Setup Instructions
 1. **Clone the repository**
