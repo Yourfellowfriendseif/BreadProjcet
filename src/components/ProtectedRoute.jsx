@@ -1,9 +1,9 @@
 // src/components/ProtectedRoute.jsx
 import { useEffect, useState } from 'react';
 import { userAPI } from '../api/userAPI';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom';
 
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute() {
   const [verified, setVerified] = useState(false);
   const navigate = useNavigate();
 
@@ -19,5 +19,5 @@ export default function ProtectedRoute({ children }) {
     verifyToken();
   }, [navigate]);
 
-  return verified ? children : <div>Verifying...</div>;
+  return verified ? <Outlet /> : <div>Verifying...</div>;
 }
