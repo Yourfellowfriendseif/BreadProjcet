@@ -6,20 +6,23 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 
 ## Features
 
-- **User Authentication**
-  - Secure JWT-based login/logout
-  - Role-based access (buyers/sellers)
-  - Protected routes
+- **Enhanced User Authentication**
+  - Secure JWT-based login/logout with automatic token refresh
+  - Detailed error handling for registration (duplicate email/username)
+  - Phone number and profile photo support
+  - Role-based access (buyers/sellers/both)
 
-- **Bread Listings**
+- **Advanced Bread Listings**
   - Create/list bread posts with freshness status
-  - Geo-location based listings
-  - Image upload support
+  - GeoJSON location support with [longitude, latitude]
+  - Quantity management
+  - Post type differentiation (sell/request)
 
-- **Core Functionality**
+- **Core Improvements**
+  - Comprehensive error handling system
+  - Type-safe JavaScript with JSDoc
   - Responsive Tailwind CSS design
-  - MongoDB database integration
-  - React Router navigation
+  - Optimized API service layer
 
 ## Tech Stack
 
@@ -27,16 +30,18 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 - React 18 + Vite
 - Tailwind CSS with `@tailwindcss/forms` plugin
 - React Router 6
-- Axios for API calls
-- React Hook Form (optional)
+- Axios with enhanced interceptors
+- JSDoc type checking
 
-### Backend
+### Backend Integration
 - Node.js + Express
 - MongoDB + Mongoose
 - JWT Authentication
 - GeoJSON location handling
+- RESTful API endpoints
 
 ## Project Structure
+
 PROJECTFINAL/
 ├── .dist/ # Production build
 ├── node_modules/ # Dependencies
@@ -44,17 +49,17 @@ PROJECTFINAL/
 │ └── images/ # Image storage
 ├── src/
 │ ├── api/ # API handlers
-│ │ ├── apiClient.js # Axios configuration
+│ │ ├── apiClient.js # Enhanced Axios instance
 │ │ ├── breadAPI.js # Bread endpoints
 │ │ └── userAPI.js # User endpoints
 │ ├── assets/ # Static assets
 │ ├── components/
 │ │ ├── auth/
-│ │ │ ├── LoginForm.jsx
-│ │ │ └── RegisterForm.jsx
+│ │ │ ├── LoginForm.jsx # Updated with error handling
+│ │ │ └── RegisterForm.jsx # Phone/photo support
 │ │ ├── bread/
 │ │ │ ├── BreadListing.jsx
-│ │ │ └── CreateBreadForm.jsx
+│ │ │ └── CreateBreadForm.jsx # GeoJSON support
 │ │ ├── ProtectedRoute.jsx
 │ │ └── UserProfile.jsx
 │ ├── context/
@@ -66,8 +71,7 @@ PROJECTFINAL/
 │ │ ├── Home.jsx
 │ │ └── NotFound.jsx
 │ ├── types/
-│ │ ├── dbTypes.js # Type definitions
-│ │ └── schema.js # Data schemas
+│ │ └── schema.js # Consolidated type definitions
 │ ├── App.jsx # Root component
 │ ├── App.css # Global styles
 │ ├── index.css # Base styles
@@ -78,16 +82,18 @@ PROJECTFINAL/
 ├── index.html # HTML template
 ├── package.json
 ├── package-lock.json
-├── tailwindcss.config.js # Tailwind config
+├── tailwind.config.js # Tailwind config
 └── vite.config.js # Vite config
 
+
 ## Setup Instructions
-1. **Clone the repository**
+
+1. **Clone and install**
    ```bash
-   git clone https://github.com/yourusername/anti-wast.git
-   cd breadproject$
+   git clone https://github.com/Yourfellowfriendseif/BreadProjcet.git
+   cd breadproject
    npm install
-   npm run dev 
+   npm run dev
 
 ## Available Scripts
 - `npm run dev` - Start Vite dev server
@@ -97,15 +103,20 @@ PROJECTFINAL/
 
 ## API Documentation
 #### Authentication
-| Endpoint          | Method | Description          |
-|-------------------|--------|----------------------|
-| `/auth/register`  | POST   | User registration    |
-| `/auth/login`     | POST   | User login           |
-| `/auth/logout`    | POST   | User logout          |
+| Endpoint            | Method | Request Body                              | Success Response       | Error Responses                     |
+|---------------------|--------|-------------------------------------------|------------------------|-------------------------------------|
+| `/auth/register`    | POST   | `{username, email, password, phone_number, photo_url}` | `{token}`             | 400: Validation errors<br>409: Duplicate data |
+| `/auth/login`       | POST   | `{email, password}`                       | `{token, user}`       | 401: Invalid credentials           |
+| `/auth/logout`      | POST   | -                                         | `{message}`           | -                                   |
 
 #### Bread Posts
-| Endpoint              | Method  | Description                |
-|-----------------------|---------|----------------------------|
-| `/bread/create`       | POST    | Create new bread post      |
-| `/bread/all`          | GET     | Get all bread posts        |
-| `/bread/delete/:id`   | DELETE  | Delete a bread post        |
+| Endpoint              | Method | Request Body                                                                 | Success Response               | Error Responses                     |
+|-----------------------|--------|------------------------------------------------------------------------------|--------------------------------|-------------------------------------|
+| `/bread/create`       | POST   | `{post_type, bread_status, photo_url, quantity, location: {type, coordinates}}` | `{message, breadPost}`         | 401: Unauthorized<br>422: Validation errors |
+| `/bread/all`          | GET    | -                                                                           | `Array<BreadPost>`             | -                                   |
+| `/bread/delete/:id`   | DELETE | -                                                                           | `{message}`                    | 404: Not found<br>403: Forbidden    |
+
+## type definition 
+- `User` - {_id, username, email, phone_number, photo_url, role, createdAt}
+- `BreadPost` - {_id, post_type, bread_status, photo_url, quantity, location, sellerId, createdAt}
+- `ApiError` - Standardized error format
