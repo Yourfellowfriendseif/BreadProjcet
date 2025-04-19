@@ -6,13 +6,13 @@ export const breadAPI = {
     apiClient.post("/bread/create", {
       post_type: breadData.post_type || "sell", // Default to 'sell'
       bread_status: breadData.bread_status || "day_old", // Default status
-      photo_url: breadData.photo_url || "",
+      photo_url: breadData.photo_url || "https://example.com/image.jpg", // Default image URL
       quantity: breadData.quantity || 1, // Default quantity
       location: {
         type: "Point",
         coordinates: [
-          breadData.location?.lng || 0, // Default longitude
-          breadData.location?.lat || 0, // Default latitude
+          breadData.location.coordinates[0] || 0, // Default latitude
+          breadData.location.coordinates[1] || 0, // Default longitude
         ],
       },
     }),

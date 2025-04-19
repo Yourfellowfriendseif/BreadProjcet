@@ -23,11 +23,8 @@ export default function BreadList() {
           setError("No data received from server");
         }
       } catch (err) {
-        console.error("Error fetching breads:", err);
         setError("Failed to load bread listings");
       } finally {
-        // Add a delay of 2 seconds before setting loading to false
-        await new Promise(resolve => setTimeout(resolve, 2000));
         setLoading(false);
       }
     };
@@ -39,16 +36,20 @@ export default function BreadList() {
 
   return (
     <div className="bread-grid">
-      {breads.map((/** @type {BreadPost} */ bread) => (
-        <div key={bread._id} className="bread-card">
-          <img src={bread.photo_url} alt={bread.post_type} />
-          <h3>
-            {bread.user.username}'s {bread.post_type}
-          </h3>
-          <p>Status: {bread.bread_status}</p>
-          <p>Quantity: {bread.quantity}</p>
-        </div>
-      ))}
+      {breads.length === 0 ? (
+        <div>No bread posts available.</div>
+      ) : (
+        breads.map((/** @type {BreadPost} */ bread) => (
+          <div key={bread._id} className="bread-card">
+            <img src={bread.photo_url} alt={bread.post_type} />
+            <h3>
+              {bread.user.username}'s {bread.post_type}
+            </h3>
+            <p>Status: {bread.bread_status}</p>
+            <p>Quantity: {bread.quantity}</p>
+          </div>
+        ))
+      )}
     </div>
   );
 }
