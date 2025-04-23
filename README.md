@@ -6,28 +6,41 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 
 ## Features
 
-- **Enhanced User Authentication**
+### Enhanced User Authentication
 
-  - Secure JWT-based login/logout with automatic token refresh
-  - Detailed error handling for registration (duplicate email/username)
-  - Phone number and profile photo support
-  - Role-based access (buyers/sellers/both)
-  - _Improved parameter validation and error messaging in login form_
+- Secure JWT-based login/logout with automatic token refresh
+- Detailed error handling for registration (duplicate email/username)
+- Phone number and profile photo support
+- Role-based access (buyers/sellers/both)
+- Improved parameter validation and error messaging in login form
 
-- **Advanced Bread Listings**
+### Advanced Bread Listings
 
-  - Create/list bread posts with freshness status
-  - GeoJSON location support with [longitude, latitude]
-  - Quantity management with additional validations
-  - Post type differentiation (sell/request)
-  - _Conditional rendering for empty listings and enhanced logging_
+- Create/list bread posts with freshness status
+- **Interactive Leaflet map for location selection**
+- **Comprehensive search functionality**
+- Quantity management with additional validations
+- Post type differentiation (sell/request)
+- Conditional rendering for empty listings and enhanced logging
 
-- **Core Improvements**
-  - Comprehensive error handling system
-  - Type-safe JavaScript with JSDoc
-  - Responsive Tailwind CSS design
-  - Optimized API service layer with consistent request formatting
-  - _Refactored API endpoints (e.g. updated profile endpoint to `/user/me`)_
+### New Implemented Features
+
+- **Geolocation Integration**
+  - Interactive map interface using Leaflet
+  - Click-to-select location functionality
+  - Coordinate display and validation
+- **Search System**
+  - Real-time filtering of bread listings
+  - Case-insensitive search across bread attributes
+  - Combined with sorting for powerful discovery
+
+### Core Improvements
+
+- Comprehensive error handling system
+- Type-safe JavaScript with JSDoc
+- Responsive Tailwind CSS design
+- Optimized API service layer with consistent request formatting
+- Refactored API endpoints (e.g. updated profile endpoint to `/user/me`)
 
 ## Tech Stack
 
@@ -35,8 +48,9 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 
 - React 18 + Vite
 - Tailwind CSS with `@tailwindcss/forms` plugin
-- React Router 6 (Protected routes now using Outlet)
+- React Router 6 (Protected routes using Outlet)
 - Axios with enhanced interceptors
+- **React-Leaflet** for interactive maps
 - JSDoc type checking
 
 ### Backend Integration
@@ -48,6 +62,7 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 - RESTful API endpoints
 
 ## Project Structure
+
 PROJECTFINAL/
 ├── .dist/ # Production build
 ├── node_modules/ # Dependencies
@@ -57,16 +72,19 @@ PROJECTFINAL/
 │ ├── api/ # API handlers
 │ │ ├── apiClient.js # Enhanced Axios instance
 │ │ ├── breadAPI.js # Bread endpoints (default photo URL & logging added)
-│ │ └── userAPI.js # User endpoints (profile endpoint updated to `/user/me`)
+│ │ └── userAPI.js # User endpoints (profile endpoint updated to /user/me)
 │ ├── assets/ # Static assets
 │ ├── components/
 │ │ ├── auth/
-│ │ │ ├── LoginForm.jsx # Improved parameter handling and error messaging
+│ │ │ ├── LoginForm.jsx # Improved parameter handling
 │ │ │ └── RegisterForm.jsx # Phone/photo support
 │ │ ├── bread/
-│ │ │ ├── BreadListing.jsx # Now supports empty list rendering and enhanced logging
-│ │ │ └── CreateBreadForm.jsx # Refined coordinate validations and error messaging
-│ │ ├── ProtectedRoute.jsx # Refactored to use Outlet for routing
+│ │ │ ├── BreadListing.jsx # Now with search and sorting
+│ │ │ ├── CreateBreadForm.jsx # With Leaflet map integration
+│ │ │ └── SearchBar.jsx # New search component
+│ │ ├── common/
+│ │ │ └── LocationPicker.jsx # New Leaflet map component
+│ │ ├── ProtectedRoute.jsx # Refactored to use Outlet
 │ │ └── UserProfile.jsx
 │ ├── context/
 │ │ └── AppContext.jsx # Global state
@@ -99,6 +117,7 @@ PROJECTFINAL/
    cd BreadProjcet
    npm install
    npm run dev
+   npm install leaflet react-leaflet
    ```
 
 ## Available Scripts
@@ -139,11 +158,40 @@ PROJECTFINAL/
 
 ## Recent Changes
 
-- Updated **breadAPI**:
-  - Default photo URL set.
-  - Enhanced logging in the getAll endpoint.
-- Modified **userAPI**:
-  - Profile endpoint updated from `/users/me` to `/user/me`.
-  - Standardized request formatting.
-- Refactored **ProtectedRoute.jsx** to use Outlet for improved routing.
-- Enhanced **LoginForm.jsx**, **BreadListing.jsx**, and **CreateBreadForm.jsx** with improved state handling, validations, and error messaging.
+## Recent Changes
+
+### Frontend Updates
+
+#### Added Leaflet Map Integration
+
+- Interactive location selection in CreateBreadForm
+- Visual feedback for selected coordinates
+- Proper marker icons and tile layers
+- Mobile-responsive map container
+- Coordinate validation system
+
+#### Implemented Search Functionality
+
+- Dedicated `SearchBar` component
+- Real-time filtering of bread listings
+- Case-insensitive search across:
+  - Bread type
+  - Description
+  - Location names
+- Preserves active sorting during searches
+
+#### UI Improvements
+
+- Enhanced form layouts with Tailwind CSS
+- Improved error display components
+- Responsive design for all map components
+- Animated transitions for search results
+- Accessible form labels and controls
+
+### Backend Coordination
+
+- Added `/bread/search` endpoint documentation
+- Verified GeoJSON compatibility with Leaflet
+- Standardized coordinate handling as `[longitude, latitude]`
+- Updated error handling for location validation
+- Optimized search query performance

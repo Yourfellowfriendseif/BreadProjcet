@@ -1,5 +1,52 @@
 import { useState } from "react";
 import { breadAPI } from "../../api/breadAPI";
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default marker icons in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+});
+
+/**
+ * LocationPicker component for selecting coordinates on a map
+ * @param {{
+ *   onLocationSelect: (coords: [number, number]) => void,
+ *   initialCoords?: [number, number]
+ * }} props 
+ */
+function LocationPicker({ onLocationSelect, initialCoords = [0, 0] }) {
+  const [position, setPosition] = useState(initialCoords);
+
+  const LocationFinder = () => {
+    useMapEvents({
+      click(e) {
+        const newPosition = [e.latlng.lng, e.latlng.lat];
+        setPosition(newPosition);
+        onLocationSelect(newPosition);
+      },
+    });
+    return position ? <Marker position={[position[1], position[0]]} /> : null;
+  };
+
+  return (
+    <MapContainer
+      center={[initialCoords[1], initialCoords[0]]}
+      zoom={13}
+      style={{ height: '400px', width: '100%', marginTop: '1rem' }}
+    >
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      />
+      <LocationFinder />
+    </MapContainer>
+  );
+}
 
 /**
  * @typedef {import('../../types/schema').BreadPost} BreadPost
@@ -24,7 +71,7 @@ export default function CreateBreadForm() {
     quantity: 1,
     location: {
       type: "Point",
-      coordinates: [0, 0],
+      coordinates: [0, 0], // [longitude, latitude]
     },
   });
 
@@ -47,6 +94,20 @@ export default function CreateBreadForm() {
       setError(apiError.message || "Failed to create bread post");
       console.error("Creation failed:", apiError);
     }
+  };
+
+  /**
+   * Updates location coordinates
+   * @param {[number, number]} coords - [longitude, latitude]
+   */
+  const handleLocationSelect = (coords) => {
+    setFormData({
+      ...formData,
+      location: {
+        ...formData.location,
+        coordinates: coords,
+      },
+    });
   };
 
   return (
@@ -128,51 +189,18 @@ export default function CreateBreadForm() {
 
         <div>
           <label className="block text-sm font-medium mb-1">
-            Location (Latitude(-90, 90) / Longitude(-180, 180))
+            Location (Click on the map to select)
           </label>
-          <div className="flex space-x-2">
-            <input
-              type="number"
-              step="0.000001"
-              min="-90"
-              max="90"
-              placeholder="Latitude"
-              value={formData.location.coordinates[1]}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  location: {
-                    ...formData.location,
-                    coordinates: [
-                      formData.location.coordinates[0], // keep longitude unchanged
-                      parseFloat(e.target.value) || 0,   // update latitude
-                    ],
-                  },
-                })
-              }
-              className="w-full p-2 border rounded"
-            />
-            <input
-              type="number"
-              step="0.000001"
-              min="-180"
-              max="180"
-              placeholder="Longitude"
-              value={formData.location.coordinates[0]}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  location: {
-                    ...formData.location,
-                    coordinates: [
-                      parseFloat(e.target.value) || 0,    // update longitude
-                      formData.location.coordinates[1],   // keep latitude unchanged
-                    ],
-                  },
-                })
-              }
-              className="w-full p-2 border rounded"
-            />
+          <LocationPicker 
+            onLocationSelect={handleLocationSelect}
+            initialCoords={formData.location.coordinates}
+          />
+          <div className="mt-2 text-sm text-gray-600">
+            Selected coordinates: 
+            <span className="font-mono ml-2">
+              {formData.location.coordinates[1]?.toFixed(6)}, 
+              {formData.location.coordinates[0]?.toFixed(6)}
+            </span>
           </div>
         </div>
 

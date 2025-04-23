@@ -1,7 +1,10 @@
+// src/api/apiClient.js
 import axios from 'axios';
 
 /**
  * @typedef {import('../types/schema').ApiError} ApiError
+ * @typedef {import('../types/schema').BreadPost} BreadPost
+ * @typedef {import('../types/schema').User} User
  */
 
 export const apiClient = axios.create({
@@ -73,3 +76,27 @@ apiClient.interceptors.response.use(
     return Promise.reject(apiError);
   }
 );
+
+/**
+ * Search for bread posts or users
+ * @param {string} query - Search term
+ * @param {'bread'|'user'} type - Type of search
+ * @param {Object} [filters] - Additional filters
+ * @param {number} [filters.radius] - Search radius in meters (for location-based searches)
+ * @param {[number, number]} [filters.location] - [longitude, latitude] for location-based searches
+ * @returns {Promise<{bread?: BreadPost[], users?: User[]}>} Search results
+ */
+export const search = async (query, type = 'bread', filters = {}) => {
+  const params = new URLSearchParams({ q: query, type });
+  
+  if (filters.radius) params.append('radius', filters.radius);
+  if (filters.location) {
+    params.append('lng', filters.location[0]);
+    params.append('lat', filters.location[1]);
+  }
+
+  return apiClient.get(`/search?${params.toString()}`);
+};
+
+// Add to your existing exports if you have others
+export default apiClient;
