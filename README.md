@@ -48,7 +48,6 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 - RESTful API endpoints
 
 ## Project Structure
-```text
 PROJECTFINAL/
 ├── .dist/ # Production build
 ├── node_modules/ # Dependencies
@@ -91,7 +90,7 @@ PROJECTFINAL/
 ├── package-lock.json
 ├── tailwind.config.js # Tailwind config
 └── vite.config.js # Vite config
-```
+
 ## Setup Instructions
 
 1. **Clone and install**
