@@ -9,7 +9,7 @@ import CreateBreadForm from './components/bread/CreateBreadForm';
 import UserProfile from './components/UserProfile';
 import NotFound from './pages/NotFound';
 import SearchResults from './pages/SearchResults';
-
+import Navbar from './components/Navbar'; // Add this import
 
 function App() {
   const [user, setUser] = useState(null);
