@@ -17,7 +17,7 @@ export default function BreadList() {
         const data = await breadAPI.getAll();
         if (data) {
           console.log("Fetched breads:", data);
-          setBreads(data);
+          setBreads(data.data.posts);
         } else {
           console.error("No data received from breadAPI");
           setError("No data received from server");

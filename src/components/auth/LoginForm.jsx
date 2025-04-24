@@ -2,7 +2,7 @@ import { useState } from "react";
 import { userAPI } from "../../api/userAPI";
 import { useNavigate, Link } from "react-router-dom";
 
-export default function LoginForm() {
+export default function LoginForm({ onLogin }) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -13,12 +13,19 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Ensure the correct structure of the data
-      const { token } = await userAPI.login(formData.email, formData.password);
-      localStorage.setItem("token", token);
-      navigate("/dashboard");
+      const { token, user } = await userAPI.login(
+        formData.email,
+        formData.password
+      );
+      if (token && user) {
+        localStorage.setItem("token", token);
+        onLogin(user);
+        navigate("/");
+      } else {
+        setError("Invalid response from server");
+      }
     } catch (err) {
-      setError("Invalid email or password");
+      setError(err.message || "Invalid email or password");
     }
   };
 

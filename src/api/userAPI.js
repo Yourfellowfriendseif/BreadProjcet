@@ -2,8 +2,11 @@ import { apiClient } from "./apiClient";
 
 export const userAPI = {
   // Authentication
-  login: (email, password) =>
-    apiClient.post("/auth/login", { email, password }),
+  login: async (email, password) => {
+    const response = await apiClient.post("/auth/login", { email, password });
+    // Extract data from the nested structure
+    return response.data; // This will contain { token, user }
+  },
 
   register: (userData) =>
     apiClient.post("/auth/register", {

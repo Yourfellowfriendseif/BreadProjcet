@@ -1,23 +1,12 @@
 // src/components/ProtectedRoute.jsx
-import { useEffect, useState } from 'react';
-import { userAPI } from '../api/userAPI';
-import { useNavigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet } from "react-router-dom";
 
 export default function ProtectedRoute() {
-  const [verified, setVerified] = useState(false);
-  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    const verifyToken = async () => {
-      try {
-        await userAPI.getProfile(); // Uses JWT via interceptor
-        setVerified(true);
-      } catch {
-        navigate('/login');
-      }
-    };
-    verifyToken();
-  }, [navigate]);
+  if (!token) {
+    return <Navigate to="/login" />;
+  }
 
-  return verified ? <Outlet /> : <div>Verifying...</div>;
+  return <Outlet />;
 }
