@@ -1,10 +1,5 @@
-// src/components/BreadList.jsx
 import { useEffect, useState } from "react";
 import { breadAPI } from "../../api/breadAPI";
-
-/**
- * @typedef {import('../../types/dbTypes').BreadPost} BreadPost
- */
 
 export default function BreadList() {
   const [breads, setBreads] = useState([]);
@@ -14,14 +9,8 @@ export default function BreadList() {
   useEffect(() => {
     const loadBreads = async () => {
       try {
-        const data = await breadAPI.getAll();
-        if (data) {
-          console.log("Fetched breads:", data);
-          setBreads(data.data.posts);
-        } else {
-          console.error("No data received from breadAPI");
-          setError("No data received from server");
-        }
+        const response = await breadAPI.getAll();
+        setBreads(response.data.posts);
       } catch (err) {
         setError("Failed to load bread listings");
       } finally {
@@ -35,18 +24,35 @@ export default function BreadList() {
   if (error) return <div>{error}</div>;
 
   return (
-    <div className="bread-grid">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {breads.length === 0 ? (
         <div>No bread posts available.</div>
       ) : (
-        breads.map((/** @type {BreadPost} */ bread) => (
-          <div key={bread._id} className="bread-card">
-            <img src={bread.photo_url} alt={bread.post_type} />
-            <h3>
-              {bread.user.username}'s {bread.post_type}
-            </h3>
-            <p>Status: {bread.bread_status}</p>
-            <p>Quantity: {bread.quantity}</p>
+        breads.map((bread) => (
+          <div key={bread._id} className="border rounded-lg overflow-hidden shadow">
+            <div className="h-48 overflow-hidden">
+              {bread.imageIds?.length > 0 ? (
+                <img 
+                  src={`${import.meta.env.VITE_API_BASE_URL}/api/upload/${bread.imageIds[0]}`} 
+                  alt={bread.description}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                  No Image
+                </div>
+              )}
+            </div>
+            <div className="p-4">
+              <h3 className="font-bold text-lg">{bread.description}</h3>
+              <p>Type: {bread.post_type === 'sell' ? 'For Sale' : 'Wanted'}</p>
+              <p>Status: {bread.status}</p>
+              <p>Category: {bread.category}</p>
+              <p>Quantity: {bread.quantity}</p>
+              {bread.user && (
+                <p className="text-sm text-gray-600">Posted by: {bread.user.username}</p>
+              )}
+            </div>
           </div>
         ))
       )}

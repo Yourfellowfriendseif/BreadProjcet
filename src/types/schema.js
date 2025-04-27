@@ -14,15 +14,19 @@
  * @typedef {Object} BreadPost
  * @property {string} _id - MongoDB ID
  * @property {'sell' | 'request'} post_type - Listing type
- * @property {'fresh' | 'day_old' | 'stale'} bread_status - Condition
- * @property {string} photo_url - Bread image URL
+ * @property {'fresh' | 'day_old' | 'stale'} status - Condition (changed from bread_status)
+ * @property {string} category - Food category (new)
+ * @property {string} description - Detailed description (new)
+ * @property {string[]} imageIds - Array of image IDs (changed from photo_url)
  * @property {number} quantity - Available quantity
  * @property {Object} location - GeoJSON location
  * @property {'Point'} location.type - Always 'Point'
  * @property {[number, number]} location.coordinates - [longitude, latitude]
  * @property {string} sellerId - Reference to User._id
  * @property {string} createdAt - ISO creation date
- * @property {User} [user] - Populated user data (from backend)
+ * @property {User} [user] - Populated user data
+ * @property {boolean} [reserved] - Reservation status (new)
+ * @property {string} [reservedBy] - User ID who reserved (new)
  */
 
 /**
