@@ -18,21 +18,31 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 
 - Create/list bread posts with freshness status
 - **Interactive Leaflet map for location selection**
-- **Comprehensive search functionality**
+- **Comprehensive search and filtering system**
+- **Multiple image upload support**
 - Quantity management with additional validations
 - Post type differentiation (sell/request)
 - Conditional rendering for empty listings and enhanced logging
+- **Post reservation system**
 
 ### New Implemented Features
 
-- **Geolocation Integration**
+- **Geolocation Services**
   - Interactive map interface using Leaflet
   - Click-to-select location functionality
-  - Coordinate display and validation
-- **Search System**
+  - Coordinate validation and display
+  - Nearby posts functionality
+
+- **Enhanced Search System**
   - Real-time filtering of bread listings
-  - Case-insensitive search across bread attributes
+  - Case-insensitive search across multiple fields
   - Combined with sorting for powerful discovery
+  - Location-based filtering
+
+- **Image Management**
+  - Multiple image upload support
+  - Image preview functionality
+  - Responsive image display
 
 ### Core Improvements
 
@@ -40,7 +50,8 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 - Type-safe JavaScript with JSDoc
 - Responsive Tailwind CSS design
 - Optimized API service layer with consistent request formatting
-- Refactored API endpoints (e.g. updated profile endpoint to `/user/me`)
+- Refactored to match backend API structure
+- Improved form validation and user feedback
 
 ## Tech Stack
 
@@ -50,7 +61,7 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 - Tailwind CSS with `@tailwindcss/forms` plugin
 - React Router 6 (Protected routes using Outlet)
 - Axios with enhanced interceptors
-- **React-Leaflet** for interactive maps
+- React-Leaflet for interactive maps
 - JSDoc type checking
 
 ### Backend Integration
@@ -60,6 +71,7 @@ A platform connecting bakeries and consumers to reduce bread waste by selling or
 - JWT Authentication
 - GeoJSON location handling
 - RESTful API endpoints
+- Multer for image uploads
 
 ## Project Structure
 
@@ -71,43 +83,44 @@ PROJECTFINAL/
 ├── src/
 │ ├── api/ # API handlers
 │ │ ├── apiClient.js # Enhanced Axios instance
-│ │ ├── breadAPI.js # Bread endpoints (default photo URL & logging added)
-│ │ └── userAPI.js # User endpoints (profile endpoint updated to /user/me)
+│ │ ├── breadAPI.js # Updated bread endpoints
+│ │ └── userAPI.js # User endpoints
 │ ├── assets/ # Static assets
 │ ├── components/
 │ │ ├── auth/
-│ │ │ ├── LoginForm.jsx # Improved parameter handling
-│ │ │ └── RegisterForm.jsx # Phone/photo support
+│ │ │ ├── LoginForm.jsx
+│ │ │ └── RegisterForm.jsx
 │ │ ├── bread/
-│ │ │ ├── BreadListing.jsx # Now with search and sorting
-│ │ │ ├── CreateBreadForm.jsx # With Leaflet map integration
-│ │ │ └── SearchBar.jsx # New search component
+│ │ │ ├── BreadListing.jsx # Updated with new post structure
+│ │ │ ├── CreateBreadForm.jsx # With multi-image upload
+│ │ │ ├── SearchBar.jsx
+│ │ │ └── SortDropdown.jsx
 │ │ ├── common/
-│ │ │ └── LocationPicker.jsx # New Leaflet map component
-│ │ ├── ProtectedRoute.jsx # Refactored to use Outlet
+│ │ │ └── LocationPicker.jsx
+│ │ ├── ProtectedRoute.jsx
 │ │ └── UserProfile.jsx
 │ ├── context/
-│ │ └── AppContext.jsx # Global state
+│ │ └── AppContext.jsx
 │ ├── mocks/
-│ │ └── data.js # Mock data
+│ │ └── data.js
 │ ├── pages/
 │ │ ├── About.jsx
 │ │ ├── Home.jsx
 │ │ └── NotFound.jsx
 │ ├── types/
-│ │ └── schema.js # Consolidated type definitions
-│ ├── App.jsx # Root component
-│ ├── App.css # Global styles
-│ ├── index.css # Base styles
-│ └── main.jsx # Entry point
-├── .env # Environment vars
+│ │ └── schema.js # Updated type definitions
+│ ├── App.jsx
+│ ├── App.css
+│ ├── index.css
+│ └── main.jsx
+├── .env
 ├── .gitignore
-├── eslint.config.js # ESLint config
-├── index.html # HTML template
+├── eslint.config.js
+├── index.html
 ├── package.json
 ├── package-lock.json
-├── tailwind.config.js # Tailwind config
-└── vite.config.js # Vite config
+├── tailwind.config.js
+└── vite.config.js
 
 ## Setup Instructions
 
@@ -129,69 +142,124 @@ PROJECTFINAL/
 
 ## API Documentation
 
-#### Authentication
+### Authentication
 
-| Endpoint         | Method | Request Body                                           | Success Response | Error Responses                               |
-| ---------------- | ------ | ------------------------------------------------------ | ---------------- | --------------------------------------------- |
-| `/auth/register` | POST   | `{username, email, password, phone_number, photo_url}` | `{token}`        | 400: Validation errors<br>409: Duplicate data |
-| `/auth/login`    | POST   | `{email, password}`                                    | `{token, user}`  | 401: Invalid credentials                      |
-| `/auth/logout`   | POST   | -                                                      | `{message}`      | -                                             |
+| Endpoint         | Method | Request Body                                           | Success Response               | Error Responses                               |
+|------------------|--------|-------------------------------------------------------|---------------------------------|----------------------------------------------|
+| `/auth/register` | POST   | `{username, email, password, phone_number, photo_url}` | `{token, user}`                | 400: Validation errors<br>409: Duplicate data |
+| `/auth/login`    | POST   | `{email, password}`                                   | `{token, user}`                | 401: Invalid credentials                     |
+| `/auth/logout`   | POST   | -                                                     | `{message}`                    | 401: Unauthorized                            |
 
-#### User Profile
+### User Management
 
-| Endpoint   | Method | Request Body | Success Response           | Error Responses   |
-| ---------- | ------ | ------------ | -------------------------- | ----------------- |
-| `/user/me` | GET    | -            | `User` profile information | 401: Unauthorized |
+| Endpoint          | Method | Request Body                     | Success Response | Error Responses          |
+|-------------------|--------|----------------------------------|------------------|--------------------------|
+| `/user/me`        | GET    | -                                | `{user}`         | 401: Unauthorized        |
+| `/user/profile`   | PUT    | `{name, email, phone, photoUrl}` | `{user}`         | 400: Validation errors   |
+| `/user/password`  | PUT    | `{currentPassword, newPassword}` | `{message}`      | 401: Wrong password      |
 
-#### Bread Posts
+### Image Management
 
-| Endpoint            | Method | Request Body                                                                    | Success Response       | Error Responses                             |
-| ------------------- | ------ | ------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------- |
-| `/bread/create`     | POST   | `{post_type, bread_status, photo_url, quantity, location: {type, coordinates}}` | `{message, breadPost}` | 401: Unauthorized<br>422: Validation errors |
-| `/bread/all`        | GET    | -                                                                               | `Array<BreadPost>`     | -                                           |
-| `/bread/delete/:id` | DELETE | -                                                                               | `{message}`            | 404: Not found<br>403: Forbidden            |
+| Endpoint               | Method | Content-Type           | Response                          | Error Responses          |
+|------------------------|--------|------------------------|-----------------------------------|--------------------------|
+| `/api/upload`          | POST   | multipart/form-data    | `{status, data: {image}}`         | 400: Invalid file type   |
+| `/api/upload/multiple` | POST   | multipart/form-data    | `{status, data: {images: []}}`    | 413: File too large      |
+| `/api/upload/:filename`| DELETE | -                      | `{status, message}`               | 404: File not found      |
 
-## API Documentation Details
+### Post Management
 
-- **Authentication:** Secure endpoints for registration, login, logout, and fetching user profile with updated userAPI integration.
-- **Bread Posts:** Endpoints to create, view, and delete bread posts with enhanced validations and logging.
-
-## Recent Changes
+| Endpoint                  | Method | Request Body                                                                 | Success Response               | Error Responses                     |
+|---------------------------|--------|------------------------------------------------------------------------------|---------------------------------|-------------------------------------|
+| `/api/posts/create`       | POST   | `{post_type, status, category, description, quantity, location, imageIds}` | `{post}`                       | 422: Validation errors              |
+| `/api/posts/all`          | GET    | -                                                                            | `{posts: [], pagination: {}}`  | -                                   |
+| `/api/posts/nearby`       | POST   | `{location: {coordinates}, maxDistance}`                                    | `{posts: []}`                  | 400: Invalid location               |
+| `/api/posts/reserve/:id`  | PUT    | -                                                                            | `{post}`                       | 409: Already reserved               |
+| `/api/posts/search`       | GET    | Query params: `q, status, post_type, lat, lng, radius`                     | `{posts: [], pagination: {}}`  | -                                   |
 
 ## Recent Changes
 
 ### Frontend Updates
 
-#### Added Leaflet Map Integration
+- **Post Structure Revamp**
+  - Changed from `bread_status` to `status` field
+  - Added `category` and `description` fields
+  - Replaced single `photo_url` with multiple `imageIds`
+  - Updated all forms and displays accordingly
 
-- Interactive location selection in CreateBreadForm
-- Visual feedback for selected coordinates
-- Proper marker icons and tile layers
-- Mobile-responsive map container
-- Coordinate validation system
+- **Enhanced Image Handling**
+  - Implemented multi-image upload interface
+  - Added image preview functionality
+  - Created responsive image galleries
+  - Improved error handling for uploads
 
-#### Implemented Search Functionality
+- **Location Services**
+  - Standardized coordinate handling [lng, lat]
+  - Added better map interaction feedback
+  - Implemented address validation
 
-- Dedicated `SearchBar` component
-- Real-time filtering of bread listings
-- Case-insensitive search across:
-  - Bread type
-  - Description
-  - Location names
-- Preserves active sorting during searches
-
-#### UI Improvements
-
-- Enhanced form layouts with Tailwind CSS
-- Improved error display components
-- Responsive design for all map components
-- Animated transitions for search results
-- Accessible form labels and controls
+- **UI/UX Improvements**
+  - Consistent form styling across components
+  - Better error visualization
+  - Responsive design refinements
+  - Improved loading states
 
 ### Backend Coordination
 
-- Added `/bread/search` endpoint documentation
-- Verified GeoJSON compatibility with Leaflet
-- Standardized coordinate handling as `[longitude, latitude]`
-- Updated error handling for location validation
-- Optimized search query performance
+- **API Endpoint Alignment**
+  - Updated all endpoints to `/api/` prefix
+  - Standardized success/error responses
+  - Implemented proper status codes
+
+- **New Features Integration**
+  - Post reservation system
+  - Location-based post filtering
+  - Advanced search functionality
+  - Multi-image support
+
+- **Performance Optimizations**
+  - Reduced unnecessary API calls
+  - Improved data caching
+  - Better error recovery flows
+
+## Next Steps
+
+### Immediate Priorities
+
+1. **Real-time Notifications System**
+   - Implement socket.io for live updates
+   - Notify users about reservations
+   - Alert for new nearby posts
+
+2. **User Rating System**
+   - Post-collection feedback
+   - User reputation scores
+   - Review moderation tools
+
+3. **In-app Messaging**
+   - Direct user-to-user chat
+   - Message notifications
+   - Conversation history
+
+### Near-term Roadmap
+
+- **Admin Dashboard**
+  - User management
+  - Content moderation
+  - Analytics reporting
+
+- **Enhanced Search**
+  - Saved searches
+  - Search history
+  - Advanced filters
+
+- **Mobile Optimization**
+  - PWA support
+  - Offline capabilities
+  - Camera upload integration
+
+### Future Considerations
+
+- Social sharing features
+- Subscription model for bakeries
+- Food safety guidelines integration
+- Multi-language support
