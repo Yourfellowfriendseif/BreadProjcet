@@ -60,37 +60,58 @@ export default function CreateBreadForm() {
 
   const [error, setError] = useState("");
   const [imageFiles, setImageFiles] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleImageChange = (e) => {
     setImageFiles([...e.target.files]);
   };
 
-  const uploadImages = async () => {
-    const formData = new FormData();
-    imageFiles.forEach(file => formData.append('images', file));
-    
-    try {
-      const response = await breadAPI.uploadImages(formData);
-      return response.data.images.map(img => img.id);
-    } catch (error) {
-      setError("Failed to upload images");
-      throw error;
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+
     try {
+      let uploadedImageIds = [];
       if (imageFiles.length > 0) {
-        const uploadedImageIds = await uploadImages();
-        formData.imageIds = uploadedImageIds;
+        const uploadFormData = new FormData();
+        imageFiles.forEach(file => uploadFormData.append('images', file));
+        
+        const uploadResponse = await breadAPI.uploadMultipleImages(uploadFormData);
+        uploadedImageIds = uploadResponse.images?.map(img => img.id) || []
+
+        console.log("Upload response:", uploadResponse);
+        console.log("Extracted image IDs:", uploadedImageIds);
       }
-      
-      await breadAPI.create(formData);
+
+      const postData = {
+        ...formData,
+        imageIds: uploadedImageIds
+      };
+
+      const response = await breadAPI.create(postData);
+      console.log("Post created:", response);
+
       alert("Bread post created successfully!");
+      
+      setFormData({
+        post_type: "sell",
+        status: "fresh",
+        category: "bread",
+        description: "",
+        quantity: 1,
+        location: {
+          type: "Point",
+          coordinates: [0, 0],
+        },
+        imageIds: []
+      });
+      setImageFiles([]);
     } catch (error) {
-      setError(error.message || "Failed to create bread post");
-      console.error("Creation failed:", error);
+      console.error("Error:", error);
+      setError(error.response?.data?.message || error.message || "Failed to create post");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -195,9 +216,10 @@ export default function CreateBreadForm() {
 
         <button
           type="submit"
-          className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600"
+          className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 disabled:bg-gray-400"
+          disabled={isSubmitting}
         >
-          Create Post
+          {isSubmitting ? 'Creating...' : 'Create Post'}
         </button>
       </form>
     </div>

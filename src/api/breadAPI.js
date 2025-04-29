@@ -5,7 +5,7 @@ export const breadAPI = {
   uploadImage: (file) => {
     const formData = new FormData();
     formData.append('image', file);
-    return apiClient.post('/api/upload', formData, {
+    return apiClient.post('/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -15,18 +15,18 @@ export const breadAPI = {
   uploadMultipleImages: (files) => {
     const formData = new FormData();
     files.forEach(file => formData.append('images', file));
-    return apiClient.post('/api/upload/multiple', formData, {
+    return apiClient.post('/upload/multiple', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     });
   },
 
-  deleteImage: (filename) => apiClient.delete(`/api/upload/${filename}`),
+  deleteImage: (filename) => apiClient.delete(`/upload/${filename}`),
 
   // Bread Posts Endpoints
   create: (breadData) => {
-    return apiClient.post('/api/posts/create', {
+    return apiClient.post('/posts/create', {
       post_type: breadData.post_type || 'sell',
       status: breadData.status || 'fresh',
       category: breadData.category || 'bread',
@@ -42,9 +42,9 @@ export const breadAPI = {
 
   getAll: async () => {
     try {
-      console.log("Calling /api/posts/all endpoint...");
-      const response = await apiClient.get("/api/posts/all");
-      console.log("Response from /api/posts/all:", response);
+      console.log("Calling /posts/all endpoint...");
+      const response = await apiClient.get("/posts/all");
+      console.log("Response from /posts/all:", response);
       return response;
     } catch (error) {
       console.error("Error in breadAPI.getAll:", error);
@@ -52,15 +52,15 @@ export const breadAPI = {
     }
   },
 
-  getById: (id) => apiClient.get(`/api/posts/${id}`),
+  getById: (id) => apiClient.get(`/posts/${id}`),
 
-  update: (id, breadData) => apiClient.put(`/api/posts/update/${id}`, breadData),
+  update: (id, breadData) => apiClient.put(`/posts/update/${id}`, breadData),
 
-  delete: (id) => apiClient.delete(`/api/posts/delete/${id}`),
+  delete: (id) => apiClient.delete(`/posts/delete/${id}`),
 
   // Location-based Endpoints
   getNearby: (lat, lng, radius) => 
-    apiClient.post('/api/posts/nearby', {
+    apiClient.post('/posts/nearby', {
       location: {
         type: 'Point',
         coordinates: [lng, lat]
@@ -69,16 +69,16 @@ export const breadAPI = {
     }),
 
   // Reservation Endpoints
-  reserve: (id) => apiClient.put(`/api/posts/reserve/${id}`),
+  reserve: (id) => apiClient.put(`/posts/reserve/${id}`),
   
-  unreserve: (id) => apiClient.put(`/api/posts/unreserve/${id}`),
+  unreserve: (id) => apiClient.put(`/posts/unreserve/${id}`),
 
-  getReserved: () => apiClient.get('/api/posts/reserved'),
+  getReserved: () => apiClient.get('/posts/reserved'),
 
   // User Posts
-  getUserPosts: () => apiClient.get('/api/posts/user'),
+  getUserPosts: () => apiClient.get('/posts/user'),
 
-  getPostsByUser: (userId) => apiClient.get(`/api/posts/user/${userId}`),
+  getPostsByUser: (userId) => apiClient.get(`/posts/user/${userId}`),
 
   // Search Endpoint
   search: (query, filters = {}) => {
@@ -91,10 +91,10 @@ export const breadAPI = {
       params.append('lng', filters.lng);
     }
     if (filters.radius) params.append('radius', filters.radius);
-    return apiClient.get(`/api/posts/search?${params.toString()}`);
+    return apiClient.get(`/posts/search?${params.toString()}`);
   },
 
   // Status Updates
   updateStatus: (id, newStatus) => 
-    apiClient.patch(`/api/posts/${id}/status`, { status: newStatus })
+    apiClient.patch(`/posts/${id}/status`, { status: newStatus })
 };
