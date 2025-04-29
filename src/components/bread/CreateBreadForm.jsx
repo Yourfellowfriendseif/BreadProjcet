@@ -4,7 +4,6 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix for default marker icons in Leaflet
 const iconRetinaUrl = new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href;
 const iconUrl = new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href;
 const shadowUrl = new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href;
@@ -60,36 +59,38 @@ export default function CreateBreadForm() {
   });
 
   const [error, setError] = useState("");
-  const [uploadingImages, setUploadingImages] = useState(false);
+  const [imageFiles, setImageFiles] = useState([]);
 
-  const handleImageUpload = async (e) => {
-    const files = e.target.files;
-    if (!files.length) return;
+  const handleImageChange = (e) => {
+    setImageFiles([...e.target.files]);
+  };
 
-    setUploadingImages(true);
+  const uploadImages = async () => {
+    const formData = new FormData();
+    imageFiles.forEach(file => formData.append('images', file));
+    
     try {
-      const formData = new FormData();
-      Array.from(files).forEach(file => formData.append('images', file));
-
       const response = await breadAPI.uploadImages(formData);
-      setFormData(prev => ({
-        ...prev,
-        imageIds: [...prev.imageIds, ...response.data.images.map(img => img._id)]
-      }));
+      return response.data.images.map(img => img.id);
     } catch (error) {
       setError("Failed to upload images");
-    } finally {
-      setUploadingImages(false);
+      throw error;
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      if (imageFiles.length > 0) {
+        const uploadedImageIds = await uploadImages();
+        formData.imageIds = uploadedImageIds;
+      }
+      
       await breadAPI.create(formData);
       alert("Bread post created successfully!");
     } catch (error) {
       setError(error.message || "Failed to create bread post");
+      console.error("Creation failed:", error);
     }
   };
 
@@ -109,9 +110,31 @@ export default function CreateBreadForm() {
       {error && <div className="text-red-500 mb-4">{error}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Post Type Dropdown (unchanged) */}
-        {/* Bread Condition Dropdown (renamed from bread_status to status) */}
-        
+        <div>
+          <label className="block text-sm font-medium mb-1">Post Type</label>
+          <select
+            value={formData.post_type}
+            onChange={(e) => setFormData({...formData, post_type: e.target.value})}
+            className="w-full p-2 border rounded"
+          >
+            <option value="sell">Selling</option>
+            <option value="request">Looking For</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Bread Condition</label>
+          <select
+            value={formData.status}
+            onChange={(e) => setFormData({...formData, status: e.target.value})}
+            className="w-full p-2 border rounded"
+          >
+            <option value="fresh">Fresh</option>
+            <option value="day_old">Day Old</option>
+            <option value="stale">Stale</option>
+          </select>
+        </div>
+
         <div>
           <label className="block text-sm font-medium mb-1">Category</label>
           <input
@@ -119,7 +142,7 @@ export default function CreateBreadForm() {
             value={formData.category}
             onChange={(e) => setFormData({...formData, category: e.target.value})}
             className="w-full p-2 border rounded"
-            required
+            placeholder="Bread category"
           />
         </div>
 
@@ -129,7 +152,18 @@ export default function CreateBreadForm() {
             value={formData.description}
             onChange={(e) => setFormData({...formData, description: e.target.value})}
             className="w-full p-2 border rounded"
-            required
+            placeholder="Describe your bread..."
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Quantity</label>
+          <input
+            type="number"
+            min="1"
+            value={formData.quantity}
+            onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}
+            className="w-full p-2 border rounded"
           />
         </div>
 
@@ -138,32 +172,30 @@ export default function CreateBreadForm() {
           <input
             type="file"
             multiple
-            onChange={handleImageUpload}
-            disabled={uploadingImages}
+            onChange={handleImageChange}
             className="w-full p-2 border rounded"
             accept="image/*"
           />
-          {uploadingImages && <p>Uploading images...</p>}
-          <div className="flex flex-wrap gap-2 mt-2">
-            {formData.imageIds.map(id => (
-              <div key={id} className="w-16 h-16 bg-gray-200 rounded">
-                <img 
-                  src={`${import.meta.env.VITE_API_BASE_URL}/api/upload/${id}`} 
-                  alt="Uploaded preview"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-          </div>
         </div>
 
-        {/* Quantity Input (unchanged) */}
-        {/* Location Picker (unchanged) */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Location</label>
+          <LocationPicker 
+            onLocationSelect={handleLocationSelect}
+            initialCoords={formData.location.coordinates}
+          />
+          <div className="mt-2 text-sm text-gray-600">
+            Selected coordinates: 
+            <span className="font-mono ml-2">
+              {formData.location.coordinates[1]?.toFixed(6)}, 
+              {formData.location.coordinates[0]?.toFixed(6)}
+            </span>
+          </div>
+        </div>
 
         <button
           type="submit"
           className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600"
-          disabled={uploadingImages}
         >
           Create Post
         </button>
