@@ -21,10 +21,8 @@ export const chatAPI = {
     return response.data;
   },
 
-  markAsRead: async (messageIds) => {
-    const response = await apiClient.put("/chat/mark-read", {
-      messageIds: Array.isArray(messageIds) ? messageIds : [messageIds],
-    });
+  markAsRead: async (messageId) => {
+    const response = await apiClient.put(`/chat/messages/${messageId}/read`);
     return response.data;
   },
 
@@ -39,7 +37,7 @@ export const chatAPI = {
   },
 
   getUnreadCount: async () => {
-    const response = await apiClient.get("/chat/unread/count");
+    const response = await apiClient.get("/chat/unread");
     return response.data;
   },
 };

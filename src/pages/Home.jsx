@@ -64,9 +64,10 @@ export default function Home() {
     try {
       setLoading(true);
       const response = await breadAPI.getNearbyPosts({
-        lat: location.lat,
-        lng: location.lng,
-        maxDistance: filters.maxDistance,
+        location: {
+          type: "Point",
+          coordinates: [location.lng, location.lat]
+        },
         ...filters
       });
       setPosts(response.data || []);
@@ -91,7 +92,7 @@ export default function Home() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Available Bread</h1>
         <Link
-          to="/posts/new"
+          to="/bread/new"
           className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
         >
           Create Post

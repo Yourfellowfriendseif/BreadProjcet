@@ -21,13 +21,9 @@ export const breadAPI = {
     return response.data;
   },
 
-  getNearbyPosts: async ({ lat, lng, maxDistance, ...filters }) => {
+  getNearbyPosts: async ({ location, ...filters }) => {
     const response = await apiClient.post("/posts/nearby", {
-      location: {
-        type: "Point",
-        coordinates: [lng, lat],
-      },
-      maxDistance,
+      location,
       ...filters,
     });
     return response.data;
@@ -63,12 +59,12 @@ export const breadAPI = {
   },
 
   reserve: async (postId) => {
-    const response = await apiClient.put(`/posts/${postId}/reserve`);
+    const response = await apiClient.put(`/posts/reserve/${postId}`);
     return response.data;
   },
 
   unreserve: async (postId) => {
-    const response = await apiClient.put(`/posts/${postId}/unreserve`);
+    const response = await apiClient.put(`/posts/unreserve/${postId}`);
     return response.data;
   },
 
@@ -78,12 +74,12 @@ export const breadAPI = {
   },
 
   delete: async (postId) => {
-    const response = await apiClient.delete(`/posts/${postId}`);
+    const response = await apiClient.delete(`/posts/delete/${postId}`);
     return response.data;
   },
 
   update: async (postId, updateData) => {
-    const response = await apiClient.put(`/posts/${postId}`, updateData);
+    const response = await apiClient.put(`/posts/update/${postId}`, updateData);
     return response.data;
   },
 };
