@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { getConversations } from '../../api/chatAPI';
+import { useState, useEffect } from 'react';
+import { chatAPI } from '../../api/chatAPI';
 import LoadingSpinner from '../LoadingSpinner';
 import { useApp } from '../../context/AppContext';
 
@@ -11,7 +11,7 @@ export default function ChatList({ onSelectChat, selectedUserId }) {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const data = await getConversations();
+        const data = await chatAPI.getRecentChats();
         setConversations(data);
       } catch (error) {
         console.error('Error fetching conversations:', error);

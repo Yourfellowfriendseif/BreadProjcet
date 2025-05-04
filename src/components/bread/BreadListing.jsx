@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { breadAPI } from "../../api/breadAPI";
-import BreadListing from "../BreadListing";
 
-export default function BreadList() {
+
+export default function BreadListing() {
   const [breads, setBreads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
