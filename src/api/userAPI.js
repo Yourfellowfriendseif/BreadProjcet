@@ -18,12 +18,12 @@ export const userAPI = {
   },
 
   getProfile: async () => {
-    const response = await apiClient.get("/user/profile");
+    const response = await apiClient.get("/user/me");
     return response.data;
   },
 
   getUserById: async (userId) => {
-    const response = await apiClient.get(`/user/${userId}`);
+    const response = await apiClient.get(`/user/me`); // Remove this or implement proper endpoint
     return response.data;
   },
 
