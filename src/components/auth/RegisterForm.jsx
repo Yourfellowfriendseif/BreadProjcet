@@ -1,228 +1,211 @@
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { userAPI } from '../../api/userAPI';
-import { Link } from 'react-router-dom';
-
-/**
- * @typedef {import('../../types/schema').User} User
- * @typedef {import('../../types/schema').ApiError} ApiError
- */
+import { useApp } from '../../context/AppContext';
+import { breadAPI } from '../../api/breadAPI';
+import ImageUpload from '../common/ImageUpload';
 
 export default function RegisterForm() {
-  /** @type {[{
-   *   username: string,
-   *   email: string,
-   *   password: string,
-   *   confirmPassword: string,
-   *   phone_number: string,
-   *   photo_url: string
-   * }, function]} */
+  const navigate = useNavigate();
+  const { setUser } = useApp();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     confirmPassword: '',
     phone_number: '',
-    photo_url: ''
   });
+  const [photo, setPhoto] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  /** @type {[{
-   *   username: string,
-   *   email: string,
-   *   password: string,
-   *   confirmPassword: string,
-   *   general: string
-   * }, function]} */
-  const [errors, setErrors] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    general: ''
-  });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-  const [showPassword, setShowPassword] = useState(false);
+  const handleImageSelected = (images) => {
+    if (images && images.length > 0) {
+      setPhoto(images[0]);
+    }
+  };
 
-  /**
-   * Handles form submission
-   * @param {React.FormEvent} e 
-   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Client-side validation
     if (formData.password !== formData.confirmPassword) {
-      setErrors({
-        ...errors,
-        confirmPassword: 'Passwords do not match',
-        password: 'Passwords do not match'
-      });
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setErrors({
-        ...errors,
-        password: 'Password must be at least 8 characters'
-      });
+      setError('Passwords do not match');
       return;
     }
 
     try {
-      // Only send necessary fields to the API
-      const { confirmPassword, ...registrationData } = formData;
-      const { token } = await userAPI.register(registrationData);
-      
-      localStorage.setItem('token', token);
-      window.location.href = '/';
-    } catch (error) {
-      /** @type {ApiError} */
-      const apiError = error;
-      
-      if (apiError.conflictField === 'username') {
-        setErrors({...errors, username: apiError.message});
-      } else if (apiError.conflictField === 'email') {
-        setErrors({...errors, email: apiError.message});
-      } else if (apiError.errors) {
-        const newErrors = {
-          username: '', 
-          email: '', 
-          password: '',
-          confirmPassword: '',
-          general: ''
-        };
-        apiError.errors.forEach(err => {
-          if (err.field === 'username') newErrors.username = err.message;
-          if (err.field === 'email') newErrors.email = err.message;
-          if (err.field === 'password') newErrors.password = err.message;
-        });
-        setErrors(newErrors);
-      } else {
-        setErrors({...errors, general: apiError.message});
+      setLoading(true);
+      setError(null);
+
+      // Upload photo if provided
+      let photo_url = '';
+      if (photo) {
+        const uploadResponse = await breadAPI.uploadImage(photo);
+        photo_url = uploadResponse.data.image;
       }
+
+      // Register user
+      const response = await userAPI.register({
+        ...formData,
+        photo_url
+      });
+
+      // Store token
+      localStorage.setItem('token', response.token);
+      
+      // Set user in context
+      setUser(response.user);
+      
+      // Navigate to home
+      navigate('/');
+    } catch (err) {
+      if (err.status === 409) {
+        setError(err.conflictField === 'email' 
+          ? 'Email already exists' 
+          : 'Username already exists');
+      } else {
+        setError(err.message || 'Failed to register');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6">Register</h2>
-      {errors.general && (
-        <div className="text-red-500 mb-4">{errors.general}</div>
-      )}
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
         <div>
-          <label className="block text-sm font-medium mb-1">Username</label>
-          <input
-            type="text"
-            value={formData.username}
-            onChange={(e) => setFormData({...formData, username: e.target.value})}
-            className={`w-full p-2 border rounded ${errors.username ? 'border-red-500' : ''}`}
-            required
-          />
-          {errors.username && (
-            <p className="text-red-500 text-sm">{errors.username}</p>
-          )}
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Create your account
+          </h2>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Email</label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({...formData, email: e.target.value})}
-            className={`w-full p-2 border rounded ${errors.email ? 'border-red-500' : ''}`}
-            required
-          />
-          {errors.email && (
-            <p className="text-red-500 text-sm">{errors.email}</p>
+        
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-400 p-4">
+              <p className="text-red-700">{error}</p>
+            </div>
           )}
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Password</label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-              className={`w-full p-2 border rounded ${errors.password ? 'border-red-500' : ''}`}
-              required
-              minLength="8"
-            />
+          <div className="rounded-md shadow-sm space-y-4">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                Username
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                value={formData.username}
+                onChange={handleChange}
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Username"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">
+                Phone Number
+              </label>
+              <input
+                id="phone_number"
+                name="phone_number"
+                type="tel"
+                value={formData.phone_number}
+                onChange={handleChange}
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Phone number (optional)"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                Confirm Password
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                required
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Confirm password"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Profile Photo
+              </label>
+              <ImageUpload 
+                onImagesSelected={handleImageSelected}
+                maxImages={1}
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <div>
             <button
-              type="button"
-              className="absolute right-2 top-2 text-gray-500"
-              onClick={() => setShowPassword(!showPassword)}
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {showPassword ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
-                  <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
-                </svg>
-              )} show
+              {loading ? 'Creating account...' : 'Sign up'}
             </button>
           </div>
-          {errors.password && (
-            <p className="text-red-500 text-sm">{errors.password}</p>
-          )}
-          <p className="text-xs text-gray-500 mt-1">
-            Password must be at least 8 characters
-          </p>
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Confirm Password</label>
-          <input
-            type={showPassword ? "text" : "password"}
-            value={formData.confirmPassword}
-            onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-            className={`w-full p-2 border rounded ${errors.confirmPassword ? 'border-red-500' : ''}`}
-            required
-          />
-          {errors.confirmPassword && (
-            <p className="text-red-500 text-sm">{errors.confirmPassword}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Phone Number</label>
-          <input
-            type="tel"
-            value={formData.phone_number}
-            onChange={(e) => setFormData({...formData, phone_number: e.target.value})}
-            className="w-full p-2 border rounded"
-            pattern="[0-9]{10}"
-            placeholder="1234567890"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Profile Photo URL</label>
-          <input
-            type="url"
-            value={formData.photo_url}
-            onChange={(e) => setFormData({...formData, photo_url: e.target.value})}
-            className="w-full p-2 border rounded"
-            placeholder="https://example.com/profile.jpg"
-          />
-        </div>
-
-        <button 
-          type="submit" 
-          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors"
-        >
-          Register
-        </button>
-      </form>
-
-      <div className="mt-4 text-center">
-        Already have an account?{' '}
-        <Link to="/login" className="text-blue-500 hover:underline">Login</Link>
+          <div className="text-sm text-center">
+            <Link
+              to="/login"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              Already have an account? Sign in
+            </Link>
+          </div>
+        </form>
       </div>
     </div>
   );

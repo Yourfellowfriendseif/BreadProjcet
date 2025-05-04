@@ -9,7 +9,7 @@ import axios from "axios";
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 5000,
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -17,19 +17,25 @@ export const apiClient = axios.create({
 });
 
 // Add JWT interceptor
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
 // Enhanced error handling
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (!error.response) {
+      console.error("Network error - no response received");
       return Promise.reject(
         /** @type {ApiError} */ ({
           message: "Network Error - Please check your connection",
@@ -53,27 +59,37 @@ apiClient.interceptors.response.use(
         apiError.message = data?.message || "Invalid request data";
         break;
       case 401:
+        localStorage.removeItem("token");
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
         apiError.message =
           data?.message || "Session expired - Please login again";
         break;
       case 403:
+        console.error("Permission denied");
         apiError.message =
           data?.message || "You are not authorized for this action";
         break;
       case 404:
+        console.error("Resource not found");
         apiError.message = data?.message || "Resource not found";
         break;
       case 409:
+        console.error("Conflict detected");
         apiError.message = data?.message || "Conflict detected";
         apiError.conflictField = data?.field;
         break;
       case 422:
+        console.error("Validation error:", data?.errors);
         apiError.message = "Validation failed";
         break;
       case 500:
         apiError.message =
           data?.message || "Server error - Please try again later";
         break;
+      default:
+        console.error("API error:", data);
     }
 
     return Promise.reject(apiError);

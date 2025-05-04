@@ -1,147 +1,120 @@
-import { useState } from "react";
-import { userAPI } from "../../api/userAPI";
-import { useNavigate, Link } from "react-router-dom";
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { userAPI } from '../../api/userAPI';
+import { useApp } from '../../context/AppContext';
+import { socketService } from '../../api/socketService';
 
-export default function LoginForm({ onLogin }) {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-  const [error, setError] = useState("");
+export default function LoginForm() {
   const navigate = useNavigate();
+  const { setUser } = useApp();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { token, user } = await userAPI.login(
-        formData.email,
-        formData.password
-      );
-      if (token && user) {
-        localStorage.setItem("token", token);
-        onLogin(user);
-        navigate("/");
-      } else {
-        setError("Invalid response from server");
-      }
+      setLoading(true);
+      setError(null);
+      const response = await userAPI.login(formData.email, formData.password);
+      
+      // Store token
+      localStorage.setItem('token', response.token);
+      
+      // Set user in context
+      setUser(response.user);
+      
+      // Connect socket
+      socketService.connect(response.token);
+      
+      // Redirect to home
+      navigate('/');
     } catch (err) {
-      setError(err.message || "Invalid email or password");
+      setError(err.message || 'Failed to login');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
           </h2>
         </div>
-
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-            <div className="flex">
-              <div className="text-red-700">
-                <p>{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
+        
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm space-y-4">
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-400 p-4">
+              <p className="text-red-700">{error}</p>
+            </div>
+          )}
+
+          <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="email" className="sr-only">
                 Email address
               </label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="you@example.com"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
+                onChange={handleChange}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
               />
             </div>
-
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="password" className="sr-only">
                 Password
               </label>
               <input
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="current-password"
                 required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="••••••••"
                 value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
+                onChange={handleChange}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
               />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="remember-me"
-                className="ml-2 block text-sm text-gray-900"
-              >
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <a
-                href="#"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                Forgot your password?
-              </a>
             </div>
           </div>
 
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              Sign in
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
-        </form>
 
-        <div className="text-center mt-4">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{" "}
+          <div className="text-sm text-center">
             <Link
               to="/register"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
+              className="font-medium text-blue-600 hover:text-blue-500"
             >
-              Register here
+              Don't have an account? Sign up
             </Link>
-          </p>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   );

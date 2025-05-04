@@ -1,100 +1,89 @@
 import { apiClient } from "./apiClient";
 
 export const breadAPI = {
-  // Image Upload Endpoints
-  uploadImage: (file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    return apiClient.post('/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
+  create: async (postData) => {
+    const response = await apiClient.post("/posts/create", postData);
+    return response.data;
   },
 
-  uploadMultipleImages: (files) => {
-    const formData = new FormData();
-    files.forEach(file => formData.append('images', file));
-    return apiClient.post('/upload/multiple', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
+  getAll: async (filters = {}) => {
+    const response = await apiClient.get("/posts/all", { params: filters });
+    return response.data;
   },
 
-  deleteImage: (filename) => apiClient.delete(`/upload/${filename}`),
+  getById: async (id) => {
+    const response = await apiClient.get(`/posts/${id}`);
+    return response.data;
+  },
 
-  // Bread Posts Endpoints
-  create: (breadData) => {
-    return apiClient.post('/posts/create', {
-      post_type: breadData.post_type || 'sell',
-      status: breadData.status || 'fresh',
-      category: breadData.category || 'bread',
-      description: breadData.description || '',
-      quantity: breadData.quantity || 1,
+  getByUser: async (userId) => {
+    const response = await apiClient.get(`/posts/user/${userId}`);
+    return response.data;
+  },
+
+  getNearbyPosts: async ({ lat, lng, maxDistance, ...filters }) => {
+    const response = await apiClient.post("/posts/nearby", {
       location: {
-        type: 'Point',
-        coordinates: breadData.location?.coordinates || [0, 0]
+        type: "Point",
+        coordinates: [lng, lat],
       },
-      imageIds: breadData.imageIds || []
+      maxDistance,
+      ...filters,
     });
+    return response.data;
   },
 
-  getAll: async () => {
-    try {
-      console.log("Calling /posts/all endpoint...");
-      const response = await apiClient.get("/posts/all");
-      console.log("Response from /posts/all:", response);
-      return response;
-    } catch (error) {
-      console.error("Error in breadAPI.getAll:", error);
-      throw error;
-    }
+  search: async (params) => {
+    const response = await apiClient.get("/posts/search", { params });
+    return response.data;
   },
 
-  getById: (id) => apiClient.get(`/posts/${id}`),
-
-  update: (id, breadData) => apiClient.put(`/posts/update/${id}`, breadData),
-
-  delete: (id) => apiClient.delete(`/posts/delete/${id}`),
-
-  // Location-based Endpoints
-  getNearby: (lat, lng, radius) => 
-    apiClient.post('/posts/nearby', {
-      location: {
-        type: 'Point',
-        coordinates: [lng, lat]
+  uploadImage: async (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    const response = await apiClient.post("/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
       },
-      maxDistance: radius
-    }),
-
-  // Reservation Endpoints
-  reserve: (id) => apiClient.put(`/posts/reserve/${id}`),
-  
-  unreserve: (id) => apiClient.put(`/posts/unreserve/${id}`),
-
-  getReserved: () => apiClient.get('/posts/reserved'),
-
-  // User Posts
-  getUserPosts: () => apiClient.get('/posts/user'),
-
-  getPostsByUser: (userId) => apiClient.get(`/posts/user/${userId}`),
-
-  // Search Endpoint
-  search: (query, filters = {}) => {
-    const params = new URLSearchParams({ q: query });
-    if (filters.category) params.append('category', filters.category);
-    if (filters.status) params.append('status', filters.status);
-    if (filters.post_type) params.append('post_type', filters.post_type);
-    if (filters.lat && filters.lng) {
-      params.append('lat', filters.lat);
-      params.append('lng', filters.lng);
-    }
-    if (filters.radius) params.append('radius', filters.radius);
-    return apiClient.get(`/posts/search?${params.toString()}`);
+    });
+    return response.data;
   },
 
-  // Status Updates
-  updateStatus: (id, newStatus) => 
-    apiClient.patch(`/posts/${id}/status`, { status: newStatus })
+  uploadImages: async (files) => {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("images", file);
+    });
+    const response = await apiClient.post("/upload/multiple", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+
+  reserve: async (postId) => {
+    const response = await apiClient.put(`/posts/${postId}/reserve`);
+    return response.data;
+  },
+
+  unreserve: async (postId) => {
+    const response = await apiClient.put(`/posts/${postId}/unreserve`);
+    return response.data;
+  },
+
+  getReservedPosts: async () => {
+    const response = await apiClient.get("/posts/reserved");
+    return response.data;
+  },
+
+  delete: async (postId) => {
+    const response = await apiClient.delete(`/posts/${postId}`);
+    return response.data;
+  },
+
+  update: async (postId, updateData) => {
+    const response = await apiClient.put(`/posts/${postId}`, updateData);
+    return response.data;
+  },
 };

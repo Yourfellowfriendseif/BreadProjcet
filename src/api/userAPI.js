@@ -1,27 +1,42 @@
 import { apiClient } from "./apiClient";
 
 export const userAPI = {
-  // Authentication
   login: async (email, password) => {
     const response = await apiClient.post("/auth/login", { email, password });
-    // Extract data from the nested structure
-    return response.data; // This will contain { token, user }
+    return response.data;
   },
 
-  register: (userData) =>
-    apiClient.post("/auth/register", {
-      username: userData.username,
-      email: userData.email,
-      password: userData.password,
-      phone_number: userData.phone_number || "", // Default empty if not provided
-      photo_url: userData.photo_url || "https://example.com/default-avatar.jpg", // Default image
-    }),
+  register: async (userData) => {
+    const response = await apiClient.post("/auth/register", userData);
+    return response.data;
+  },
 
-  logout: () => apiClient.post("/auth/logout"),
+  logout: async () => {
+    const response = await apiClient.post("/auth/logout");
+    localStorage.removeItem("token");
+    return response.data;
+  },
 
-  // User Management
-  getProfile: () => apiClient.get("/user/me"),
+  getProfile: async () => {
+    const response = await apiClient.get("/user/profile");
+    return response.data;
+  },
 
-  // New method for error testing
-  testError: () => apiClient.get("/auth/test-error"),
+  getUserById: async (userId) => {
+    const response = await apiClient.get(`/user/${userId}`);
+    return response.data;
+  },
+
+  updateProfile: async (userData) => {
+    const response = await apiClient.put("/user/profile", userData);
+    return response.data;
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    const response = await apiClient.put("/user/password", {
+      currentPassword,
+      newPassword,
+    });
+    return response.data;
+  },
 };
