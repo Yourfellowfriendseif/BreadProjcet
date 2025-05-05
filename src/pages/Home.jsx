@@ -65,8 +65,10 @@ export default function Home() {
       setLoading(true);
       const response = await breadAPI.getNearbyPosts({
         location: {
-          type: "Point",
-          coordinates: [location.lng, location.lat]
+          gps: {
+            latitude: location.lat,
+            longitude: location.lng
+          }
         },
         ...filters
       });

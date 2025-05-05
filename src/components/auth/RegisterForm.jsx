@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { userAPI } from '../../api/userAPI';
 import { useApp } from '../../context/AppContext';
@@ -18,6 +18,121 @@ export default function RegisterForm() {
   const [photo, setPhoto] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [validations, setValidations] = useState({
+    username: { isValid: true, message: '' },
+    email: { isValid: true, message: '' },
+    password: { isValid: true, message: '' },
+    confirmPassword: { isValid: true, message: '' }
+  });
+
+  const isFormValid = () => {
+    return (
+      formData.username &&
+      formData.email &&
+      formData.password &&
+      formData.confirmPassword &&
+      formData.password === formData.confirmPassword &&
+      validations.username.isValid &&
+      validations.email.isValid
+    );
+  };
+
+  const isValidEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  useEffect(() => {
+    const checkAvailability = async () => {
+      try {
+        if (formData.username.length >= 3) {
+          const response = await userAPI.register({ username: formData.username });
+          setValidations(prev => ({
+            ...prev,
+            username: {
+              isValid: true,
+              message: ''
+            }
+          }));
+        }
+      } catch (err) {
+        if (err.status === 409) {
+          setValidations(prev => ({
+            ...prev,
+            username: {
+              isValid: false,
+              message: 'Username already exists'
+            }
+          }));
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      if (formData.username) {
+        checkAvailability();
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.username]);
+
+  useEffect(() => {
+    const checkEmailAvailability = async () => {
+      try {
+        if (isValidEmail(formData.email)) {
+          const response = await userAPI.register({ email: formData.email });
+          setValidations(prev => ({
+            ...prev,
+            email: {
+              isValid: true,
+              message: ''
+            }
+          }));
+        }
+      } catch (err) {
+        if (err.status === 409) {
+          setValidations(prev => ({
+            ...prev,
+            email: {
+              isValid: false,
+              message: 'Email already exists'
+            }
+          }));
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      if (formData.email) {
+        if (!isValidEmail(formData.email)) {
+          setValidations(prev => ({
+            ...prev,
+            email: {
+              isValid: false,
+              message: 'Invalid email format'
+            }
+          }));
+        } else {
+          checkEmailAvailability();
+        }
+      }
+    }, 50000);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData.email]);
+
+  useEffect(() => {
+    if (formData.password && formData.confirmPassword) {
+      setValidations(prev => ({
+        ...prev,
+        confirmPassword: {
+          isValid: formData.password === formData.confirmPassword,
+          message: formData.password === formData.confirmPassword ? '' : 'Passwords do not match'
+        }
+      }));
+    }
+  }, [formData.password, formData.confirmPassword]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,8 +151,8 @@ export default function RegisterForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+    if (!isFormValid()) {
+      setError('Please fill in all required fields correctly');
       return;
     }
 
@@ -45,35 +160,24 @@ export default function RegisterForm() {
       setLoading(true);
       setError(null);
 
-      // Upload photo if provided
       let photo_url = '';
       if (photo) {
         const uploadResponse = await breadAPI.uploadImage(photo);
         photo_url = uploadResponse.data.image;
       }
 
-      // Register user
-      const response = await userAPI.register({
+      await userAPI.register({
         ...formData,
         photo_url
       });
 
-      // Store token
-      localStorage.setItem('token', response.token);
+      // Show success message and redirect to login page
+      setError(null);
+      alert('Registration successful! Please login with your credentials.');
+      navigate('/login');
       
-      // Set user in context
-      setUser(response.user);
-      
-      // Navigate to home
-      navigate('/');
     } catch (err) {
-      if (err.status === 409) {
-        setError(err.conflictField === 'email' 
-          ? 'Email already exists' 
-          : 'Username already exists');
-      } else {
-        setError(err.message || 'Failed to register');
-      }
+      setError(err.message || 'Failed to register');
     } finally {
       setLoading(false);
     }
@@ -98,7 +202,7 @@ export default function RegisterForm() {
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
+                Username <span className="text-red-500">*</span>
               </label>
               <input
                 id="username"
@@ -107,14 +211,19 @@ export default function RegisterForm() {
                 required
                 value={formData.username}
                 onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className={`appearance-none relative block w-full px-3 py-2 border ${
+                  !validations.username.isValid ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Username"
               />
+              {!validations.username.isValid && (
+                <p className="mt-1 text-sm text-red-600">{validations.username.message}</p>
+              )}
             </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
+                Email <span className="text-red-500">*</span>
               </label>
               <input
                 id="email"
@@ -123,9 +232,14 @@ export default function RegisterForm() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className={`appearance-none relative block w-full px-3 py-2 border ${
+                  !validations.email.isValid ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Email address"
               />
+              {!validations.email.isValid && (
+                <p className="mt-1 text-sm text-red-600">{validations.email.message}</p>
+              )}
             </div>
 
             <div>
@@ -145,7 +259,7 @@ export default function RegisterForm() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
+                Password <span className="text-red-500">*</span>
               </label>
               <input
                 id="password"
@@ -161,7 +275,7 @@ export default function RegisterForm() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
+                Confirm Password <span className="text-red-500">*</span>
               </label>
               <input
                 id="confirmPassword"
@@ -170,28 +284,35 @@ export default function RegisterForm() {
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className={`appearance-none relative block w-full px-3 py-2 border ${
+                  !validations.confirmPassword.isValid ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                 placeholder="Confirm password"
               />
+              {!validations.confirmPassword.isValid && (
+                <p className="mt-1 text-sm text-red-600">{validations.confirmPassword.message}</p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Profile Photo
               </label>
-              <ImageUpload 
-                onImagesSelected={handleImageSelected}
-                maxImages={1}
-                className="mt-1"
-              />
+              <div className="mt-1 w-32 h-32 mx-auto">
+                <ImageUpload 
+                  onImagesSelected={handleImageSelected}
+                  maxImages={1}
+                  className="h-full w-full object-cover"
+                />
+              </div>
             </div>
           </div>
 
           <div>
             <button
               type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              disabled={loading || !isFormValid()}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating account...' : 'Sign up'}
             </button>
