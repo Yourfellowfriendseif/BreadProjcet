@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
-import { breadAPI } from '../api/breadAPI';
-import BreadListing from '../components/bread/BreadListing';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useApp } from "../context/AppContext";
+import { breadAPI } from "../api/breadAPI";
+import BreadListing from "../components/bread/BreadListing";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function Home() {
   const { user } = useApp();
@@ -12,9 +12,9 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [filters, setFilters] = useState({
-    status: '',
-    post_type: '',
-    maxDistance: 10000
+    status: "",
+    post_type: "",
+    maxDistance: 10000,
   });
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function Home() {
         (position) => {
           const location = {
             lat: position.coords.latitude,
-            lng: position.coords.longitude
+            lng: position.coords.longitude,
           };
           setUserLocation(location);
           loadNearbyPosts(location);
@@ -53,8 +53,8 @@ export default function Home() {
       const response = await breadAPI.getAll(filters);
       setPosts(response.data || []);
     } catch (error) {
-      setError('Failed to load posts');
-      console.error('Error loading posts:', error);
+      setError("Failed to load posts");
+      console.error("Error loading posts:", error);
     } finally {
       setLoading(false);
     }
@@ -64,15 +64,17 @@ export default function Home() {
     try {
       setLoading(true);
       const response = await breadAPI.getNearbyPosts({
-        lat: location.lat,
-        lng: location.lng,
-        maxDistance: filters.maxDistance,
-        ...filters
+        gps: {
+          lat: location.lat,
+          lng: location.lng,
+          maxDistance: filters.maxDistance,
+          ...filters,
+        },
       });
       setPosts(response.data || []);
     } catch (error) {
-      setError('Failed to load nearby posts');
-      console.error('Error loading nearby posts:', error);
+      setError("Failed to load nearby posts");
+      console.error("Error loading nearby posts:", error);
     } finally {
       setLoading(false);
     }
@@ -101,7 +103,9 @@ export default function Home() {
       <div className="mb-6 flex flex-wrap gap-4">
         <select
           value={filters.status}
-          onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, status: e.target.value }))
+          }
           className="px-4 py-2 border rounded-lg"
         >
           <option value="">All Status</option>
@@ -112,7 +116,9 @@ export default function Home() {
 
         <select
           value={filters.post_type}
-          onChange={(e) => setFilters(prev => ({ ...prev, post_type: e.target.value }))}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, post_type: e.target.value }))
+          }
           className="px-4 py-2 border rounded-lg"
         >
           <option value="">All Types</option>
@@ -123,7 +129,12 @@ export default function Home() {
         {userLocation && (
           <select
             value={filters.maxDistance}
-            onChange={(e) => setFilters(prev => ({ ...prev, maxDistance: Number(e.target.value) }))}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                maxDistance: Number(e.target.value),
+              }))
+            }
             className="px-4 py-2 border rounded-lg"
           >
             <option value="5000">Within 5km</option>
@@ -147,7 +158,9 @@ export default function Home() {
       ) : posts.length === 0 ? (
         <div className="text-center text-gray-500">
           <p className="text-xl">No posts found</p>
-          <p className="mt-2">Try adjusting your filters or create a new post</p>
+          <p className="mt-2">
+            Try adjusting your filters or create a new post
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -21,15 +21,35 @@ export const breadAPI = {
     return response.data;
   },
 
-  getNearbyPosts: async ({ lat, lng, maxDistance, ...filters }) => {
-    const response = await apiClient.post("/posts/nearby", {
-      location: {
-        type: "Point",
-        coordinates: [lng, lat],
-      },
-      maxDistance,
-      ...filters,
+  getNearbyPosts: async ({ gps, ...otherFilters }) => {
+    const requestBody = {
+      location: {},
+    };
+
+    // Add GPS coordinates if provided
+    if (gps?.lat !== undefined && gps?.lng !== undefined) {
+      requestBody.location.gps = {
+        lat: gps.lat,
+        lng: gps.lng,
+      };
+    }
+
+    // Add state if provided
+    if (otherFilters.state) {
+      requestBody.location.state = otherFilters.state;
+    }
+
+    // Add any remaining filters to the root of the request
+    Object.keys(otherFilters).forEach((key) => {
+      if (key !== "state") {
+        requestBody[key] = otherFilters[key];
+      }
     });
+
+    // Log the request body before sending
+    console.log("getNearbyPosts request body:", requestBody);
+
+    const response = await apiClient.post("/posts/nearby", requestBody);
     return response.data;
   },
 
