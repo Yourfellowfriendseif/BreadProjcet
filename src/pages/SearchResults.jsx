@@ -1,29 +1,44 @@
 // src/pages/SearchResults.jsx
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { breadAPI } from '../api/breadAPI';
+import { userAPI } from '../api/userAPI';
 import BreadListing from '../components/bread/BreadListing';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function SearchResults() {
-  const location = useLocation();
-  const [results, setResults] = useState([]);
+  const [searchParams] = useSearchParams();
+  const [results, setResults] = useState({
+    posts: [],
+    users: []
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('posts');
+
+  const query = searchParams.get('q') || '';
+  const type = searchParams.get('type') || 'all';
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    loadResults(Object.fromEntries(searchParams));
-  }, [location.search]);
+    performSearch();
+  }, [query, type]);
 
-  const loadResults = async (params) => {
+  const performSearch = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await breadAPI.search(params);
-      setResults(response.data);
-    } catch (error) {
-      setError(error.message || 'Failed to load search results');
+
+      const [postsResponse, usersResponse] = await Promise.all([
+        type !== 'users' ? breadAPI.searchPosts({ query }) : Promise.resolve([]),
+        type !== 'posts' ? userAPI.searchUsers(query) : Promise.resolve([])
+      ]);
+
+      setResults({
+        posts: postsResponse || [],
+        users: usersResponse || []
+      });
+    } catch (err) {
+      setError(err.message || 'Search failed');
     } finally {
       setLoading(false);
     }
@@ -37,42 +52,81 @@ export default function SearchResults() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-500">{error}</p>
-      </div>
-    );
-  }
-
-  if (results.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <h2 className="text-2xl font-bold text-gray-700">No Results Found</h2>
-        <p className="mt-2 text-gray-500">
-          Try adjusting your search filters or search terms
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h2 className="text-2xl font-bold text-gray-700 mb-6">
-        Search Results ({results.length})
-      </h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {results.map((post) => (
-          <BreadListing
-            key={post._id}
-            post={post}
-            onUpdate={() => loadResults(
-              Object.fromEntries(new URLSearchParams(location.search))
-            )}
-          />
-        ))}
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">
+        Search Results for "{query}"
+      </h1>
+
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
+
+      <div className="flex border-b mb-6">
+        <button
+          className={`px-4 py-2 ${
+            activeTab === 'posts'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => setActiveTab('posts')}
+        >
+          Posts ({results.posts.length})
+        </button>
+        <button
+          className={`px-4 py-2 ${
+            activeTab === 'users'
+              ? 'border-b-2 border-blue-500 text-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => setActiveTab('users')}
+        >
+          Users ({results.users.length})
+        </button>
       </div>
+
+      {activeTab === 'posts' ? (
+        results.posts.length === 0 ? (
+          <p className="text-center text-gray-500">No posts found</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {results.posts.map((post) => (
+              <BreadListing
+                key={post._id}
+                post={post}
+                onUpdate={performSearch}
+              />
+            ))}
+          </div>
+        )
+      ) : (
+        results.users.length === 0 ? (
+          <p className="text-center text-gray-500">No users found</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {results.users.map((user) => (
+              <div
+                key={user._id}
+                className="flex items-center p-4 border rounded-lg hover:shadow-md transition-shadow"
+              >
+                <img
+                  src={user.avatar || '/default-avatar.png'}
+                  alt={user.username}
+                  className="w-12 h-12 rounded-full mr-4"
+                />
+                <div>
+                  <h3 className="font-medium">{user.username}</h3>
+                  {user.phone && (
+                    <p className="text-sm text-gray-500">{user.phone}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      )}
     </div>
   );
 }

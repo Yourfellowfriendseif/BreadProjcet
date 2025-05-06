@@ -13,8 +13,8 @@ export default function Home() {
   const [userLocation, setUserLocation] = useState(null);
   const [filters, setFilters] = useState({
     status: '',
-    post_type: '',
-    maxDistance: 10000
+    type: '', // Changed from post_type to match backend
+    radius: 10000 // Changed from maxDistance to match backend
   });
 
   useEffect(() => {
@@ -22,70 +22,47 @@ export default function Home() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const location = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
+          const location = [position.coords.longitude, position.coords.latitude]; // Changed to match backend [lng, lat] format
           setUserLocation(location);
-          loadNearbyPosts(location);
+          loadPosts(location);
         },
         () => {
           // Fallback to loading all posts if location is not available
-          loadAllPosts();
+          loadPosts();
         }
       );
     } else {
-      loadAllPosts();
+      loadPosts();
     }
   }, []);
 
   useEffect(() => {
-    if (userLocation) {
-      loadNearbyPosts(userLocation);
-    } else {
-      loadAllPosts();
-    }
+    loadPosts(userLocation);
   }, [filters]);
 
-  const loadAllPosts = async () => {
+  const loadPosts = async (location = null) => {
     try {
       setLoading(true);
-      const response = await breadAPI.getAll(filters);
-      setPosts(response.data || []);
+      setError(null);
+      
+      const searchFilters = { ...filters };
+      if (location) {
+        searchFilters.location = location;
+        searchFilters.radius = filters.radius;
+      }
+
+      // Remove empty filters
+      Object.keys(searchFilters).forEach(key => 
+        !searchFilters[key] && delete searchFilters[key]
+      );
+
+      const response = await breadAPI.searchPosts(searchFilters);
+      setPosts(response || []);
     } catch (error) {
-      setError('Failed to load posts');
+      setError(error.message || 'Failed to load posts');
       console.error('Error loading posts:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadNearbyPosts = async (location) => {
-    try {
-      setLoading(true);
-      const response = await breadAPI.getNearbyPosts({
-        location: {
-          gps: {
-            latitude: location.lat,
-            longitude: location.lng
-          }
-        },
-        ...filters
-      });
-      setPosts(response.data || []);
-    } catch (error) {
-      setError('Failed to load nearby posts');
-      console.error('Error loading nearby posts:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePostUpdate = () => {
-    if (userLocation) {
-      loadNearbyPosts(userLocation);
-    } else {
-      loadAllPosts();
     }
   };
 
@@ -114,19 +91,19 @@ export default function Home() {
         </select>
 
         <select
-          value={filters.post_type}
-          onChange={(e) => setFilters(prev => ({ ...prev, post_type: e.target.value }))}
+          value={filters.type}
+          onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
           className="px-4 py-2 border rounded-lg"
         >
           <option value="">All Types</option>
-          <option value="sell">For Sale</option>
+          <option value="offer">Offers</option>
           <option value="request">Requests</option>
         </select>
 
         {userLocation && (
           <select
-            value={filters.maxDistance}
-            onChange={(e) => setFilters(prev => ({ ...prev, maxDistance: Number(e.target.value) }))}
+            value={filters.radius}
+            onChange={(e) => setFilters(prev => ({ ...prev, radius: Number(e.target.value) }))}
             className="px-4 py-2 border rounded-lg"
           >
             <option value="5000">Within 5km</option>
@@ -158,7 +135,7 @@ export default function Home() {
             <BreadListing
               key={post._id}
               post={post}
-              onUpdate={handlePostUpdate}
+              onUpdate={() => loadPosts(userLocation)}
             />
           ))}
         </div>

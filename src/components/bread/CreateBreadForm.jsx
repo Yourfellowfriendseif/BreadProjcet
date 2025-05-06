@@ -39,7 +39,8 @@ export default function CreateBreadForm() {
       let imageIds = [];
       if (images.length > 0) {
         const uploadResponse = await breadAPI.uploadImages(images);
-        imageIds = uploadResponse.data.images;
+        // The response structure includes data.images array containing the saved image objects
+        imageIds = uploadResponse.data.images.map(img => img._id);
       }
 
       // Create the post
@@ -159,7 +160,7 @@ export default function CreateBreadForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Images
           </label>
           <ImageUpload onImagesSelected={handleImagesSelected} maxImages={4} />

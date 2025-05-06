@@ -8,15 +8,11 @@ import axios from "axios";
  */
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
+  baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`,
+  withCredentials: true,
 });
 
-// Add JWT interceptor
+// Request interceptor for adding auth token
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -30,92 +26,72 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Enhanced error handling
+// Response interceptor for handling common errors
 apiClient.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    // If the response has a data.data structure, return just the data
+    if (response.data?.data) {
+      return response.data.data;
+    }
+    return response;
+  },
   (error) => {
+    // Network error
     if (!error.response) {
-      console.error("Network error - no response received");
-      return Promise.reject(
-        /** @type {ApiError} */ ({
-          message: "Network Error - Please check your connection",
-          isNetworkError: true,
-        })
-      );
+      return Promise.reject({
+        message: "Network error - please check your internet connection",
+        isNetworkError: true,
+      });
     }
 
-    const { status, data } = error.response;
-
-    /** @type {ApiError} */
-    const apiError = {
-      message: data?.message || `Request failed with status ${status}`,
-      status,
-      errors: data?.errors,
-      conflictField: data?.field,
-    };
-
-    switch (status) {
-      case 400:
-        apiError.message = data?.message || "Invalid request data";
-        break;
+    // Handle specific error cases
+    switch (error.response.status) {
       case 401:
+        // Clear token if it's invalid or expired
         localStorage.removeItem("token");
         if (window.location.pathname !== "/login") {
           window.location.href = "/login";
         }
-        apiError.message =
-          data?.message || "Session expired - Please login again";
         break;
-      case 403:
-        console.error("Permission denied");
-        apiError.message =
-          data?.message || "You are not authorized for this action";
-        break;
-      case 404:
-        console.error("Resource not found");
-        apiError.message = data?.message || "Resource not found";
-        break;
+
       case 409:
-        console.error("Conflict detected");
-        apiError.message = data?.message || "Conflict detected";
-        apiError.conflictField = data?.field;
-        break;
-      case 422:
-        console.error("Validation error:", data?.errors);
-        apiError.message = "Validation failed";
-        break;
-      case 500:
-        apiError.message =
-          data?.message || "Server error - Please try again later";
-        break;
-      default:
-        console.error("API error:", data);
+        // Handle conflict errors (e.g., duplicate email/username)
+        const conflictField = error.response.data.field || "unknown";
+        return Promise.reject({
+          message: error.response.data.message || "A conflict occurred",
+          conflictField,
+        });
+
+      case 413:
+        return Promise.reject({
+          message: "File too large - please upload a smaller file",
+        });
+
+      case 415:
+        return Promise.reject({
+          message: "Unsupported file type",
+        });
     }
 
-    return Promise.reject(apiError);
+    // Format validation errors
+    if (error.response.data?.errors) {
+      const validationErrors = {};
+      error.response.data.errors.forEach((err) => {
+        validationErrors[err.param] = err.msg;
+      });
+      return Promise.reject({
+        message: "Validation failed",
+        errors: validationErrors,
+      });
+    }
+
+    // Return formatted error
+    return Promise.reject({
+      message: error.response.data?.message || "An error occurred",
+      status: error.response.status,
+      data: error.response.data,
+    });
   }
 );
 
-/**
- * Search for bread posts or users
- * @param {string} query - Search term
- * @param {'bread'|'user'} type - Type of search
- * @param {Object} [filters] - Additional filters
- * @param {number} [filters.radius] - Search radius in meters (for location-based searches)
- * @param {[number, number]} [filters.location] - [longitude, latitude] for location-based searches
- * @returns {Promise<{bread?: BreadPost[], users?: User[]}>} Search results
- */
-export const search = async (query, type = "bread", filters = {}) => {
-  const params = new URLSearchParams({ q: query, type });
-
-  if (filters.radius) params.append("radius", filters.radius);
-  if (filters.location) {
-    params.append("lng", filters.location[0]);
-    params.append("lat", filters.location[1]);
-  }
-
-  return apiClient.get(`/search?${params.toString()}`);
-};
-
-// Add to your existing exports if you have others
 export default apiClient;

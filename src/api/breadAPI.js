@@ -1,85 +1,116 @@
 import { apiClient } from "./apiClient";
 
 export const breadAPI = {
-  create: async (postData) => {
-    const response = await apiClient.post("/posts/create", postData);
-    return response.data;
-  },
-
-  getAll: async (filters = {}) => {
-    const response = await apiClient.get("/posts/all", { params: filters });
-    return response.data;
-  },
-
-  getById: async (id) => {
-    const response = await apiClient.get(`/posts/${id}`);
-    return response.data;
-  },
-
-  getByUser: async (userId) => {
-    const response = await apiClient.get(`/posts/user/${userId}`);
-    return response.data;
-  },
-
-  getNearbyPosts: async ({ location, ...filters }) => {
-    const response = await apiClient.post("/posts/nearby", {
-      location,
-      ...filters,
-    });
-    return response.data;
-  },
-
-  search: async (params) => {
-    const response = await apiClient.get("/posts/search", { params });
-    return response.data;
-  },
-
-  uploadImage: async (file) => {
+  createPost: async (postData) => {
     const formData = new FormData();
-    formData.append("image", file);
-    const response = await apiClient.post("/upload", formData, {
+
+    if (postData.images?.length > 0) {
+      postData.images.forEach((image) => {
+        formData.append("images", image);
+      });
+    }
+
+    // Convert location to GeoJSON Point format if not already
+    if (postData.location && !postData.location.type) {
+      postData.location = {
+        type: "Point",
+        coordinates: [postData.location[0], postData.location[1]],
+      };
+    }
+
+    Object.keys(postData).forEach((key) => {
+      if (key !== "images") {
+        if (typeof postData[key] === "object") {
+          formData.append(key, JSON.stringify(postData[key]));
+        } else {
+          formData.append(key, postData[key]);
+        }
+      }
+    });
+
+    return apiClient.post("/posts/create", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-    return response.data;
   },
 
-  uploadImages: async (files) => {
+  getAllPosts: async () => {
+    return apiClient.get("/posts/all");
+  },
+
+  getPostById: async (postId) => {
+    return apiClient.get(`/posts/${postId}`);
+  },
+
+  updatePost: async (postId, updateData) => {
     const formData = new FormData();
-    files.forEach((file) => {
-      formData.append("images", file);
+
+    if (updateData.images?.length > 0) {
+      updateData.images.forEach((image) => {
+        formData.append("images", image);
+      });
+    }
+
+    // Convert location to GeoJSON Point format if not already
+    if (updateData.location && !updateData.location.type) {
+      updateData.location = {
+        type: "Point",
+        coordinates: [updateData.location[0], updateData.location[1]],
+      };
+    }
+
+    Object.keys(updateData).forEach((key) => {
+      if (key !== "images") {
+        if (typeof updateData[key] === "object") {
+          formData.append(key, JSON.stringify(updateData[key]));
+        } else {
+          formData.append(key, updateData[key]);
+        }
+      }
     });
-    const response = await apiClient.post("/upload/multiple", formData, {
+
+    return apiClient.put(`/posts/update/${postId}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-    return response.data;
   },
 
-  reserve: async (postId) => {
-    const response = await apiClient.put(`/posts/reserve/${postId}`);
-    return response.data;
+  deletePost: async (postId) => {
+    return apiClient.delete(`/posts/delete/${postId}`);
   },
 
-  unreserve: async (postId) => {
-    const response = await apiClient.put(`/posts/unreserve/${postId}`);
-    return response.data;
+  searchPosts: async (filters = {}) => {
+    return apiClient.get("/posts/search", { params: filters });
+  },
+
+  getNearbyPosts: async ({ location, maxDistance }) => {
+    return apiClient.post("/posts/nearby", {
+      location: {
+        gps: {
+          latitude: location.coordinates[1],
+          longitude: location.coordinates[0],
+        },
+      },
+      maxDistance,
+    });
+  },
+
+  reservePost: async (postId) => {
+    return apiClient.put(`/posts/reserve/${postId}`);
+  },
+
+  cancelReservation: async (postId) => {
+    return apiClient.put(`/posts/unreserve/${postId}`);
   },
 
   getReservedPosts: async () => {
-    const response = await apiClient.get("/posts/reserved");
-    return response.data;
+    return apiClient.get("/posts/reserved");
   },
 
-  delete: async (postId) => {
-    const response = await apiClient.delete(`/posts/delete/${postId}`);
-    return response.data;
-  },
-
-  update: async (postId, updateData) => {
-    const response = await apiClient.put(`/posts/update/${postId}`, updateData);
-    return response.data;
+  getUserPosts: async (userId, params = {}) => {
+    const endpoint = userId ? `/posts/user/${userId}` : "/posts/user";
+    return apiClient.get(endpoint, { params });
   },
 };

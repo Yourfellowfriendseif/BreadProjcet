@@ -1,80 +1,97 @@
-import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import { useEffect, useRef, useState } from 'react';
+import { GoogleMap, Marker, useLoadScript } from '@react-google-maps/api';
 
-// Fix Leaflet default marker icon issue
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+const mapContainerStyle = {
+  width: '100%',
+  height: '300px'
+};
 
-function LocationMarker({ position, onLocationChange }) {
-  const map = useMapEvents({
-    click(e) {
-      onLocationChange(e.latlng);
-    },
+const defaultCenter = {
+  lat: 36.8016,
+  lng: 10.1234 // Tunisia coordinates as default
+};
+
+export default function LocationPicker({
+  value,
+  onChange,
+  error,
+  required
+}) {
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY
   });
 
+  const [marker, setMarker] = useState(null);
+  const mapRef = useRef();
+
+  // Convert GeoJSON to Google Maps LatLng
   useEffect(() => {
-    if (position) {
-      map.flyTo(position, map.getZoom());
+    if (value?.coordinates) {
+      setMarker({
+        lat: value.coordinates[1],
+        lng: value.coordinates[0]
+      });
     }
-  }, [position]);
+  }, [value]);
 
-  return position ? <Marker position={position} /> : null;
-}
+  const handleMapClick = (event) => {
+    const newMarker = {
+      lat: event.latLng.lat(),
+      lng: event.latLng.lng()
+    };
+    setMarker(newMarker);
 
-export default function LocationPicker({ onLocationSelect, defaultLocation }) {
-  const [position, setPosition] = useState(defaultLocation);
-  const [initialPosition, setInitialPosition] = useState([36.8065, 10.1815]); // Default to Tunisia
-
-  useEffect(() => {
-    // Get user's location if available
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const newPos = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude
-          };
-          setInitialPosition([newPos.lat, newPos.lng]);
-          if (!defaultLocation) {
-            setPosition(newPos);
-            onLocationSelect(newPos);
-          }
-        },
-        () => {
-          // Use default position if geolocation fails
-          console.log('Using default location');
-        }
-      );
+    // Convert to GeoJSON Point format
+    if (onChange) {
+      onChange({
+        type: 'Point',
+        coordinates: [newMarker.lng, newMarker.lat]
+      });
     }
-  }, []);
-
-  const handleLocationChange = (newPosition) => {
-    setPosition(newPosition);
-    onLocationSelect(newPosition);
   };
 
+  if (loadError) {
+    return <div className="text-red-600">Error loading maps</div>;
+  }
+
+  if (!isLoaded) {
+    return <div className="h-[300px] bg-gray-100 animate-pulse rounded-lg" />;
+  }
+
   return (
-    <div className="h-96 w-full rounded-lg overflow-hidden border border-gray-300">
-      <MapContainer
-        center={initialPosition}
+    <div className="space-y-2">
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
         zoom={13}
-        style={{ height: '100%', width: '100%' }}
+        center={marker || defaultCenter}
+        onClick={handleMapClick}
+        options={{
+          fullscreenControl: false,
+          streetViewControl: false,
+          mapTypeControl: false,
+          zoomControl: true
+        }}
+        onLoad={map => {
+          mapRef.current = map;
+        }}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <LocationMarker
-          position={position}
-          onLocationChange={handleLocationChange}
-        />
-      </MapContainer>
+        {marker && (
+          <Marker
+            position={marker}
+            animation={google.maps.Animation.DROP}
+          />
+        )}
+      </GoogleMap>
+      
+      {error && (
+        <p className="text-sm text-red-600">{error}</p>
+      )}
+      
+      {required && !marker && (
+        <p className="text-sm text-gray-500">
+          Click on the map to set your location
+        </p>
+      )}
     </div>
   );
 }

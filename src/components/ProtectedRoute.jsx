@@ -1,11 +1,21 @@
 // src/components/ProtectedRoute.jsx
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet } from 'react-router-dom';
+import { useApp } from '../context/AppContext';
+import LoadingSpinner from './LoadingSpinner';
 
 export default function ProtectedRoute() {
-  const token = localStorage.getItem("token");
+  const { user, loading } = useApp();
 
-  if (!token) {
-    return <Navigate to="/login" />;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   return <Outlet />;
