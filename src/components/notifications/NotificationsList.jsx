@@ -1,85 +1,62 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 import { notificationAPI } from '../../api/notificationAPI';
-import { socketService } from '../../api/socketService';
 import LoadingSpinner from '../LoadingSpinner';
 
 export default function NotificationsList() {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { notifications, markNotificationRead, markAllNotificationsRead } = useApp();
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  useEffect(() => {
-    loadNotifications();
-    setupSocketListeners();
-
-    return () => {
-      socketService.removeAllListeners();
-    };
-  }, []);
-
-  const setupSocketListeners = () => {
-    socketService.onNotification((notification) => {
-      setNotifications(prev => [notification, ...prev]);
-    });
-  };
-
-  const loadNotifications = async () => {
-    try {
-      setLoading(true);
-      const response = await notificationAPI.getNotifications();
-      setNotifications(response.data);
-    } catch (error) {
-      setError(error.message || 'Failed to load notifications');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await notificationAPI.markAsRead(notificationId);
-      setNotifications(prev =>
-        prev.map(n =>
-          n._id === notificationId ? { ...n, read: true } : n
-        )
-      );
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
+      await markNotificationRead(notificationId);
+    } catch (err) {
+      setError(err.message || 'Failed to mark notification as read');
     }
   };
 
   const handleMarkAllAsRead = async () => {
     try {
-      await notificationAPI.markAllAsRead();
-      setNotifications(prev =>
-        prev.map(n => ({ ...n, read: true }))
-      );
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      await markAllNotificationsRead();
+    } catch (err) {
+      setError(err.message || 'Failed to mark all notifications as read');
     }
   };
 
-  const handleDelete = async (notificationId) => {
-    try {
-      await notificationAPI.deleteNotification(notificationId);
-      setNotifications(prev =>
-        prev.filter(n => n._id !== notificationId)
-      );
-    } catch (error) {
-      console.error('Error deleting notification:', error);
-    }
-  };
-
-  const getNotificationLink = (notification) => {
+  const getNotificationContent = (notification) => {
     switch (notification.type) {
       case 'post_reserved':
+        return {
+          icon: '🔒',
+          link: `/bread/${notification.post?._id}`,
+          action: 'reserved your post'
+        };
       case 'reservation_cancelled':
-        return `/posts/${notification.post?._id}`;
+        return {
+          icon: '🔓',
+          link: `/bread/${notification.post?._id}`,
+          action: 'cancelled their reservation'
+        };
       case 'new_message':
-        return `/messages?userId=${notification.user}`;
+        return {
+          icon: '💬',
+          link: '/messages',
+          action: 'sent you a message'
+        };
+      case 'post_completed':
+        return {
+          icon: '✅',
+          link: `/bread/${notification.post?._id}`,
+          action: 'marked the exchange as completed'
+        };
       default:
-        return '#';
+        return {
+          icon: '📢',
+          link: '#',
+          action: 'interacted with your post'
+        };
     }
   };
 
@@ -91,83 +68,70 @@ export default function NotificationsList() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-500">{error}</p>
-      </div>
-    );
-  }
-
-  if (notifications.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <h2 className="text-xl font-semibold text-gray-700">
-          No Notifications
-        </h2>
-        <p className="mt-2 text-gray-500">
-          You're all caught up!
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center pb-4 border-b">
-        <h2 className="text-xl font-semibold text-gray-700">
-          Notifications
-        </h2>
-        <button
-          onClick={handleMarkAllAsRead}
-          className="text-blue-500 hover:text-blue-600 text-sm"
-        >
-          Mark all as read
-        </button>
-      </div>
-
-      <div className="space-y-2">
-        {notifications.map((notification) => (
-          <div
-            key={notification._id}
-            className={`p-4 rounded-lg ${
-              notification.read ? 'bg-white' : 'bg-blue-50'
-            }`}
+    <div className="max-w-2xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Notifications</h2>
+        {notifications.some(n => !n.read) && (
+          <button
+            onClick={handleMarkAllAsRead}
+            className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800"
           >
-            <div className="flex items-start justify-between">
-              <Link
-                to={getNotificationLink(notification)}
-                className="flex-1"
-                onClick={() => !notification.read && handleMarkAsRead(notification._id)}
-              >
-                <p className={`text-gray-800 ${!notification.read && 'font-medium'}`}>
-                  {notification.message}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {new Date(notification.createdAt).toLocaleString()}
-                </p>
-              </Link>
-
-              <button
-                onClick={() => handleDelete(notification._id)}
-                className="ml-4 text-gray-400 hover:text-red-500"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        ))}
+            Mark all as read
+          </button>
+        )}
       </div>
+
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
+
+      {notifications.length === 0 ? (
+        <div className="text-center text-gray-500 py-8">
+          No notifications yet
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {notifications.map((notification) => {
+            const { icon, link, action } = getNotificationContent(notification);
+            
+            return (
+              <div
+                key={notification._id}
+                className={`p-4 rounded-lg border ${
+                  notification.read 
+                    ? 'bg-white'
+                    : 'bg-blue-50 border-blue-100'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">{icon}</span>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <Link
+                        to={link}
+                        className="text-gray-900 hover:text-blue-600"
+                        onClick={() => !notification.read && handleMarkAsRead(notification._id)}
+                      >
+                        <span className="font-medium">{notification.user.username}</span>
+                        {' '}{action}
+                      </Link>
+                      <span className="text-sm text-gray-500">
+                        {new Date(notification.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {notification.message && (
+                      <p className="text-gray-600 mt-1">{notification.message}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

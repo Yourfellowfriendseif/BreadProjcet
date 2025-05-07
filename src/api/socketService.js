@@ -1,104 +1,162 @@
-import io from "socket.io-client";
+import { io } from "socket.io-client";
+import { config } from "../utils/config";
+import { storage } from "../utils/storage";
+import { SOCKET_EVENTS } from "./socketEvents";
 
 class SocketService {
   constructor() {
     this.socket = null;
-    this.connected = false;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
   }
 
-  connect(token) {
-    if (this.socket) {
-      this.socket.disconnect();
-    }
+  initialize() {
+    if (this.socket) return;
 
-    this.socket = io("http://localhost:5000", {
+    const token = storage.getToken();
+
+    this.socket = io(config.apiUrl, {
       auth: {
         token,
       },
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: this.maxReconnectAttempts,
     });
 
-    this.socket.on("connect", () => {
-      this.connected = true;
+    this.setupEventHandlers();
+  }
+
+  setupEventHandlers() {
+    if (!this.socket) return;
+
+    this.socket.on(SOCKET_EVENTS.CONNECT, () => {
       console.log("Socket connected");
+      this.reconnectAttempts = 0;
     });
 
-    this.socket.on("disconnect", () => {
-      this.connected = false;
-      console.log("Socket disconnected");
+    this.socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
+      console.log("Socket disconnected:", reason);
     });
 
-    this.socket.on("error", (error) => {
+    this.socket.on(SOCKET_EVENTS.ERROR, (error) => {
       console.error("Socket error:", error);
-      this.connected = false;
+      if (error.message === "Authentication failed") {
+        this.disconnect();
+      }
     });
+
+    this.socket.io.on("reconnect_attempt", () => {
+      this.reconnectAttempts++;
+      console.log(
+        `Reconnect attempt ${this.reconnectAttempts} of ${this.maxReconnectAttempts}`
+      );
+    });
+
+    this.socket.io.on("reconnect_failed", () => {
+      console.log("Failed to reconnect to socket");
+      this.disconnect();
+    });
+  }
+
+  removeAllListeners() {
+    if (!this.socket) {
+      console.warn("Socket not initialized");
+      return;
+    }
+    this.socket.removeAllListeners();
+  }
+
+  connect() {
+    if (!this.socket) {
+      this.initialize();
+    }
+    this.socket?.connect();
   }
 
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
-      this.connected = false;
     }
+    this.reconnectAttempts = 0;
   }
 
-  onNotification(callback) {
-    if (!this.socket) return;
-    this.socket.on("notification", callback);
+  emit(event, data) {
+    if (!this.socket) {
+      console.warn("Socket not initialized");
+      return;
+    }
+    this.socket.emit(event, data);
   }
 
-  onMessage(callback) {
-    if (!this.socket) return;
-    this.socket.on("message", callback);
+  on(event, callback) {
+    if (!this.socket) {
+      console.warn("Socket not initialized");
+      return;
+    }
+    this.socket.on(event, callback);
   }
 
-  onUserOnline(callback) {
-    if (!this.socket) return;
-    this.socket.on("user:online", callback);
-  }
-
-  onUserOffline(callback) {
-    if (!this.socket) return;
-    this.socket.on("user:offline", callback);
-  }
-
-  onPostReserved(callback) {
-    if (!this.socket) return;
-    this.socket.on("post:reserved", callback);
-  }
-
-  onReservationCancelled(callback) {
-    if (!this.socket) return;
-    this.socket.on("post:unreserved", callback);
-  }
-
-  emitTyping(recipientId, isTyping = true) {
-    if (!this.socket) return;
-    this.socket.emit("chat:typing", { recipientId, isTyping });
-  }
-
-  onTyping(callback) {
-    if (!this.socket) return;
-    this.socket.on("chat:typing", callback);
-  }
-
-  joinRoom(roomId) {
-    if (!this.socket) return;
-    this.socket.emit("room:join", roomId);
-  }
-
-  leaveRoom(roomId) {
-    if (!this.socket) return;
-    this.socket.emit("room:leave", roomId);
-  }
-
-  removeAllListeners() {
-    if (!this.socket) return;
-    this.socket.removeAllListeners();
+  off(event, callback) {
+    if (!this.socket) {
+      console.warn("Socket not initialized");
+      return;
+    }
+    this.socket.off(event, callback);
   }
 
   isConnected() {
-    return this.connected;
+    return this.socket?.connected || false;
   }
+
+  // Location-specific events
+  updateLocation(location) {
+    this.emit(SOCKET_EVENTS.LOCATION_UPDATE, location);
+  }
+
+  // Chat-specific events
+  sendMessage(message) {
+    this.emit(SOCKET_EVENTS.CHAT_MESSAGE, message);
+  }
+
+  sendTyping(chatId) {
+    this.emit(SOCKET_EVENTS.CHAT_TYPING, { chatId });
+  }
+
+  markAsRead(chatId, messageIds) {
+    this.emit(SOCKET_EVENTS.CHAT_READ, { chatId, messageIds });
+  }
+
+  // Bread-specific events
+  notifyBreadCreated(bread) {
+    this.emit(SOCKET_EVENTS.BREAD_CREATED, bread);
+  }
+
+  notifyBreadReserved(breadId, userId) {
+    this.emit(SOCKET_EVENTS.BREAD_RESERVED, { breadId, userId });
+  }
+
+  // In socketService.js, add these methods to the SocketService class:
+
+// Chat event handlers
+onNewMessage(callback) {
+  this.on(SOCKET_EVENTS.CHAT_MESSAGE_NEW, callback);
+}
+
+onMessageRead(callback) {
+  this.on(SOCKET_EVENTS.CHAT_MESSAGE_READ, callback);
+}
+
+onTyping(callback) {
+  this.on(SOCKET_EVENTS.CHAT_TYPING, callback);
+}
+
+emitTyping(userId, isTyping) {
+  this.emit(SOCKET_EVENTS.CHAT_TYPING, { userId, isTyping });
+}
+
 }
 
 export const socketService = new SocketService();

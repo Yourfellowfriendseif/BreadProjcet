@@ -1,21 +1,19 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { userAPI } from '../../api/userAPI';
 import { useApp } from '../../context/AppContext';
-import { breadAPI } from '../../api/breadAPI';
-import ImageUpload from '../common/ImageUpload';
 
 export default function RegisterForm() {
   const navigate = useNavigate();
-  const { setUser } = useApp();
+  const { login } = useApp();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     confirmPassword: '',
-    phone_number: '',
+    phone: '',
+    address: ''
   });
-  const [photo, setPhoto] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -27,53 +25,46 @@ export default function RegisterForm() {
     }));
   };
 
-  const handleImageSelected = (images) => {
-    if (images && images.length > 0) {
-      setPhoto(images[0]);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setError(null);
+
+    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
     try {
       setLoading(true);
-      setError(null);
-
-      // Upload photo if provided
-      let photo_url = '';
-      if (photo) {
-        const uploadResponse = await breadAPI.uploadImage(photo);
-        photo_url = uploadResponse.data.image;
-      }
-
+      
+      // Create registration payload
+      const registrationPayload = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        phone_number: formData.phone,
+        address: formData.address
+      };
+  
       // Register user
-      const response = await userAPI.register({
-        ...formData,
-        photo_url
+      await userAPI.register(registrationPayload);
+      
+      // Login with credentials - add delay if needed
+      await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
+      await login({
+        email: formData.email,
+        password: formData.password
       });
-
-      // Store token
-      localStorage.setItem('token', response.token);
       
-      // Set user in context
-      setUser(response.user);
-      
-      // Navigate to home
       navigate('/');
     } catch (err) {
-      if (err.status === 409) {
-        setError(err.conflictField === 'email' 
-          ? 'Email already exists' 
-          : 'Username already exists');
-      } else {
-        setError(err.message || 'Failed to register');
-      }
+      setError(err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -86,20 +77,24 @@ export default function RegisterForm() {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Create your account
           </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Or{' '}
+            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              sign in to your account
+            </Link>
+          </p>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-4">
-              <p className="text-red-700">{error}</p>
-            </div>
-          )}
 
-          <div className="rounded-md shadow-sm space-y-4">
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
-              </label>
+              <label htmlFor="username" className="sr-only">Username</label>
               <input
                 id="username"
                 name="username"
@@ -107,82 +102,74 @@ export default function RegisterForm() {
                 required
                 value={formData.username}
                 onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Username"
               />
             </div>
-
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
+              <label htmlFor="email" className="sr-only">Email address</label>
               <input
                 id="email"
                 name="email"
                 type="email"
+                autoComplete="email"
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
               />
             </div>
-
             <div>
-              <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">
-                Phone Number
-              </label>
-              <input
-                id="phone_number"
-                name="phone_number"
-                type="tel"
-                value={formData.phone_number}
-                onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Phone number (optional)"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
+              <label htmlFor="password" className="sr-only">Password</label>
               <input
                 id="password"
                 name="password"
                 type="password"
+                autoComplete="new-password"
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
               />
             </div>
-
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
+              <label htmlFor="confirmPassword" className="sr-only">Confirm password</label>
               <input
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
+                autoComplete="new-password"
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Confirm password"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Profile Photo
-              </label>
-              <ImageUpload 
-                onImagesSelected={handleImageSelected}
-                maxImages={1}
-                className="mt-1"
+              <label htmlFor="phone" className="sr-only">Phone number (optional)</label>
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Phone number (optional)"
+              />
+            </div>
+            <div>
+              <label htmlFor="address" className="sr-only">Address (optional)</label>
+              <input
+                id="address"
+                name="address"
+                type="text"
+                value={formData.address}
+                onChange={handleChange}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Address (optional)"
               />
             </div>
           </div>
@@ -195,15 +182,6 @@ export default function RegisterForm() {
             >
               {loading ? 'Creating account...' : 'Sign up'}
             </button>
-          </div>
-
-          <div className="text-sm text-center">
-            <Link
-              to="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              Already have an account? Sign in
-            </Link>
           </div>
         </form>
       </div>

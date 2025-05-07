@@ -1,33 +1,15 @@
-import { apiClient } from './apiClient';
+import { apiClient } from "./apiClient";
 
 export const notificationAPI = {
   getNotifications: async () => {
-    const response = await apiClient.get('/notifications');
-    return response.data;
-  },
-
-  getUnreadCount: async () => {
-    const response = await apiClient.get('/notifications/unread/count');
-    return response.data;
+    return apiClient.get("/notifications");
   },
 
   markAsRead: async (notificationId) => {
-    const response = await apiClient.put(`/notifications/${notificationId}/read`);
-    return response.data;
+    return apiClient.put(`/notifications/${notificationId}/mark-read`);
   },
 
   markAllAsRead: async () => {
-    const response = await apiClient.put('/notifications/read-all');
-    return response.data;
+    return apiClient.put("/notifications/mark-all-read");
   },
-
-  deleteNotification: async (notificationId) => {
-    const response = await apiClient.delete(`/notifications/${notificationId}`);
-    return response.data;
-  },
-
-  deleteAllNotifications: async () => {
-    const response = await apiClient.delete('/notifications/all');
-    return response.data;
-  }
 };

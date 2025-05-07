@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { userAPI } from '../../api/userAPI';
+import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
-import { socketService } from '../../api/socketService';
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const { setUser } = useApp();
+  const { login } = useApp();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -24,24 +22,14 @@ export default function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+
     try {
       setLoading(true);
-      setError(null);
-      const response = await userAPI.login(formData.email, formData.password);
-      
-      // Store token
-      localStorage.setItem('token', response.token);
-      
-      // Set user in context
-      setUser(response.user);
-      
-      // Connect socket
-      socketService.connect(response.token);
-      
-      // Redirect to home
+      await login(formData);
       navigate('/');
     } catch (err) {
-      setError(err.message || 'Failed to login');
+      setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -54,24 +42,29 @@ export default function LoginForm() {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
           </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Or{' '}
+            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
+              create a new account
+            </Link>
+          </p>
         </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-4">
-              <p className="text-red-700">{error}</p>
-            </div>
-          )}
 
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
+              <label htmlFor="email" className="sr-only">Email address</label>
               <input
                 id="email"
                 name="email"
                 type="email"
+                autoComplete="email"
                 required
                 value={formData.email}
                 onChange={handleChange}
@@ -80,19 +73,26 @@ export default function LoginForm() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
+              <label htmlFor="password" className="sr-only">Password</label>
               <input
                 id="password"
                 name="password"
                 type="password"
+                autoComplete="current-password"
                 required
                 value={formData.password}
                 onChange={handleChange}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
               />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                Forgot your password?
+              </Link>
             </div>
           </div>
 
@@ -104,15 +104,6 @@ export default function LoginForm() {
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
-          </div>
-
-          <div className="text-sm text-center">
-            <Link
-              to="/register"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              Don't have an account? Sign up
-            </Link>
           </div>
         </form>
       </div>
