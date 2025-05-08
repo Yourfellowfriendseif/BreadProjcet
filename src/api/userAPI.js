@@ -49,7 +49,7 @@ export const userAPI = {
   },
 
   getProfile: async () => {
-    const response = await apiClient.get("/user/me");
+    const response = await apiClient.get("/user/profile");
     return response.data;
   },
 
