@@ -39,11 +39,19 @@ export const userAPI = {
   },
 
   getProfile: async () => {
-    return apiClient.get("/user/me");
+    const res = await apiClient.get("/user/me");
+    return res.user;
   },
 
   getUserById: async (userId) => {
-    return apiClient.get(`/user/${userId}`);
+    // Workaround: fetch all users and find the one with the matching ID
+    const allUsers = await apiClient.get("/user/all");
+    if (Array.isArray(allUsers)) {
+      return allUsers.find((u) => u._id === userId);
+    } else if (allUsers?.users) {
+      return allUsers.users.find((u) => u._id === userId);
+    }
+    throw new Error("User not found");
   },
 
   updateProfile: async (updateData) => {

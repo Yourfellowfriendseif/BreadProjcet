@@ -36,8 +36,10 @@ export default function UserProfile() {
       const userData = isOwnProfile 
         ? await userAPI.getProfile()
         : await userAPI.getUserById(userId);
+      console.log('Loaded userData:', userData);
       setUser(userData);
     } catch (err) {
+      console.error('Profile load error:', err);
       setError(err.message || 'Failed to load profile');
     } finally {
       setLoading(false);
