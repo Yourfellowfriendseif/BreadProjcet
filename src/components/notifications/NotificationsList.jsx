@@ -112,7 +112,7 @@ export default function NotificationsList() {
                         className="notification-item-link"
                         onClick={() => !notification.read && handleMarkAsRead(notification._id)}
                       >
-                        <span className="notification-item-username">{notification.user.username}</span>
+                        <span className="notification-item-username">{(notification.user && notification.user.username) || 'Unknown user'}</span>
                         {' '}{action}
                       </Link>
                       <span className="notification-item-date">

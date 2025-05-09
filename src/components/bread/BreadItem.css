@@ -1,29 +1,214 @@
-.bread-item {
-  padding: 1rem;
-  border: 1px solid var(--gray-200);
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-}
-
-.bread-item-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.bread-item-image {
+.bread-card {
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s, transform 0.2s;
+  border: 1px solid #f3f4f6;
+  min-width: 0;
   width: 100%;
-  height: 12rem;
+  max-width: 370px;
+  margin: 0 auto;
+}
+
+.bread-card:hover {
+  box-shadow: 0 6px 24px 0 rgba(255, 106, 43, 0.12);
+  transform: translateY(-2px) scale(1.01);
+}
+
+.bread-card-image-wrapper {
+  width: 100%;
+  height: 180px;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.bread-card-image {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 0.375rem;
-  margin: 0.5rem 0;
+  border-radius: 0.5rem 0.5rem 0 0;
+  background: #f3f4f6;
 }
 
-.bread-item-description {
-  color: var(--gray-600);
+.bread-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1.25rem 1rem 1.25rem;
 }
 
-.bread-item-location {
+.bread-card-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.bread-card-price {
+  background: #ff6a2b;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+}
+
+.bread-card-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  background: #f3f4f6;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.bread-badge-fresh {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.bread-badge-day-old {
+  background: #fef9c3;
+  color: #ca8a04;
+}
+.bread-badge-stale {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.bread-badge-sell {
+  background: #ffe7d6;
+  color: #ff6a2b;
+}
+.bread-badge-request {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.bread-card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0.25rem 0 0.25rem 0;
+  color: #222;
+  line-height: 1.2;
+}
+
+.bread-card-description {
+  color: #4b5563;
+  font-size: 0.97rem;
+  margin-bottom: 0.5rem;
+  min-height: 2.2em;
+}
+
+.bread-card-qty-loc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  color: #6b7280;
+}
+
+.bread-card-quantity {
+  font-weight: 500;
+}
+
+.bread-card-address {
+  font-size: 0.93rem;
+  color: #2563eb;
+  margin-left: 0.5rem;
+  font-weight: 500;
+}
+
+.bread-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.bread-card-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bread-card-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #f3f4f6;
+}
+
+.bread-card-username {
+  font-size: 0.97rem;
+  font-weight: 500;
+  color: #222;
+}
+
+.bread-card-date {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.bread-card-actions {
+  display: flex;
+  gap: 0.75rem;
   margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--gray-500);
+}
+
+.bread-card-btn {
+  flex: 1 1 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.bread-card-btn-outline {
+  background: #fff;
+  color: #ff6a2b;
+  border: 2px solid #ff6a2b;
+}
+.bread-card-btn-outline:hover {
+  background: #fff5f0;
+  color: #ff6a2b;
+  box-shadow: 0 2px 8px 0 rgba(255, 106, 43, 0.08);
+}
+
+.bread-card-btn-primary {
+  background: #ff6a2b;
+  color: #fff;
+  border: 2px solid #ff6a2b;
+}
+.bread-card-btn-primary:hover {
+  background: #ff8c42;
+  color: #fff;
+  box-shadow: 0 2px 8px 0 rgba(255, 106, 43, 0.12);
+}
+
+@media (max-width: 600px) {
+  .bread-card-content {
+    padding: 1rem 0.75rem 0.75rem 0.75rem;
+  }
+  .bread-card-title {
+    font-size: 1rem;
+  }
+  .bread-card-image-wrapper {
+    height: 120px;
+  }
+  .bread-card-avatar {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
 }

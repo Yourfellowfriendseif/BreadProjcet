@@ -6,6 +6,7 @@ import './NavBar.css';
 export default function NavBar() {
   const { user, logout, notifications, unreadMessages, setGlobalSearchTerm, globalSearchTerm } = useApp();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,6 +30,14 @@ export default function NavBar() {
   // Notification dropdown toggle
   const handleNotificationClick = () => {
     setShowNotifications((prev) => !prev);
+    setShowMessages(false);
+    setShowUserMenu(false);
+  };
+
+  // Messages dropdown toggle
+  const handleMessagesClick = () => {
+    setShowMessages((prev) => !prev);
+    setShowNotifications(false);
     setShowUserMenu(false);
   };
 
@@ -36,12 +45,14 @@ export default function NavBar() {
   const handleUserClick = () => {
     setShowUserMenu((prev) => !prev);
     setShowNotifications(false);
+    setShowMessages(false);
   };
 
   // Close dropdowns on outside click
   const handleBlur = (e) => {
     if (!e.currentTarget.contains(e.relatedTarget)) {
       setShowNotifications(false);
+      setShowMessages(false);
       setShowUserMenu(false);
     }
   };
@@ -78,29 +89,49 @@ export default function NavBar() {
             onChange={handleSearchChange}
           />
         </div>
-        <div className="navbar-dropdown-wrapper">
-          <button className="navbar-icon-button navbar-icon-notification" onClick={handleNotificationClick} tabIndex={0}>
-            <span className="material-symbols-outlined">notifications</span>
-            {unreadNotifications > 0 && (
-              <span className="navbar-badge">{unreadNotifications}</span>
-            )}
-          </button>
-          {showNotifications && (
-            <div className="navbar-dropdown navbar-dropdown-notifications">
-              <div className="navbar-dropdown-header">Notifications</div>
-              {notifications.length === 0 ? (
-                <div className="navbar-dropdown-empty">No notifications</div>
-              ) : (
-                notifications.slice(0, 5).map((n) => (
-                  <div key={n._id} className={`navbar-dropdown-item${n.read ? '' : ' navbar-dropdown-item-unread'}`}>{n.message}</div>
-                ))
+        {user && (
+          <>
+            <div className="navbar-dropdown-wrapper">
+              <button className="navbar-icon-button navbar-icon-notification" onClick={handleNotificationClick} tabIndex={0}>
+                <span className="material-symbols-outlined">notifications</span>
+                {unreadNotifications > 0 && (
+                  <span className="navbar-badge">{unreadNotifications}</span>
+                )}
+              </button>
+              {showNotifications && (
+                <div className="navbar-dropdown navbar-dropdown-notifications">
+                  <div className="navbar-dropdown-header">Notifications</div>
+                  {notifications.length === 0 ? (
+                    <div className="navbar-dropdown-empty">No notifications</div>
+                  ) : (
+                    notifications.slice(0, 5).map((n) => (
+                      <div key={n._id} className={`navbar-dropdown-item${n.read ? '' : ' navbar-dropdown-item-unread'}`}>{n.message}</div>
+                    ))
+                  )}
+                  <Link to="/notifications" className="navbar-dropdown-footer" onClick={()=>setShowNotifications(false)}>
+                    View all
+                  </Link>
+                </div>
               )}
-              <Link to="/notifications" className="navbar-dropdown-footer" onClick={()=>setShowNotifications(false)}>
-                View all
-              </Link>
             </div>
-          )}
-        </div>
+            <div className="navbar-dropdown-wrapper">
+              <button className="navbar-icon-button navbar-icon-messages" onClick={handleMessagesClick} tabIndex={0}>
+                <span className="material-symbols-outlined">chat</span>
+                {unreadMessages > 0 && (
+                  <span className="navbar-badge">{unreadMessages}</span>
+                )}
+              </button>
+              {showMessages && (
+                <div className="navbar-dropdown navbar-dropdown-messages">
+                  <div className="navbar-dropdown-header">Messages</div>
+                  <Link to="/messages" className="navbar-dropdown-footer" onClick={()=>setShowMessages(false)}>
+                    View all messages
+                  </Link>
+                </div>
+              )}
+            </div>
+          </>
+        )}
         <div className="navbar-dropdown-wrapper">
           <button className="navbar-icon-button navbar-icon-profile" onClick={handleUserClick} tabIndex={0}>
             <span className="material-symbols-outlined">person</span>

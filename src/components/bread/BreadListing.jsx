@@ -1,40 +1,38 @@
-import { useEffect, useState } from "react";
-import { breadAPI } from "../../api/breadAPI";
+import { useState } from "react";
 import BreadItem from "./BreadItem";
 import './BreadListing.css';
+import PostDetailsModal from './PostDetailsModal';
 
-export default function BreadListingPage() {
-  const [breads, setBreads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+export default function BreadListingPage({ posts = [], onUpdate }) {
+  const [modalPost, setModalPost] = useState(null);
 
-  const loadBreads = async () => {
-    try {
-      const response = await breadAPI.getAll();
-      setBreads(response.data.posts);
-    } catch (err) {
-      setError("Failed to load bread listings");
-    } finally {
-      setLoading(false);
+  const handleUpdate = (action, post) => {
+    if (action === 'viewDetails') {
+      setModalPost(post);
     }
+    if (onUpdate) onUpdate(action, post);
   };
 
-  useEffect(() => {
-    loadBreads();
-  }, []);
-
-  if (loading) return <div className="bread-listing-loading">Loading...</div>;
-  if (error) return <div className="bread-listing-error">{error}</div>;
+  // Deduplicate posts by _id
+  const uniqueBreads = posts.filter(
+    (post, idx, arr) => arr.findIndex(p => p._id === post._id) === idx
+  );
 
   return (
-    <div className="bread-listing-container">
-      {breads.length === 0 ? (
-        <div className="bread-listing-empty">No bread posts available.</div>
-      ) : (
-        breads.map((bread) => (
-          <BreadItem key={bread._id} post={bread} onUpdate={loadBreads} />
-        ))
-      )}
-    </div>
+    <>
+      <div className="bread-listing-container">
+        {uniqueBreads.length === 0 ? (
+          <div className="bread-listing-empty">No bread posts available.</div>
+        ) : (
+          uniqueBreads.map((bread) => (
+            <BreadItem key={bread._id} post={bread} onUpdate={handleUpdate} />
+          ))
+        )}
+        {modalPost && (
+          <PostDetailsModal post={modalPost} onClose={() => setModalPost(null)} />
+        )}
+      </div>
+      {/* Pagination controls will go here */}
+    </>
   );
 }

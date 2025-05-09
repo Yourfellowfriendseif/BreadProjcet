@@ -17,6 +17,8 @@ export default function Home() {
     post_type: '',
     maxDistance: 10000
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 6;
 
   useEffect(() => {
     // Get user's location if available
@@ -96,6 +98,20 @@ export default function Home() {
     }
   };
 
+  // Calculate paginated posts
+  const totalPages = Math.ceil(posts.length / postsPerPage);
+  const paginatedPosts = posts.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Reset to page 1 when filters or posts change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, posts.length]);
+
   return (
     <div className="home">
       <div className="home-header">
@@ -126,8 +142,8 @@ export default function Home() {
           className="home-filter-select"
         >
           <option value="">All Types</option>
-          <option value="offer">Offers</option>
-          <option value="request">Requests</option>
+          <option value="sell">Sell</option>
+          <option value="request">Request</option>
         </select>
 
         {userLocation && (
@@ -151,22 +167,27 @@ export default function Home() {
       )}
 
       {loading ? (
-        <div className="home-loading">
+        <div className="home-posts-loading">
           <LoadingSpinner />
         </div>
-      ) : posts.length === 0 ? (
-        <div className="home-empty">
-          <p className="home-empty-title">No posts found</p>
-          <p className="home-empty-text">Try adjusting your filters or create a new post</p>
-        </div>
+      ) : error ? (
+        <div className="home-posts-error">{error}</div>
       ) : (
         <div className="home-posts-grid">
-          {posts.map((post) => (
-            <BreadListing
-              key={post._id}
-              post={post}
-              onUpdate={() => loadPosts(userLocation)}
-            />
+          <BreadListing posts={paginatedPosts} />
+        </div>
+      )}
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="home-pagination">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              className={`home-pagination-btn${page === currentPage ? ' home-pagination-btn-active' : ''}`}
+              onClick={() => handlePageChange(page)}
+            >
+              {page}
+            </button>
           ))}
         </div>
       )}

@@ -6,7 +6,8 @@ export const userAPI = {
       username: userData.username,
       email: userData.email,
       password: userData.password,
-      phone_number: userData.phone_number,
+      phone_number: userData.phone,
+      address: userData.address,
     });
 
     if (response?.token) {

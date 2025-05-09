@@ -37,10 +37,22 @@ const RegisterForm = () => {
     }
 
     try {
-      await register(formData);
-      navigate('/');
+      const response = await register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        address: formData.address
+      });
+      
+      if (response?.token) {
+        navigate('/');
+      } else {
+        setError('Registration failed. Please try again.');
+      }
     } catch (err) {
       setError(err.message || 'Failed to register');
+      console.error('Registration error:', err);
     } finally {
       setLoading(false);
     }

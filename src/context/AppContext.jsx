@@ -122,6 +122,27 @@ export function AppProvider({ children }) {
     }
   };
 
+  const register = async (userData) => {
+    try {
+      const response = await userAPI.register(userData);
+      const data = processApiResponse(response);
+      
+      // Set user based on backend response structure
+      const user = data.user || {
+        _id: data._id,
+        username: data.username,
+        email: data.email,
+        phone_number: data.phone_number,
+        photo_url: data.photo_url
+      };
+      socketService.connect();
+      setUser(user);
+      return data;
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
   const logout = async () => {
     try {
       await userAPI.logout();
@@ -174,6 +195,7 @@ export function AppProvider({ children }) {
     unreadMessages,
     login,
     logout,
+    register,
     updateUser,
     markNotificationRead,
     markAllNotificationsRead

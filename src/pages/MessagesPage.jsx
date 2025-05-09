@@ -3,7 +3,13 @@ import { useApp } from '../context/AppContext';
 import { chatAPI } from '../api/chatAPI';
 import { socketService } from '../api/socketService';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { useLocation } from 'react-router-dom';
 import './MessagesPage.css';
+import { userAPI } from '../api/userAPI';
+
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
 
 export default function MessagesPage() {
   const { user } = useApp();
@@ -16,6 +22,8 @@ export default function MessagesPage() {
   const [typing, setTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const inputRef = useRef(null);
+  const query = useQuery();
 
   useEffect(() => {
     loadConversations();
@@ -31,12 +39,40 @@ export default function MessagesPage() {
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation._id);
+      inputRef.current?.focus();
     }
   }, [selectedConversation]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Auto-select conversation if userId is in query
+  useEffect(() => {
+    const userId = query.get('userId');
+    if (userId && conversations.length > 0) {
+      let conv = conversations.find(c =>
+        c.participants.some(p => p._id === userId)
+      );
+      if (!conv) {
+        // Fetch user info for the recipient
+        userAPI.getUserById(userId).then(userInfo => {
+          conv = {
+            _id: userId, // temp id
+            participants: [
+              { _id: user._id, username: user.username, avatar: user.photo_url },
+              { _id: userId, username: userInfo.username, avatar: userInfo.photo_url || '/default-avatar.png' }
+            ],
+            messages: [],
+          };
+          setConversations(prev => [...prev, conv]);
+          setSelectedConversation(conv);
+        });
+      } else {
+        setSelectedConversation(conv);
+      }
+    }
+  }, [conversations, query, user]);
 
   const setupChatListeners = () => {
     socketService.onNewMessage((message) => {
@@ -252,6 +288,7 @@ export default function MessagesPage() {
                     onKeyPress={handleTyping}
                     placeholder="Type a message..."
                     className="messages-input"
+                    ref={inputRef}
                   />
                   <button
                     type="submit"

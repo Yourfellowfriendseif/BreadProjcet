@@ -89,13 +89,7 @@ export default function SearchResults() {
           <p className="search-results-empty">No posts found</p>
         ) : (
           <div className="search-results-grid">
-            {results.posts.map((post) => (
-              <BreadListing
-                key={post._id}
-                post={post}
-                onUpdate={performSearch}
-              />
-            ))}
+            <BreadListing posts={results.posts} onUpdate={performSearch} />
           </div>
         )
       ) : (

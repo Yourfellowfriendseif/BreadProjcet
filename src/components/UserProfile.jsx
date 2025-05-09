@@ -172,13 +172,7 @@ export default function UserProfile() {
             <p className="user-profile-no-posts">No posts found</p>
           ) : (
             <div className="user-profile-posts-grid">
-              {posts.map((post) => (
-                <BreadListing
-                  key={post._id}
-                  post={post}
-                  onUpdate={() => loadUserPosts(activeTab)}
-                />
-              ))}
+              <BreadListing posts={posts} onUpdate={() => loadUserPosts(activeTab)} />
             </div>
           )}
         </div>
