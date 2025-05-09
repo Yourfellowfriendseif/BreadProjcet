@@ -5,6 +5,7 @@ import { breadAPI } from '../api/breadAPI';
 import { userAPI } from '../api/userAPI';
 import BreadListing from '../components/bread/BreadListing';
 import LoadingSpinner from '../components/LoadingSpinner';
+import './SearchResults.css';
 
 export default function SearchResults() {
   const [searchParams] = useSearchParams();
@@ -46,40 +47,36 @@ export default function SearchResults() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="search-results-loading">
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">
+    <div className="search-results">
+      <h1 className="search-results-title">
         Search Results for "{query}"
       </h1>
 
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
-          <p className="text-red-700">{error}</p>
+        <div className="search-results-error">
+          <p className="search-results-error-text">{error}</p>
         </div>
       )}
 
-      <div className="flex border-b mb-6">
+      <div className="search-results-tabs">
         <button
-          className={`px-4 py-2 ${
-            activeTab === 'posts'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+          className={`search-results-tab ${
+            activeTab === 'posts' ? 'search-results-tab-active' : ''
           }`}
           onClick={() => setActiveTab('posts')}
         >
           Posts ({results.posts.length})
         </button>
         <button
-          className={`px-4 py-2 ${
-            activeTab === 'users'
-              ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+          className={`search-results-tab ${
+            activeTab === 'users' ? 'search-results-tab-active' : ''
           }`}
           onClick={() => setActiveTab('users')}
         >
@@ -89,9 +86,9 @@ export default function SearchResults() {
 
       {activeTab === 'posts' ? (
         results.posts.length === 0 ? (
-          <p className="text-center text-gray-500">No posts found</p>
+          <p className="search-results-empty">No posts found</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="search-results-grid">
             {results.posts.map((post) => (
               <BreadListing
                 key={post._id}
@@ -103,23 +100,23 @@ export default function SearchResults() {
         )
       ) : (
         results.users.length === 0 ? (
-          <p className="text-center text-gray-500">No users found</p>
+          <p className="search-results-empty">No users found</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="search-results-grid">
             {results.users.map((user) => (
               <div
                 key={user._id}
-                className="flex items-center p-4 border rounded-lg hover:shadow-md transition-shadow"
+                className="search-results-user-card"
               >
                 <img
                   src={user.avatar || '/default-avatar.png'}
                   alt={user.username}
-                  className="w-12 h-12 rounded-full mr-4"
+                  className="search-results-user-avatar"
                 />
-                <div>
-                  <h3 className="font-medium">{user.username}</h3>
+                <div className="search-results-user-info">
+                  <h3 className="search-results-username">{user.username}</h3>
                   {user.phone && (
-                    <p className="text-sm text-gray-500">{user.phone}</p>
+                    <p className="search-results-user-phone">{user.phone}</p>
                   )}
                 </div>
               </div>

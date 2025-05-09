@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import './NotificationMessage.css';
 
 export default function NotificationMessage({ notification, onMarkAsRead }) {
   const getNotificationContent = () => {
@@ -42,26 +43,24 @@ export default function NotificationMessage({ notification, onMarkAsRead }) {
 
   return (
     <div
-      className={`p-4 rounded-lg border ${
-        notification.read ? 'bg-white' : 'bg-blue-50 border-blue-100'
-      }`}
+      className={`notification-message ${!notification.read ? 'notification-message-unread' : ''}`}
     >
-      <div className="flex items-start gap-3">
-        <span className="text-2xl">{icon}</span>
-        <div className="flex-1">
-          <div className="flex justify-between items-start">
+      <div className="notification-message-content">
+        <span className="notification-message-icon">{icon}</span>
+        <div className="notification-message-details">
+          <div className="notification-message-header">
             <Link
               to={link}
-              className="text-gray-900 hover:text-blue-600"
+              className="notification-message-link"
               onClick={() => !notification.read && onMarkAsRead(notification._id)}
             >
-              <span className="font-medium">{notification.user.username}</span>
+              <span className="notification-message-username">{notification.user.username}</span>
               {' '}{action}
             </Link>
-            <span className="text-sm text-gray-500">{timeAgo}</span>
+            <span className="notification-message-time">{timeAgo}</span>
           </div>
           {notification.message && (
-            <p className="text-gray-600 mt-1">{notification.message}</p>
+            <p className="notification-message-text">{notification.message}</p>
           )}
         </div>
       </div>

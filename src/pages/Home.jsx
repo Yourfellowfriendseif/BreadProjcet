@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { breadAPI } from '../api/breadAPI';
 import BreadListing from '../components/bread/BreadListing';
 import LoadingSpinner from '../components/LoadingSpinner';
+import './Home.css';
 
 export default function Home() {
   const { user } = useApp();
@@ -59,8 +60,7 @@ export default function Home() {
         !searchFilters[key] && delete searchFilters[key]
       );
 
-       const response = await breadAPI.searchPosts(searchFilters);
-    // Access the posts array from the response
+      const response = await breadAPI.searchPosts(searchFilters);
       setPosts(response.posts || []);
     } catch (error) {
       setError("Failed to load posts");
@@ -97,22 +97,22 @@ export default function Home() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="bg-black text-3xl font-bold">Available Bread</h1>
+    <div className="home">
+      <div className="home-header">
+        <h1 className="home-title">Available Bread</h1>
         <Link
           to="/posts/create"
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          className="home-create-button"
         >
           Create Post
         </Link>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-4">
+      <div className="home-filters">
         <select
           value={filters.status}
           onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-          className="px-4 py-2 border rounded-lg"
+          className="home-filter-select"
         >
           <option value="">All Status</option>
           <option value="fresh">Fresh</option>
@@ -123,7 +123,7 @@ export default function Home() {
         <select
           value={filters.post_type}
           onChange={(e) => setFilters(prev => ({ ...prev, post_type: e.target.value }))}
-          className="px-4 py-2 border rounded-lg"
+          className="home-filter-select"
         >
           <option value="">All Types</option>
           <option value="offer">Offers</option>
@@ -134,7 +134,7 @@ export default function Home() {
           <select
             value={filters.maxDistance}
             onChange={(e) => setFilters(prev => ({ ...prev, maxDistance: Number(e.target.value) }))}
-            className="px-4 py-2 border rounded-lg"
+            className="home-filter-select"
           >
             <option value="5000">Within 5km</option>
             <option value="10000">Within 10km</option>
@@ -145,22 +145,22 @@ export default function Home() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
-          <p className="text-red-700">{error}</p>
+        <div className="home-error">
+          <p className="home-error-text">{error}</p>
         </div>
       )}
 
       {loading ? (
-        <div className="flex justify-center items-center h-64">
+        <div className="home-loading">
           <LoadingSpinner />
         </div>
       ) : posts.length === 0 ? (
-        <div className="text-center text-gray-500">
-          <p className="text-xl">No posts found</p>
-          <p className="mt-2">Try adjusting your filters or create a new post</p>
+        <div className="home-empty">
+          <p className="home-empty-title">No posts found</p>
+          <p className="home-empty-text">Try adjusting your filters or create a new post</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="home-posts-grid">
           {posts.map((post) => (
             <BreadListing
               key={post._id}

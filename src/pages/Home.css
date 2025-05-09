@@ -1,0 +1,91 @@
+.home {
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.home-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: black;
+}
+
+.home-create-button {
+  padding: 0.5rem 1rem;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 0.5rem;
+  text-decoration: none;
+}
+
+.home-create-button:hover {
+  background-color: #2563eb;
+}
+
+.home-filters {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.home-filter-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.home-error {
+  background-color: #fef2f2;
+  border-left: 4px solid #f87171;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.home-error-text {
+  color: #b91c1c;
+}
+
+.home-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 16rem;
+}
+
+.home-empty {
+  text-align: center;
+  color: #6b7280;
+}
+
+.home-empty-title {
+  font-size: 1.25rem;
+}
+
+.home-empty-text {
+  margin-top: 0.5rem;
+}
+
+.home-posts-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .home-posts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .home-posts-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

@@ -2,13 +2,14 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import LoadingSpinner from './LoadingSpinner';
+import './ProtectedRoute.css';
 
 export default function ProtectedRoute() {
   const { user, loading } = useApp();
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="protected-route-loading">
         <LoadingSpinner />
       </div>
     );

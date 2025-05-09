@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { breadAPI } from "../../api/breadAPI";
-import BreadListing from "./BreadListing";
+import BreadItem from "./BreadItem";
+import './BreadListing.css';
 
 export default function BreadListingPage() {
   const [breads, setBreads] = useState([]);
@@ -22,16 +23,16 @@ export default function BreadListingPage() {
     loadBreads();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  if (loading) return <div className="bread-listing-loading">Loading...</div>;
+  if (error) return <div className="bread-listing-error">{error}</div>;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="bread-listing-container">
       {breads.length === 0 ? (
-        <div>No bread posts available.</div>
+        <div className="bread-listing-empty">No bread posts available.</div>
       ) : (
         breads.map((bread) => (
-          <BreadListing key={bread._id} post={bread} onUpdate={loadBreads} />
+          <BreadItem key={bread._id} post={bread} onUpdate={loadBreads} />
         ))
       )}
     </div>

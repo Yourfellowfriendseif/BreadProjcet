@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { chatAPI } from '../api/chatAPI';
 import { socketService } from '../api/socketService';
 import LoadingSpinner from '../components/LoadingSpinner';
+import './MessagesPage.css';
 
 export default function MessagesPage() {
   const { user } = useApp();
@@ -38,7 +39,7 @@ export default function MessagesPage() {
   }, [messages]);
 
   const setupChatListeners = () => {
-    socketService.onNewMessage( (message) => {
+    socketService.onNewMessage((message) => {
       if (selectedConversation?._id === message.conversation_id) {
         setMessages(prev => [...prev, message]);
         chatAPI.markAsRead([message._id]);
@@ -53,7 +54,7 @@ export default function MessagesPage() {
       }
     });
 
-    socketService.onMessageRead( (data) => {
+    socketService.onMessageRead((data) => {
       setMessages(prev =>
         prev.map(msg =>
           msg._id === data.messageId ? { ...msg, read: true } : msg
@@ -61,11 +62,11 @@ export default function MessagesPage() {
       );
     });
 
-    socketService.onTyping( (data) => {
-    if (selectedConversation?.participants.find(p => p._id === data.userId)) {
-      setTyping(data.isTyping);
-    }
-  });
+    socketService.onTyping((data) => {
+      if (selectedConversation?.participants.find(p => p._id === data.userId)) {
+        setTyping(data.isTyping);
+      }
+    });
   };
 
   const loadConversations = async () => {
@@ -138,7 +139,7 @@ export default function MessagesPage() {
 
   if (loading && !conversations.length) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="messages-page-loading">
         <LoadingSpinner />
       </div>
     );
@@ -149,42 +150,42 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex h-[80vh] border rounded-lg overflow-hidden">
+    <div className="messages-page">
+      <div className="messages-container">
         {/* Conversations List */}
-        <div className="w-1/3 border-r bg-white">
-          <div className="p-4 border-b">
-            <h2 className="text-xl font-semibold">Messages</h2>
+        <div className="messages-list">
+          <div className="messages-list-header">
+            <h2 className="messages-list-title">Messages</h2>
           </div>
-          <div className="overflow-y-auto h-full">
+          <div className="messages-list-content">
             {conversations.map(conversation => {
               const otherUser = getOtherParticipant(conversation);
               return (
                 <div
                   key={conversation._id}
                   onClick={() => setSelectedConversation(conversation)}
-                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 ${
-                    selectedConversation?._id === conversation._id ? 'bg-gray-100' : ''
+                  className={`messages-conversation ${
+                    selectedConversation?._id === conversation._id ? 'messages-conversation-selected' : ''
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
+                  <div className="messages-conversation-content">
+                    <div className="messages-conversation-user">
                       <img
                         src={otherUser.avatar || '/default-avatar.png'}
                         alt={otherUser.username}
-                        className="w-10 h-10 rounded-full mr-3"
+                        className="messages-conversation-avatar"
                       />
-                      <div>
-                        <p className="font-medium">{otherUser.username}</p>
+                      <div className="messages-conversation-info">
+                        <p className="messages-conversation-username">{otherUser.username}</p>
                         {conversation.lastMessage && (
-                          <p className="text-sm text-gray-500 truncate">
+                          <p className="messages-conversation-last-message">
                             {conversation.lastMessage.content}
                           </p>
                         )}
                       </div>
                     </div>
                     {conversation.unreadCount > 0 && (
-                      <span className="bg-blue-500 text-white rounded-full px-2 py-1 text-xs">
+                      <span className="messages-conversation-unread">
                         {conversation.unreadCount}
                       </span>
                     )}
@@ -196,51 +197,45 @@ export default function MessagesPage() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 flex flex-col bg-gray-50">
+        <div className="messages-chat">
           {selectedConversation ? (
             <>
               {/* Chat Header */}
-              <div className="p-4 border-b bg-white">
-                <div className="flex items-center">
+              <div className="messages-chat-header">
+                <div className="messages-chat-user">
                   <img
                     src={getOtherParticipant(selectedConversation).avatar || '/default-avatar.png'}
                     alt={getOtherParticipant(selectedConversation).username}
-                    className="w-10 h-10 rounded-full mr-3"
+                    className="messages-chat-avatar"
                   />
-                  <h3 className="text-lg font-medium">
+                  <h3 className="messages-chat-username">
                     {getOtherParticipant(selectedConversation).username}
                   </h3>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4">
-                {messages.map((message, index) => (
+              <div className="messages-content">
+                {messages.map((message) => (
                   <div
                     key={message._id}
-                    className={`flex ${
-                      message.sender._id === user._id ? 'justify-end' : 'justify-start'
-                    } mb-4`}
+                    className={`messages-message ${
+                      message.sender._id === user._id ? 'messages-message-sent' : 'messages-message-received'
+                    }`}
                   >
-                    <div
-                      className={`max-w-[70%] rounded-lg p-3 ${
-                        message.sender._id === user._id
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-white'
-                      }`}
-                    >
+                    <div className="messages-message-content">
                       <p>{message.content}</p>
-                      <div className="text-xs mt-1 flex items-center gap-1">
+                      <div className="messages-message-time">
                         <span>{new Date(message.createdAt).toLocaleTimeString()}</span>
                         {message.sender._id === user._id && message.read && (
-                          <span className="text-blue-200">✓✓</span>
+                          <span className="messages-message-read">✓✓</span>
                         )}
                       </div>
                     </div>
                   </div>
                 ))}
                 {typing && (
-                  <div className="text-gray-500 italic">
+                  <div className="messages-typing">
                     {getOtherParticipant(selectedConversation).username} is typing...
                   </div>
                 )}
@@ -248,29 +243,29 @@ export default function MessagesPage() {
               </div>
 
               {/* Message Input */}
-              <form onSubmit={handleSendMessage} className="p-4 bg-white border-t">
-                <div className="flex gap-2">
+              <div className="messages-input-container">
+                <form onSubmit={handleSendMessage} className="messages-input-form">
                   <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={handleTyping}
+                    onKeyPress={handleTyping}
                     placeholder="Type a message..."
-                    className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="messages-input"
                   />
                   <button
                     type="submit"
                     disabled={!newMessage.trim()}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                    className="messages-send-button"
                   >
                     Send
                   </button>
-                </div>
-              </form>
+                </form>
+              </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
-              Select a conversation to start chatting
+            <div className="messages-empty">
+              <p>Select a conversation to start chatting</p>
             </div>
           )}
         </div>

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '../../hooks/useDebounce';
+import './SearchBar.css';
 
 export default function SearchBar() {
   const navigate = useNavigate();
@@ -36,18 +37,18 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="relative">
-      <form onSubmit={handleSearch} className="flex items-center">
-        <div className="relative flex-1">
+    <div className="search-bar">
+      <form onSubmit={handleSearch} className="search-bar-form">
+        <div className="search-bar-input-container">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search bread posts..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="search-bar-input"
           />
           <svg
-            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+            className="search-bar-icon"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -64,10 +65,10 @@ export default function SearchBar() {
         <button
           type="button"
           onClick={() => setShowFilters(!showFilters)}
-          className="ml-2 p-2 text-gray-500 hover:text-gray-700"
+          className="search-bar-filter-button"
         >
           <svg
-            className="h-6 w-6"
+            className="search-bar-filter-icon"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -83,24 +84,24 @@ export default function SearchBar() {
 
         <button
           type="submit"
-          className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          className="search-bar-submit"
         >
           Search
         </button>
       </form>
 
       {showFilters && (
-        <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-white rounded-lg shadow-lg z-10">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
+        <div className="search-bar-filters">
+          <div className="search-bar-filters-grid">
+            <div className="search-bar-filter-group">
+              <label className="search-bar-filter-label">
                 Status
               </label>
               <select
                 name="status"
                 value={filters.status}
                 onChange={handleFilterChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="search-bar-select"
               >
                 <option value="">All</option>
                 <option value="fresh">Fresh</option>
@@ -109,15 +110,15 @@ export default function SearchBar() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
+            <div className="search-bar-filter-group">
+              <label className="search-bar-filter-label">
                 Type
               </label>
               <select
                 name="post_type"
                 value={filters.post_type}
                 onChange={handleFilterChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="search-bar-select"
               >
                 <option value="">All</option>
                 <option value="sell">For Sale</option>
@@ -125,8 +126,8 @@ export default function SearchBar() {
               </select>
             </div>
 
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700">
+            <div className="search-bar-filter-group" style={{ gridColumn: 'span 2' }}>
+              <label className="search-bar-range-label">
                 Search Radius: {radius}km
               </label>
               <input
@@ -135,7 +136,7 @@ export default function SearchBar() {
                 max="50"
                 value={radius}
                 onChange={(e) => setRadius(Number(e.target.value))}
-                className="mt-1 block w-full"
+                className="search-bar-range"
               />
             </div>
           </div>

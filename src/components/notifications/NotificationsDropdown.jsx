@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { notificationAPI } from '../../api/notificationAPI';
 import { socketService } from '../../api/socketService';
 import LoadingSpinner from '../LoadingSpinner';
+import './NotificationsDropdown.css';
 
 export default function NotificationsDropdown() {
   const [notifications, setNotifications] = useState([]);
@@ -77,10 +78,10 @@ export default function NotificationsDropdown() {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="notifications-dropdown" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-800 focus:outline-none"
+        className="notifications-dropdown-button"
       >
         <svg
           className="w-6 h-6"
@@ -94,20 +95,20 @@ export default function NotificationsDropdown() {
           <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
+          <span className="notifications-dropdown-badge">
             {unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg overflow-hidden z-50">
-          <div className="p-4 border-b">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Notifications</h3>
+        <div className="notifications-dropdown-menu">
+          <div className="notifications-dropdown-header">
+            <div className="notifications-dropdown-header-content">
+              <h3 className="notifications-dropdown-title">Notifications</h3>
               <Link
                 to="/notifications"
-                className="text-blue-500 hover:text-blue-600 text-sm"
+                className="notifications-dropdown-view-all"
                 onClick={() => setIsOpen(false)}
               >
                 View All
@@ -115,27 +116,27 @@ export default function NotificationsDropdown() {
             </div>
           </div>
 
-          <div className="max-h-96 overflow-y-auto">
+          <div className="notifications-dropdown-content">
             {loading ? (
-              <div className="flex justify-center items-center h-32">
+              <div className="notifications-dropdown-loading">
                 <LoadingSpinner />
               </div>
             ) : error ? (
-              <div className="p-4 text-center text-red-500">
+              <div className="notifications-dropdown-error">
                 {error}
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
+              <div className="notifications-dropdown-empty">
                 No notifications
               </div>
             ) : (
-              <div className="divide-y">
+              <div className="notifications-dropdown-list">
                 {notifications.map((notification) => (
                   <Link
                     key={notification._id}
                     to={getNotificationLink(notification)}
-                    className={`block p-4 hover:bg-gray-50 ${
-                      !notification.read ? 'bg-blue-50' : ''
+                    className={`notifications-dropdown-item ${
+                      !notification.read ? 'notifications-dropdown-item-unread' : ''
                     }`}
                     onClick={() => {
                       if (!notification.read) {
@@ -144,10 +145,12 @@ export default function NotificationsDropdown() {
                       setIsOpen(false);
                     }}
                   >
-                    <p className={`text-sm ${!notification.read && 'font-medium'}`}>
+                    <p className={`notifications-dropdown-item-text ${
+                      !notification.read ? 'notifications-dropdown-item-text-unread' : ''
+                    }`}>
                       {notification.message}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="notifications-dropdown-item-time">
                       {new Date(notification.createdAt).toLocaleString()}
                     </p>
                   </Link>

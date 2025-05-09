@@ -1,0 +1,150 @@
+.user-profile {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.user-profile-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 16rem;
+}
+
+.user-profile-error {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.user-profile-error-content {
+  background-color: #fef2f2;
+  border-left: 4px solid #f87171;
+  padding: 1rem;
+}
+
+.user-profile-error-text {
+  color: #b91c1c;
+}
+
+.user-profile-not-found {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+  color: #6b7280;
+}
+
+.user-profile-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.user-profile-header {
+  padding: 1.5rem;
+}
+
+.user-profile-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.user-profile-avatar-container {
+  position: relative;
+}
+
+.user-profile-avatar {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 9999px;
+  object-fit: cover;
+}
+
+.user-profile-avatar-upload {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 9999px;
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.user-profile-avatar-upload:hover {
+  background-color: #2563eb;
+}
+
+.user-profile-avatar-input {
+  display: none;
+}
+
+.user-profile-details h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.user-profile-email,
+.user-profile-phone {
+  color: #6b7280;
+}
+
+.user-profile-date {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.user-profile-tabs {
+  border-top: 1px solid #e5e7eb;
+}
+
+.user-profile-tab-container {
+  display: flex;
+}
+
+.user-profile-tab {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.user-profile-tab:hover {
+  color: #374151;
+}
+
+.user-profile-tab-active {
+  border-bottom: 2px solid #3b82f6;
+  color: #3b82f6;
+}
+
+.user-profile-content {
+  padding: 1.5rem;
+}
+
+.user-profile-posts-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 8rem;
+}
+
+.user-profile-no-posts {
+  text-align: center;
+  color: #6b7280;
+}
+
+.user-profile-posts-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .user-profile-posts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

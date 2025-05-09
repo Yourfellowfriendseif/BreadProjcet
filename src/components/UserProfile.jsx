@@ -5,6 +5,7 @@ import { userAPI } from '../api/userAPI';
 import { breadAPI } from '../api/breadAPI';
 import BreadListing from './bread/BreadListing';
 import LoadingSpinner from './LoadingSpinner';
+import './UserProfile.css';
 
 export default function UserProfile() {
   const { userId } = useParams();
@@ -74,7 +75,7 @@ export default function UserProfile() {
 
   if (loading && !user) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="user-profile-loading">
         <LoadingSpinner />
       </div>
     );
@@ -82,9 +83,9 @@ export default function UserProfile() {
 
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto p-6">
-        <div className="bg-red-50 border-l-4 border-red-400 p-4">
-          <p className="text-red-700">{error}</p>
+      <div className="user-profile-error">
+        <div className="user-profile-error-content">
+          <p className="user-profile-error-text">{error}</p>
         </div>
       </div>
     );
@@ -92,28 +93,28 @@ export default function UserProfile() {
 
   if (!user) {
     return (
-      <div className="max-w-2xl mx-auto p-6">
-        <p className="text-gray-500">User not found</p>
+      <div className="user-profile-not-found">
+        <p>User not found</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="p-6">
-          <div className="flex items-center gap-6">
-            <div className="relative">
+    <div className="user-profile">
+      <div className="user-profile-container">
+        <div className="user-profile-header">
+          <div className="user-profile-info">
+            <div className="user-profile-avatar-container">
               <img
                 src={user.avatar || '/default-avatar.png'}
                 alt={user.username}
-                className="w-24 h-24 rounded-full object-cover"
+                className="user-profile-avatar"
               />
               {isOwnProfile && (
-                <label className="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-2 cursor-pointer hover:bg-blue-600">
+                <label className="user-profile-avatar-upload">
                   <input
                     type="file"
-                    className="hidden"
+                    className="user-profile-avatar-input"
                     accept="image/*"
                     onChange={handleAvatarChange}
                   />
@@ -128,36 +129,32 @@ export default function UserProfile() {
                 </label>
               )}
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">{user.username}</h1>
-              <p className="text-gray-500">{user.email}</p>
+            <div className="user-profile-details">
+              <h1>{user.username}</h1>
+              <p className="user-profile-email">{user.email}</p>
               {user.phone && (
-                <p className="text-gray-500">{user.phone}</p>
+                <p className="user-profile-phone">{user.phone}</p>
               )}
-              <p className="text-sm text-gray-400">
+              <p className="user-profile-date">
                 Member since {new Date(user.createdAt).toLocaleDateString()}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="border-t">
-          <div className="flex">
+        <div className="user-profile-tabs">
+          <div className="user-profile-tab-container">
             <button
-              className={`flex-1 py-3 px-4 text-center ${
-                activeTab === 'active'
-                  ? 'border-b-2 border-blue-500 text-blue-500'
-                  : 'text-gray-500 hover:text-gray-700'
+              className={`user-profile-tab ${
+                activeTab === 'active' ? 'user-profile-tab-active' : ''
               }`}
               onClick={() => setActiveTab('active')}
             >
               Active Posts
             </button>
             <button
-              className={`flex-1 py-3 px-4 text-center ${
-                activeTab === 'completed'
-                  ? 'border-b-2 border-blue-500 text-blue-500'
-                  : 'text-gray-500 hover:text-gray-700'
+              className={`user-profile-tab ${
+                activeTab === 'completed' ? 'user-profile-tab-active' : ''
               }`}
               onClick={() => setActiveTab('completed')}
             >
@@ -166,15 +163,15 @@ export default function UserProfile() {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="user-profile-content">
           {loading ? (
-            <div className="flex justify-center items-center h-32">
+            <div className="user-profile-posts-loading">
               <LoadingSpinner />
             </div>
           ) : posts.length === 0 ? (
-            <p className="text-center text-gray-500">No posts found</p>
+            <p className="user-profile-no-posts">No posts found</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="user-profile-posts-grid">
               {posts.map((post) => (
                 <BreadListing
                   key={post._id}

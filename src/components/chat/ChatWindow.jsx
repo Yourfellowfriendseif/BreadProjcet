@@ -3,6 +3,7 @@ import { chatAPI } from '../../api/chatAPI';
 import { socketService } from '../../api/socketService';
 import { useApp } from '../../context/AppContext';
 import LoadingSpinner from '../LoadingSpinner';
+import './ChatWindow.css';
 
 export default function ChatWindow({ recipientId, onClose }) {
   const { user } = useApp();
@@ -78,7 +79,7 @@ export default function ChatWindow({ recipientId, onClose }) {
 
   if (loading) {
     return (
-      <div className="h-full flex justify-center items-center">
+      <div className="chat-window-loading">
         <LoadingSpinner />
       </div>
     );
@@ -86,32 +87,32 @@ export default function ChatWindow({ recipientId, onClose }) {
 
   if (error) {
     return (
-      <div className="h-full flex justify-center items-center">
-        <p className="text-red-500">{error}</p>
+      <div className="chat-window-error">
+        <p className="chat-window-error-text">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-16rem)] bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="chat-window">
       {/* Chat Header */}
-      <div className="p-4 border-b flex justify-between items-center">
-        <div className="flex items-center">
+      <div className="chat-window-header">
+        <div className="chat-window-header-user">
           <img
             src={recipient?.photo_url || '/default-avatar.png'}
             alt={recipient?.username}
-            className="w-10 h-10 rounded-full mr-3"
+            className="chat-window-avatar"
           />
           <div>
-            <h3 className="font-semibold">{recipient?.username}</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="chat-window-username">{recipient?.username}</h3>
+            <p className="chat-window-status">
               {recipient?.isOnline ? 'Online' : 'Offline'}
             </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600"
+          className="chat-window-close"
         >
           <svg
             className="w-6 h-6"
@@ -128,24 +129,26 @@ export default function ChatWindow({ recipientId, onClose }) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="chat-window-messages">
         {messages.map((message) => {
           const isSender = message.sender === user._id;
           return (
             <div
               key={message._id}
-              className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
+              className={`chat-window-message ${
+                isSender ? 'chat-window-message-sent' : 'chat-window-message-received'
+              }`}
             >
               <div
-                className={`max-w-[70%] rounded-lg p-3 ${
+                className={`chat-window-message-content ${
                   isSender
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-800'
+                    ? 'chat-window-message-content-sent'
+                    : 'chat-window-message-content-received'
                 }`}
               >
                 <p>{message.content}</p>
-                <p className={`text-xs mt-1 ${
-                  isSender ? 'text-blue-100' : 'text-gray-500'
+                <p className={`chat-window-message-time ${
+                  isSender ? 'chat-window-message-time-sent' : 'chat-window-message-time-received'
                 }`}>
                   {new Date(message.createdAt).toLocaleTimeString()}
                 </p>
@@ -157,26 +160,26 @@ export default function ChatWindow({ recipientId, onClose }) {
       </div>
 
       {/* Message Input */}
-      <form onSubmit={handleSend} className="p-4 border-t">
-        <div className="flex space-x-2">
+      <form onSubmit={handleSend} className="chat-window-input">
+        <div className="chat-window-input-form">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="chat-window-input-field"
           />
           <button
             type="submit"
             disabled={!newMessage.trim() || sending}
-            className={`px-4 py-2 rounded-lg ${
+            className={`chat-window-send-button ${
               !newMessage.trim() || sending
-                ? 'bg-gray-300 cursor-not-allowed'
-                : 'bg-blue-500 hover:bg-blue-600'
-            } text-white`}
+                ? 'chat-window-send-button-disabled'
+                : 'chat-window-send-button-enabled'
+            }`}
           >
             {sending ? (
-              <span className="flex items-center space-x-2">
+              <span className="chat-window-send-button-content">
                 <LoadingSpinner size="sm" />
                 <span>Sending...</span>
               </span>

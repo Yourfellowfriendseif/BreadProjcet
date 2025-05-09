@@ -1,22 +1,28 @@
-import { useState, useEffect } from 'react';
-import { chatAPI } from '../../api/chatAPI';
-import LoadingSpinner from '../LoadingSpinner';
-import { useApp } from '../../context/AppContext';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
+import { formatDistanceToNow } from 'date-fns';
+import './ChatList.css';
 
-export default function ChatList({ onSelectChat, selectedUserId }) {
+const ChatList = ({ selectedChat, onSelectChat }) => {
   const [conversations, setConversations] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { user, socket } = useApp();
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { socket } = useSocket();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const data = await chatAPI.getRecentChats();
+        const response = await fetch('/api/chats/recent');
+        if (!response.ok) throw new Error('Failed to fetch conversations');
+        const data = await response.json();
         setConversations(data);
       } catch (error) {
         console.error('Error fetching conversations:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
@@ -26,91 +32,78 @@ export default function ChatList({ onSelectChat, selectedUserId }) {
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewMessage = (message) => {
+    socket.on('newMessage', (message) => {
       setConversations(prev => {
-        const conversationIndex = prev.findIndex(c => 
-          c.participants.some(p => p._id === message.sender._id || p._id === message.recipient._id)
-        );
-
-        if (conversationIndex === -1) {
-          // New conversation
-          return [{
-            participants: [message.sender, message.recipient],
-            lastMessage: message.content,
-            updatedAt: new Date().toISOString(),
-            unreadCount: 1
-          }, ...prev];
+        const updated = [...prev];
+        const index = updated.findIndex(conv => conv._id === message.conversationId);
+        if (index !== -1) {
+          updated[index] = {
+            ...updated[index],
+            lastMessage: message,
+            unreadCount: (updated[index].unreadCount || 0) + 1
+          };
         }
-
-        // Update existing conversation
-        const newConversations = [...prev];
-        newConversations[conversationIndex] = {
-          ...newConversations[conversationIndex],
-          lastMessage: message.content,
-          updatedAt: new Date().toISOString(),
-          unreadCount: selectedUserId === message.sender._id ? 0 : 
-            (newConversations[conversationIndex].unreadCount || 0) + 1
-        };
-
-        return newConversations;
+        return updated;
       });
-    };
-
-    socket.on('newMessage', handleNewMessage);
+    });
 
     return () => {
-      socket.off('newMessage', handleNewMessage);
+      socket.off('newMessage');
     };
-  }, [socket, selectedUserId]);
+  }, [socket]);
 
-  if (isLoading) {
-    return <LoadingSpinner />;
+  const handleChatSelect = (conversation) => {
+    onSelectChat(conversation);
+    navigate(`/chat/${conversation._id}`);
+  };
+
+  if (loading) {
+    return <div className="chat-list-empty">Loading conversations...</div>;
+  }
+
+  if (conversations.length === 0) {
+    return <div className="chat-list-empty">No conversations yet</div>;
   }
 
   return (
-    <div className="divide-y divide-gray-200">
+    <div className="chat-list">
       {conversations.map((conversation) => {
-        const otherParticipant = conversation.participants.find(p => p._id !== user._id);
-        
+        const otherUser = conversation.participants.find(p => p._id !== user._id);
         return (
           <div
-            key={otherParticipant._id}
-            className={`p-4 hover:bg-gray-50 cursor-pointer ${
-              selectedUserId === otherParticipant._id ? 'bg-blue-50' : ''
-            }`}
-            onClick={() => onSelectChat(otherParticipant._id)}
+            key={conversation._id}
+            className={`chat-list-item ${selectedChat?._id === conversation._id ? 'chat-list-item-selected' : ''}`}
+            onClick={() => handleChatSelect(conversation)}
           >
-            <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
-                  {otherParticipant.profileImage ? (
-                    <img
-                      src={otherParticipant.profileImage}
-                      alt={otherParticipant.username}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-xl text-white">
-                      {otherParticipant.username.charAt(0).toUpperCase()}
+            <div className="chat-list-item-content">
+              <div className="chat-list-avatar-container">
+                {otherUser.avatar ? (
+                  <img
+                    src={otherUser.avatar}
+                    alt={otherUser.username}
+                    className="chat-list-avatar-image"
+                  />
+                ) : (
+                  <div className="chat-list-avatar">
+                    <span className="chat-list-avatar-initial">
+                      {otherUser.username[0].toUpperCase()}
                     </span>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {otherParticipant.username}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(conversation.updatedAt).toLocaleDateString()}
-                  </p>
+              <div className="chat-list-details">
+                <div className="chat-list-header">
+                  <span className="chat-list-username">{otherUser.username}</span>
+                  <span className="chat-list-date">
+                    {formatDistanceToNow(new Date(conversation.updatedAt), { addSuffix: true })}
+                  </span>
                 </div>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-sm text-gray-500 truncate">
-                    {conversation.lastMessage}
-                  </p>
+                <div className="chat-list-message">
+                  <span className="chat-list-message-text">
+                    {conversation.lastMessage?.content || 'No messages yet'}
+                  </span>
                   {conversation.unreadCount > 0 && (
-                    <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-blue-500 rounded-full">
+                    <span className="chat-list-unread">
                       {conversation.unreadCount}
                     </span>
                   )}
@@ -120,11 +113,8 @@ export default function ChatList({ onSelectChat, selectedUserId }) {
           </div>
         );
       })}
-      {conversations.length === 0 && (
-        <div className="p-4 text-center text-gray-500">
-          No conversations yet
-        </div>
-      )}
     </div>
   );
-}
+};
+
+export default ChatList;

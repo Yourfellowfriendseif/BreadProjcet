@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { breadAPI } from '../../api/breadAPI';
 import LoadingSpinner from '../LoadingSpinner';
+import './PostDetail.css';
 
 export default function PostDetail() {
   const { id } = useParams();
@@ -74,7 +75,7 @@ export default function PostDetail() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="post-detail-loading">
         <LoadingSpinner />
       </div>
     );
@@ -82,9 +83,9 @@ export default function PostDetail() {
 
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto p-6">
-        <div className="bg-red-50 border-l-4 border-red-400 p-4">
-          <p className="text-red-700">{error}</p>
+      <div className="post-detail-error-container">
+        <div className="post-detail-error">
+          <p className="post-detail-error-text">{error}</p>
         </div>
       </div>
     );
@@ -92,39 +93,39 @@ export default function PostDetail() {
 
   if (!post) {
     return (
-      <div className="max-w-2xl mx-auto p-6">
-        <p className="text-gray-500">Post not found</p>
+      <div className="post-detail-not-found">
+        <p>Post not found</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="post-detail-container">
+      <div className="post-detail-card">
         {post.images && post.images.length > 0 && (
-          <div className="relative h-96">
+          <div className="post-detail-image-container">
             <img
               src={`${import.meta.env.VITE_API_BASE_URL}/uploads/${post.images[0]}`}
               alt={post.title}
-              className="w-full h-full object-cover"
+              className="post-detail-image"
             />
           </div>
         )}
 
-        <div className="p-6">
-          <div className="flex justify-between items-start mb-4">
+        <div className="post-detail-content">
+          <div className="post-detail-header">
             <div>
-              <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
-              <div className="flex items-center gap-4 text-sm text-gray-500">
-                <span className={`px-2 py-1 rounded ${
-                  post.status === 'fresh' ? 'bg-green-100 text-green-800' :
-                  post.status === 'day_old' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
+              <h1 className="post-detail-title">{post.title}</h1>
+              <div className="post-detail-badges">
+                <span className={`post-detail-badge ${
+                  post.status === 'fresh' ? 'post-detail-badge-fresh' :
+                  post.status === 'day_old' ? 'post-detail-badge-day-old' :
+                  'post-detail-badge-stale'
                 }`}>
                   {post.status.replace('_', ' ')}
                 </span>
-                <span className={`px-2 py-1 rounded ${
-                  post.type === 'offer' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                <span className={`post-detail-badge ${
+                  post.type === 'offer' ? 'post-detail-badge-offer' : 'post-detail-badge-request'
                 }`}>
                   {post.type === 'offer' ? 'Offering' : 'Requesting'}
                 </span>
@@ -132,16 +133,16 @@ export default function PostDetail() {
             </div>
 
             {user && user._id === post.user._id && (
-              <div className="flex gap-2">
+              <div className="post-detail-actions">
                 <button
                   onClick={() => navigate(`/bread/${id}/edit`)}
-                  className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                  className="post-detail-button post-detail-button-edit"
                 >
                   Edit
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+                  className="post-detail-button post-detail-button-delete"
                 >
                   Delete
                 </button>
@@ -149,51 +150,51 @@ export default function PostDetail() {
             )}
           </div>
 
-          <p className="text-gray-700 mb-6">{post.description}</p>
+          <p className="post-detail-description">{post.description}</p>
 
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="post-detail-info-grid">
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Quantity</h3>
-              <p className="mt-1">
+              <h3 className="post-detail-info-label">Quantity</h3>
+              <p className="post-detail-info-value">
                 {post.quantity} {post.quantity_unit}
               </p>
             </div>
             {post.address && (
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Location</h3>
-                <p className="mt-1">{post.address}</p>
+                <h3 className="post-detail-info-label">Location</h3>
+                <p className="post-detail-info-value">{post.address}</p>
               </div>
             )}
           </div>
 
-          <div className="flex items-center gap-4 mb-6 pb-6 border-b">
+          <div className="post-detail-user">
             <img
               src={post.user.avatar || '/default-avatar.png'}
               alt={post.user.username}
-              className="w-10 h-10 rounded-full"
+              className="post-detail-avatar"
             />
             <div>
-              <p className="font-medium">{post.user.username}</p>
-              <p className="text-sm text-gray-500">
+              <p className="post-detail-username">{post.user.username}</p>
+              <p className="post-detail-date">
                 Posted {new Date(post.createdAt).toLocaleDateString()}
               </p>
             </div>
           </div>
 
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
-              <p className="text-red-700">{error}</p>
+            <div className="post-detail-error">
+              <p className="post-detail-error-text">{error}</p>
             </div>
           )}
 
           {user && user._id !== post.user._id && !post.is_completed && (
-            <div className="flex justify-end">
+            <div className="post-detail-reserve">
               {post.is_reserved ? (
                 post.reserved_by?._id === user._id && (
                   <button
                     onClick={handleCancelReservation}
                     disabled={isReserving}
-                    className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+                    className="post-detail-reserve-button post-detail-reserve-button-danger"
                   >
                     {isReserving ? 'Canceling...' : 'Cancel Reservation'}
                   </button>
@@ -202,7 +203,7 @@ export default function PostDetail() {
                 <button
                   onClick={handleReserve}
                   disabled={isReserving}
-                  className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                  className="post-detail-reserve-button post-detail-reserve-button-primary"
                 >
                   {isReserving ? 'Reserving...' : 'Reserve'}
                 </button>
