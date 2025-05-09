@@ -1,137 +1,132 @@
-# Anti-Wast: Bread Marketplace Platform
+# Bread Project
 
-A platform connecting bakeries and consumers to reduce bread waste by selling or donating day-old bread.
+A web application for managing and sharing bread-related information, built with React and modern web technologies.
 
 ## Features
 
-### Core Features
-
-- User Authentication and Authorization
-- Bread Listings Management
-- Real-time Chat System
-- Push Notifications
-- Advanced Search and Filtering
-- Location-based Services
-- Multi-image Upload Support
-- User Profiles
-
-### Enhanced User Experience
-
-- Real-time Updates via WebSocket
-- Responsive Design with Tailwind CSS
-- Debounced Search Functionality
-- Protected Routes
-- Loading States and Spinners
-- Error Handling and Validation
+- User authentication and authorization
+- Bread management (create, read, update, delete)
+- Location-based bread sharing
+- Image upload and management
+- Real-time notifications
+- Responsive design
+- Modern UI components
 
 ## Tech Stack
 
-- React + Vite
-- Tailwind CSS for styling
-- Socket.io for real-time features
-- Axios for API calls
-- React Context for state management
+- **Frontend:**
+
+  - React 18
+  - React Router v6
+  - CSS Modules
+  - Leaflet (for maps)
+  - React Hot Toast (for notifications)
+  - Date-fns (for date formatting)
+
+- **Backend:**
+  - Node.js
+  - Express.js
+  - MongoDB
+  - JWT Authentication
+  - Multer (for file uploads)
 
 ## Project Structure
 
 ```
-├── public/              # Static assets
-│   └── vite.svg
-├── src/
-│   ├── api/            # API integration
-│   │   ├── apiClient.js        # Axios instance
-│   │   ├── breadAPI.js         # Bread endpoints
-│   │   ├── chatAPI.js          # Chat endpoints
-│   │   ├── notificationAPI.js  # Notification endpoints
-│   │   ├── socketService.js    # WebSocket handling
-│   │   └── userAPI.js          # User endpoints
-│   ├── assets/         # Static resources
-│   ├── components/
-│   │   ├── LoadingSpinner.jsx
-│   │   ├── NavBar.jsx
-│   │   ├── ProtectedRoute.jsx
-│   │   ├── UserProfile.jsx
-│   │   ├── auth/      # Authentication components
-│   │   ├── bread/     # Bread listing components
-│   │   ├── chat/      # Chat system components
-│   │   ├── common/    # Reusable components
-│   │   ├── notifications/ # Notification components
-│   │   ├── search/    # Search related components
-│   │   └── user/      # User related components
-│   ├── context/
-│   │   └── AppContext.jsx  # Global state management
-│   ├── hooks/
-│   │   └── useDebounce.js  # Custom hooks
-│   ├── pages/
-│   │   ├── About.jsx
-│   │   ├── Home.jsx
-│   │   ├── MessagesPage.jsx
-│   │   └── NotFound.jsx
-│   ├── types/         # TypeScript/PropTypes definitions
-│   ├── App.jsx
-│   ├── App.css
-│   ├── index.css
-│   └── main.jsx
-├── .env               # Environment variables
-├── eslint.config.js   # ESLint configuration
-├── index.html
-├── package.json
-├── tailwind.config.js # Tailwind CSS configuration
-└── vite.config.js     # Vite configuration
+src/
+├── api/              # API integration
+├── assets/           # Static assets
+├── components/       # React components
+│   ├── common/       # Reusable components
+│   ├── layout/       # Layout components
+│   └── pages/        # Page components
+├── context/          # React context
+├── hooks/            # Custom hooks
+├── styles/           # Global styles
+└── utils/            # Utility functions
 ```
 
-## Setup Instructions
+## Component Library
 
-1. Clone the repository
+The project includes a comprehensive set of reusable components:
+
+### Common Components
+
+- **Avatar**: User avatar with fallback to initials
+- **Badge**: Status indicators with multiple variants
+- **Button**: Action buttons with loading states
+- **ConfirmDialog**: Confirmation dialogs
+- **ErrorMessage**: Error message display
+- **FormGroup**: Form field wrapper with label and error handling
+- **ImageUpload**: Image upload with preview
+- **LocationPicker**: Map-based location selection
+- **Modal**: Modal dialog
+- **NoResults**: Empty state display
+- **TimeAgo**: Relative time display
+- **Toast**: Notification system
+- **ValidationError**: Form validation error display
+
+## Getting Started
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/yourusername/bread-project.git
+   cd bread-project
+   ```
+
 2. Install dependencies:
+
    ```bash
    npm install
    ```
-3. Create a .env file with required environment variables
+
+3. Set up environment variables:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` with your configuration.
+
 4. Start the development server:
    ```bash
    npm run dev
    ```
 
-## Available Scripts
+## Development
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm test` - Run tests (if configured)
+### Code Style
 
-## Recent Changes
+- Follow the existing component structure
+- Use CSS modules for component-specific styles
+- Maintain consistent naming conventions
+- Write meaningful component and function names
 
-### New Features
+### Component Guidelines
 
-- Implemented real-time chat system
-- Added push notifications
-- Enhanced image upload with multi-image support
-- Added location-based services
-- Implemented debounced search functionality
+- Keep components focused and single-responsibility
+- Use prop-types for type checking
+- Implement proper error handling
+- Follow accessibility best practices
+- Use semantic HTML elements
 
-### Technical Improvements
+### CSS Guidelines
 
-- Added WebSocket integration for real-time features
-- Improved error handling and validation
-- Enhanced state management with Context API
-- Added loading states and spinners
-- Implemented protected routes
-
-## Next Steps
-
-- Implement advanced filtering options
-- Add user preferences
-- Enhance chat features
-- Implement social sharing
-- Add analytics and reporting
-- Optimize performance and loading times
+- Use CSS modules for component-specific styles
+- Follow BEM naming convention
+- Maintain consistent spacing and colors
+- Use CSS variables for theming
+- Implement responsive design patterns
 
 ## Contributing
 
-Please read our contributing guidelines before submitting pull requests.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

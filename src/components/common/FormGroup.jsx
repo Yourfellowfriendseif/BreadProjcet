@@ -1,4 +1,5 @@
 import ValidationError from './ValidationError';
+import './FormGroup.css';
 
 export default function FormGroup({
   label,
@@ -9,19 +10,19 @@ export default function FormGroup({
   helperText
 }) {
   return (
-    <div className="space-y-1">
+    <div className="form-group">
       {label && (
         <label 
           htmlFor={id}
-          className="block text-sm font-medium text-gray-700"
+          className="form-group-label"
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="form-group-required">*</span>}
         </label>
       )}
       {children}
       {helperText && (
-        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
+        <p className="form-group-helper">{helperText}</p>
       )}
       <ValidationError error={error} />
     </div>

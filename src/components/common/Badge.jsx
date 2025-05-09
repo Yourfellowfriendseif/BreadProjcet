@@ -1,16 +1,18 @@
+import './Badge.css';
+
 const variants = {
-  fresh: 'bg-green-100 text-green-800',
-  day_old: 'bg-yellow-100 text-yellow-800',
-  stale: 'bg-red-100 text-red-800',
-  reserved: 'bg-blue-100 text-blue-800',
-  completed: 'bg-purple-100 text-purple-800',
-  default: 'bg-gray-100 text-gray-800'
+  fresh: 'badge-fresh',
+  day_old: 'badge-day-old',
+  stale: 'badge-stale',
+  reserved: 'badge-reserved',
+  completed: 'badge-completed',
+  default: 'badge-default'
 };
 
 const sizes = {
-  sm: 'px-2 py-0.5 text-xs',
-  md: 'px-2.5 py-0.5 text-sm',
-  lg: 'px-3 py-1 text-base'
+  sm: 'badge-sm',
+  md: 'badge-md',
+  lg: 'badge-lg'
 };
 
 export default function Badge({
@@ -21,10 +23,7 @@ export default function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full
-        ${variants[variant] || variants.default}
-        ${sizes[size]}
-        ${className}`}
+      className={`badge ${variants[variant] || variants.default} ${sizes[size]} ${className}`}
     >
       {children}
     </span>

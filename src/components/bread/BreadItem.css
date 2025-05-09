@@ -1,0 +1,29 @@
+.bread-item {
+  padding: 1rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.bread-item-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.bread-item-image {
+  width: 100%;
+  height: 12rem;
+  object-fit: cover;
+  border-radius: 0.375rem;
+  margin: 0.5rem 0;
+}
+
+.bread-item-description {
+  color: var(--gray-600);
+}
+
+.bread-item-location {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--gray-500);
+}

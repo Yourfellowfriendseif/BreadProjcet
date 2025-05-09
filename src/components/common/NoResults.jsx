@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import Button from './Button';
+import './NoResults.css';
 
 export default function NoResults({
   title = 'No results found',
@@ -9,9 +10,9 @@ export default function NoResults({
   actionLink
 }) {
   return (
-    <div className="text-center py-12 px-4">
+    <div className="no-results">
       <svg
-        className="mx-auto h-12 w-12 text-gray-400"
+        className="no-results-icon"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -24,10 +25,10 @@ export default function NoResults({
           d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         />
       </svg>
-      <h3 className="mt-4 text-lg font-medium text-gray-900">{title}</h3>
-      <p className="mt-2 text-sm text-gray-500">{message}</p>
+      <h3 className="no-results-title">{title}</h3>
+      <p className="no-results-message">{message}</p>
       {(action || actionLink) && (
-        <div className="mt-6">
+        <div className="no-results-action">
           {actionLink ? (
             <Link to={actionLink}>
               <Button variant="primary">{actionText}</Button>

@@ -42,41 +42,49 @@ function App() {
   }, []);
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
   }
 
   return (
     <AppProvider value={{ user, setUser }}>
-      <Router>
-        <Navbar />
-        <div className="container mx-auto px-4 py-6">
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/register" element={<RegisterForm />} />
-            <Route path="/" element={<Home />} />
-            <Route path="/search" element={<SearchResults />} />
-            <Route path="/bread/:id" element={<PostDetail />} />
+        <Router>
+          <div id="webcrumbs" className="min-h-screen bg-gray-50">
+            <div className="w-full max-w-[1280px] mx-auto p-6">
+            <Navbar />
+            <main className="container mx-auto px-4 py-6">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/login" element={<LoginForm />} />
+                <Route path="/register" element={<RegisterForm />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/search" element={<SearchResults />} />
+                <Route path="/bread/:id" element={<PostDetail />} />
 
-            {/* Protected Routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/bread/new" element={<CreatePost />} />
-              <Route path="/profile" element={<UserProfile />} />
-              <Route path="/user/:userId" element={<UserProfile />} />
-              <Route path="/messages" element={<MessagesPage />} />
-              <Route
-                path="/notifications"
-                element={
-                  <div className="container mx-auto px-4 py-8">
-                    <NotificationsList />
-                  </div>
-                }
-              />
-            </Route>
+                {/* Protected Routes */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/posts/create" element={<CreatePost />} />
+                  <Route path="/profile" element={<UserProfile />} />
+                  <Route path="/user/:userId" element={<UserProfile />} />
+                  <Route path="/messages" element={<MessagesPage />} />
+                  <Route
+                    path="/notifications"
+                    element={
+                      <div className="container mx-auto px-4 py-8">
+                        <NotificationsList />
+                      </div>
+                    }
+                  />
+                </Route>
 
-            {/* 404 Handling */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+                {/* 404 Handling */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
         </div>
       </Router>
     </AppProvider>

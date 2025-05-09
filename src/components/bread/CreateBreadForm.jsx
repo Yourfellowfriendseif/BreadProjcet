@@ -4,6 +4,7 @@ import { breadAPI } from '../../api/breadAPI';
 import LocationPicker from '../common/LocationPicker.jsx';
 import ImageUpload from '../common/ImageUpload';
 import LoadingSpinner from '../LoadingSpinner';
+import './CreateBreadForm.css';
 
 export default function CreateBreadForm() {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ export default function CreateBreadForm() {
       // Upload images first if any
       let imageIds = [];
       if (images.length > 0) {
-        const uploadResponse = await breadAPI.uploadImages(images);
+        const uploadResponse = await breadAPI.uploadImage(images);
         // The response structure includes data.images array containing the saved image objects
         imageIds = uploadResponse.data.images.map(img => img._id);
       }
@@ -70,41 +71,41 @@ export default function CreateBreadForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-6">Create New Post</h2>
+    <div className="create-bread-form">
+      <h2 className="create-bread-form-title">Create New Post</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit}>
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4">
-            <p className="text-red-700">{error}</p>
+          <div className="create-bread-form-error">
+            <p className="create-bread-form-error-text">{error}</p>
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
+        <div className="create-bread-form-grid">
+          <div className="create-bread-form-group">
+            <label className="create-bread-form-label">
               Post Type
             </label>
             <select
               name="post_type"
               value={formData.post_type}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="create-bread-form-select"
             >
               <option value="sell">Sell</option>
               <option value="request">Request</option>
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
+          <div className="create-bread-form-group">
+            <label className="create-bread-form-label">
               Status
             </label>
             <select
               name="status"
               value={formData.status}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="create-bread-form-select"
             >
               <option value="fresh">Fresh</option>
               <option value="day_old">Day Old</option>
@@ -113,8 +114,8 @@ export default function CreateBreadForm() {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
+        <div className="create-bread-form-group">
+          <label className="create-bread-form-label">
             Description
           </label>
           <textarea
@@ -122,14 +123,14 @@ export default function CreateBreadForm() {
             value={formData.description}
             onChange={handleInputChange}
             rows={3}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="create-bread-form-textarea"
             placeholder="Describe your bread..."
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
+        <div className="create-bread-form-grid">
+          <div className="create-bread-form-group">
+            <label className="create-bread-form-label">
               Quantity
             </label>
             <input
@@ -138,19 +139,19 @@ export default function CreateBreadForm() {
               value={formData.quantity}
               onChange={handleInputChange}
               min="1"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="create-bread-form-input"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
+          <div className="create-bread-form-group">
+            <label className="create-bread-form-label">
               Unit
             </label>
             <select
               name="quantity_unit"
               value={formData.quantity_unit}
               onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="create-bread-form-select"
             >
               <option value="pieces">Pieces</option>
               <option value="kg">Kilograms</option>
@@ -159,30 +160,30 @@ export default function CreateBreadForm() {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="create-bread-form-group">
+          <label className="create-bread-form-label">
             Images
           </label>
           <ImageUpload onImagesSelected={handleImagesSelected} maxImages={4} />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="create-bread-form-group">
+          <label className="create-bread-form-label">
             Location
           </label>
           <LocationPicker onLocationSelect={setLocation} />
           {!location && (
-            <p className="mt-1 text-sm text-red-600">
+            <p className="create-bread-form-location-error">
               Please select a location on the map
             </p>
           )}
         </div>
 
-        <div className="flex justify-end">
+        <div className="create-bread-form-submit">
           <button
             type="submit"
             disabled={loading || !location}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="create-bread-form-button"
           >
             {loading ? <LoadingSpinner /> : 'Create Post'}
           </button>

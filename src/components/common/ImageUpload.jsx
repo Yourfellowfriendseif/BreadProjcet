@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { uploadAPI } from '../../api/uploadAPI';
 import Button from './Button';
+import './ImageUpload.css';
 
 export default function ImageUpload({
   onChange,
@@ -64,31 +65,31 @@ export default function ImageUpload({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="image-upload">
       <input
         ref={fileInputRef}
         type="file"
         accept={accept}
         multiple={multiple}
         onChange={handleFileChange}
-        className="hidden"
+        className="image-upload-input"
       />
 
-      <div className="flex flex-wrap gap-4">
+      <div className="image-upload-grid">
         {value?.map((image, index) => (
-          <div key={index} className="relative">
+          <div key={index} className="image-upload-item">
             <img
               src={typeof image === 'string' ? image : uploadAPI.getImageUrl(image.filename)}
               alt={`Uploaded ${index + 1}`}
-              className="h-24 w-24 object-cover rounded-lg"
+              className="image-upload-preview"
             />
             <button
               type="button"
               onClick={() => handleRemove(index)}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+              className="image-upload-remove"
             >
               <svg
-                className="h-4 w-4"
+                className="image-upload-remove-icon"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -107,7 +108,7 @@ export default function ImageUpload({
       </div>
 
       {error && (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="image-upload-error">{error}</p>
       )}
 
       <Button
@@ -121,7 +122,7 @@ export default function ImageUpload({
       </Button>
 
       {multiple && (
-        <p className="text-sm text-gray-500">
+        <p className="image-upload-help">
           You can upload up to {maxFiles} images (max {maxSize / 1024 / 1024}MB each)
         </p>
       )}

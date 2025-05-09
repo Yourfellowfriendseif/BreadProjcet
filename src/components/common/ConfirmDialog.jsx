@@ -1,5 +1,6 @@
 import Modal from './Modal';
 import Button from './Button';
+import './ConfirmDialog.css';
 
 export default function ConfirmDialog({
   open,
@@ -19,13 +20,13 @@ export default function ConfirmDialog({
       title={title}
       maxWidth="sm"
     >
-      <div className="mt-2">
-        <p className="text-sm text-gray-500">
+      <div className="confirm-dialog-message">
+        <p className="confirm-dialog-message-text">
           {message}
         </p>
       </div>
 
-      <div className="mt-4 flex justify-end space-x-3">
+      <div className="confirm-dialog-actions">
         <Button
           variant="secondary"
           onClick={onClose}

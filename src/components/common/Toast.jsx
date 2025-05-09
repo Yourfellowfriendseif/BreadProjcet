@@ -1,28 +1,23 @@
 import { Toaster, toast } from 'react-hot-toast';
+import './Toast.css';
 
 export const Toast = {
   success: (message) => {
     toast.success(message, {
-      style: {
-        background: '#10B981',
-        color: '#FFFFFF'
-      },
+      className: 'toast-success',
       iconTheme: {
-        primary: '#FFFFFF',
-        secondary: '#10B981'
+        primary: 'var(--toast-icon-success-color)',
+        secondary: 'var(--toast-icon-success-bg)'
       }
     });
   },
 
   error: (message) => {
     toast.error(message, {
-      style: {
-        background: '#EF4444',
-        color: '#FFFFFF'
-      },
+      className: 'toast-error',
       iconTheme: {
-        primary: '#FFFFFF',
-        secondary: '#EF4444'
+        primary: 'var(--toast-icon-error-color)',
+        secondary: 'var(--toast-icon-error-bg)'
       }
     });
   },
@@ -30,10 +25,7 @@ export const Toast = {
   info: (message) => {
     toast(message, {
       icon: 'ℹ️',
-      style: {
-        background: '#3B82F6',
-        color: '#FFFFFF'
-      }
+      className: 'toast-info'
     });
   }
 };
@@ -44,20 +36,10 @@ export function ToastProvider() {
       position="top-right"
       reverseOrder={false}
       gutter={8}
-      containerStyle={{
-        top: 20,
-        right: 20,
-        padding: '4px'
-      }}
+      containerClassName="toast-container"
       toastOptions={{
         duration: 3000,
-        style: {
-          background: '#FFFFFF',
-          color: '#1F2937',
-          padding: '12px 16px',
-          borderRadius: '6px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-        }
+        className: 'toast'
       }}
     />
   );

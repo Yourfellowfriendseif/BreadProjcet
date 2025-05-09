@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import './LocationPicker.css';
 
 // Fix Leaflet default marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -24,7 +25,7 @@ function LocationMarker({ position, onLocationChange }) {
     }
   }, [position]);
 
-  return position ? <Marker position={position} /> : null;
+  return position ? <Marker position={position} className="location-picker-marker" /> : null;
 }
 
 export default function LocationPicker({ onLocationSelect, defaultLocation }) {
@@ -60,11 +61,11 @@ export default function LocationPicker({ onLocationSelect, defaultLocation }) {
   };
 
   return (
-    <div className="space-y-2">
-      <GoogleMap
-        mapContainerStyle={mapContainerStyle}
+    <div className="location-picker">
+      <MapContainer
+        center={initialPosition}
         zoom={13}
-        style={{ height: '100%', width: '100%' }}
+        className="location-picker-map"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
