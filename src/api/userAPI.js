@@ -2,42 +2,31 @@ import { apiClient } from "./apiClient";
 
 export const userAPI = {
   register: async (userData) => {
-    // Send as JSON instead of FormData
     const response = await apiClient.post("/auth/register", {
       username: userData.username,
       email: userData.email,
       password: userData.password,
       phone_number: userData.phone_number,
-      // Note: Avatar would need to be handled separately if needed
-      // via a different endpoint like PATCH /users/profile
     });
 
-    if (response.data?.token) {
-      localStorage.setItem("token", response.data.token);
+    if (response?.token) {
+      localStorage.setItem("token", response.token);
     }
 
-    return response.data;
+    return response;
   },
 
   login: async (credentials) => {
     try {
       const response = await apiClient.post("/auth/login", credentials);
-      console.log('Full login response:', response);
-      
-      // Check for response.data or use response directly if data is at root level
-      const responseData = response.data || response;
-      
-      if (!responseData) {
-        throw new Error('No data received from server');
+
+      if (response?.token) {
+        localStorage.setItem("token", response.token);
       }
-      
-      if (responseData.token) {
-        localStorage.setItem("token", responseData.token);
-      }
-      
-      return responseData;
+
+      return response;
     } catch (error) {
-      console.error('Login API error:', error);
+      console.error("Login API error:", error);
       throw error;
     }
   },
@@ -49,12 +38,11 @@ export const userAPI = {
   },
 
   getProfile: async () => {
-    const response = await apiClient.get("/user/me");
-    return response.data;
+    return apiClient.get("/user/me");
   },
 
   getUserById: async (userId) => {
-    return apiClient.get(`/users/${userId}`);
+    return apiClient.get(`/user/${userId}`);
   },
 
   updateProfile: async (updateData) => {
@@ -73,7 +61,7 @@ export const userAPI = {
       }
     });
 
-    return apiClient.put("/users/profile", formData, {
+    return apiClient.put("/user/profile", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -81,14 +69,14 @@ export const userAPI = {
   },
 
   updatePassword: async ({ currentPassword, newPassword }) => {
-    return apiClient.put("/users/password", {
+    return apiClient.put("/user/password", {
       currentPassword,
       newPassword,
     });
   },
 
   searchUsers: async (query) => {
-    return apiClient.get("/users/search", {
+    return apiClient.get("/user/search", {
       params: { q: query },
     });
   },

@@ -10,11 +10,12 @@ export default function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
-    post_type: 'offer', // Changed from 'type' to match backend
+    post_type: 'sell', // Changed from 'offer' to match backend
     description: '',
     quantity: 1,
-    quantity_unit: 'loaves',
+    quantity_unit: 'pieces', // Changed default to match backend
     status: 'fresh',
+    category: 'bread', // Added category field
     images: [],
     address: ''
   });
@@ -73,17 +74,30 @@ export default function CreatePost() {
       // First upload images if any
       let imageIds = [];
       if (formData.images.length > 0) {
-        const uploadPromises = formData.images.map(file => 
-          breadAPI.uploadImage(file)
-        );
-        const uploadResponses = await Promise.all(uploadPromises);
-        imageIds = uploadResponses.map(res => res.data.id);
+        try {
+          const uploadPromises = formData.images.map(file => 
+            breadAPI.uploadImage(file)
+          );
+          const uploadResponses = await Promise.all(uploadPromises);
+          console.log('Upload responses:', uploadResponses); // Debug log
+          imageIds = uploadResponses.map(response => {
+            if (!response || !response._id) {
+              console.error('Invalid image response:', response);
+              throw new Error('Invalid image upload response');
+            }
+            return response._id;
+          });
+        } catch (uploadError) {
+          console.error('Image upload error:', uploadError);
+          throw new Error('Failed to upload images');
+        }
       }
 
       // Prepare post data matching backend requirements
       const postData = {
         post_type: formData.post_type,
         status: formData.status,
+        category: formData.category,
         description: formData.description,
         quantity: formData.quantity,
         quantity_unit: formData.quantity_unit,
@@ -91,14 +105,14 @@ export default function CreatePost() {
           type: 'Point',
           coordinates: userLocation
         },
-        imageIds, // Use uploaded image IDs
+        imageIds: imageIds.length > 0 ? imageIds : undefined, // Only include if there are images
         address: formData.address
       };
 
-      await breadAPI.create(postData);
+      const response = await breadAPI.create(postData);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to create post');
+      setError(err.message || 'Failed to create post');
       console.error('Post creation error:', err);
     } finally {
       setLoading(false);
@@ -123,7 +137,7 @@ export default function CreatePost() {
             onChange={(e) => setFormData(prev => ({ ...prev, post_type: e.target.value }))}
             className="create-post-select"
           >
-            <option value="offer">Offer</option>
+            <option value="sell">Sell</option>
             <option value="request">Request</option>
           </select>
         </div>
@@ -136,6 +150,7 @@ export default function CreatePost() {
             rows={4}
             className="create-post-textarea"
             placeholder="Describe what you're offering or requesting"
+            maxLength={1000}
           />
         </div>
 
@@ -159,10 +174,12 @@ export default function CreatePost() {
               onChange={(e) => setFormData(prev => ({ ...prev, quantity_unit: e.target.value }))}
               className="create-post-select"
             >
-              <option value="loaves">Loaves</option>
               <option value="pieces">Pieces</option>
+              <option value="loaves">Loaves</option>
               <option value="kg">Kilograms</option>
               <option value="g">Grams</option>
+              <option value="boxes">Boxes</option>
+              <option value="packages">Packages</option>
             </select>
           </div>
         </div>

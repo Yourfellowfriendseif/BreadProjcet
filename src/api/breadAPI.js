@@ -46,6 +46,7 @@ export const breadAPI = {
         "Content-Type": "multipart/form-data",
       },
     });
+    return response;
   },
 
   getAllPosts: async () => {

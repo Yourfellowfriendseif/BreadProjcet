@@ -29,22 +29,29 @@ apiClient.interceptors.request.use(
 // Response interceptor for handling common errors
 apiClient.interceptors.response.use(
   (response) => {
-    // If the response has a data.data structure, return just the data
-    if (response.data?.data) {
+    // Handle the standard backend response structure
+    if (response.data?.status === "success") {
+      // For upload endpoints, return the image data directly
+      if (response.config.url.includes("/upload")) {
+        return response.data.data.image;
+      }
       return response.data.data;
     }
-    return response;
+    return response.data;
   },
   (error) => {
     // Network error
     if (!error.response) {
       return Promise.reject({
+        status: "error",
         message: "Network error - please check your internet connection",
         isNetworkError: true,
       });
     }
 
     // Handle specific error cases
+    const errorResponse = error.response.data || {};
+
     switch (error.response.status) {
       case 401:
         // Clear token if it's invalid or expired
@@ -52,34 +59,39 @@ apiClient.interceptors.response.use(
         if (window.location.pathname !== "/login") {
           window.location.href = "/login";
         }
-        break;
+        return Promise.reject({
+          status: "error",
+          message: errorResponse.message || "Authentication failed",
+        });
 
       case 409:
-        // Handle conflict errors (e.g., duplicate email/username)
-        const conflictField = error.response.data.field || "unknown";
         return Promise.reject({
-          message: error.response.data.message || "A conflict occurred",
-          conflictField,
+          status: "fail",
+          message: errorResponse.message || "A conflict occurred",
+          field: errorResponse.field || "unknown",
         });
 
       case 413:
         return Promise.reject({
+          status: "error",
           message: "File too large - please upload a smaller file",
         });
 
       case 415:
         return Promise.reject({
+          status: "error",
           message: "Unsupported file type",
         });
     }
 
     // Format validation errors
-    if (error.response.data?.errors) {
+    if (errorResponse.errors) {
       const validationErrors = {};
-      error.response.data.errors.forEach((err) => {
+      errorResponse.errors.forEach((err) => {
         validationErrors[err.param] = err.msg;
       });
       return Promise.reject({
+        status: "fail",
         message: "Validation failed",
         errors: validationErrors,
       });
@@ -87,9 +99,9 @@ apiClient.interceptors.response.use(
 
     // Return formatted error
     return Promise.reject({
-      message: error.response.data?.message || "An error occurred",
-      status: error.response.status,
-      data: error.response.data,
+      status: errorResponse.status || "error",
+      message: errorResponse.message || "An error occurred",
+      data: errorResponse.data,
     });
   }
 );
