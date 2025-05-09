@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { socketService } from '../api/socketService';
-import { userAPI } from '../api/userAPI';
-import { notificationAPI } from '../api/notificationAPI';
+import { createContext, useContext, useState, useEffect } from "react";
+import { socketService } from "../api/socketService";
+import { userAPI } from "../api/userAPI";
+import { notificationAPI } from "../api/notificationAPI";
 
 const AppContext = createContext();
 
@@ -23,32 +23,48 @@ export function AppProvider({ children }) {
   };
 
   const handleApiError = (error) => {
-    const message = error.response?.data?.message || 
-                   error.response?.data?.error || 
-                   error.message || 
-                   'An error occurred';
+    const message =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      "An error occurred";
     throw new Error(message);
   };
 
   // Initialize user session
   useEffect(() => {
     const initializeSession = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (token) {
         try {
-          const userData = await userAPI.getProfile().then(processApiResponse);
-          setUser(userData);
-          
-          // Load initial notifications
-          const notificationsData = await notificationAPI.getNotifications()
-            .then(processApiResponse);
-          setNotifications(notificationsData?.notifications || []);
-          
-        } catch (error) {
-          if (error.response?.status === 401) {
-            localStorage.removeItem('token');
+          console.log("Found token in localStorage, initializing session...");
+          const userData = await userAPI.getProfile();
+
+          if (userData) {
+            console.log("Successfully loaded user profile");
+            setUser(userData);
+
+            // Load initial notifications
+            try {
+              const notificationsData = await notificationAPI
+                .getNotifications()
+                .then(processApiResponse);
+              setNotifications(notificationsData?.notifications || []);
+            } catch (notifError) {
+              console.error("Error loading notifications:", notifError);
+            }
+          } else {
+            console.warn("No user data returned despite valid token");
+            localStorage.removeItem("token");
           }
-          handleApiError(error);
+        } catch (error) {
+          console.error("Error initializing session:", error);
+          if (error.response?.status === 401) {
+            console.warn(
+              "Token expired or invalid, removing from localStorage"
+            );
+            localStorage.removeItem("token");
+          }
         }
       }
       setLoading(false);
@@ -59,43 +75,84 @@ export function AppProvider({ children }) {
 
   // Handle socket connections and events
   useEffect(() => {
-    if (user) {
-      const token = localStorage.getItem('token');
-      socketService.connect(token);
+    let isMounted = true;
 
-      // Chat events
-      socketService.on('chat:message:new', (message) => {
-        if (message.sender._id !== user._id) {
-          setUnreadMessages(prev => prev + 1);
+    const setupSocket = async () => {
+      if (user) {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.warn("User is set but no token found");
+          return;
         }
-      });
 
-      socketService.on('chat:message:read', ({ messageId, readBy }) => {
-        if (readBy === user._id) {
-          setUnreadMessages(prev => Math.max(0, prev - 1));
+        try {
+          console.log(
+            "Setting up socket connection with token:",
+            token.substring(0, 10) + "..."
+          );
+
+          // First verify the token with the server
+          await userAPI.getProfile();
+
+          // Then connect socket - exactly like the HTML test
+          socketService.connect(token);
+
+          if (isMounted) {
+            // Chat events
+            socketService.on("chat:message:new", (message) => {
+              console.log("Socket received new message:", message);
+              if (message.sender._id !== user._id) {
+                setUnreadMessages((prev) => prev + 1);
+              }
+            });
+
+            socketService.on("chat:message:read", ({ messageId, readBy }) => {
+              console.log("Socket received message read:", {
+                messageId,
+                readBy,
+              });
+              if (readBy === user._id) {
+                setUnreadMessages((prev) => Math.max(0, prev - 1));
+              }
+            });
+
+            // Notification events
+            socketService.on("notification:new", (notification) => {
+              console.log("Socket received new notification:", notification);
+              setNotifications((prev) => [notification, ...prev]);
+            });
+
+            socketService.on("notification:read", (data) => {
+              console.log("Socket received notification read:", data);
+              const notificationId = data.notificationId;
+              setNotifications((prev) =>
+                prev.map((n) =>
+                  n._id === notificationId ? { ...n, read: true } : n
+                )
+              );
+            });
+
+            socketService.on("notification:allRead", () => {
+              console.log("Socket received all notifications read");
+              setNotifications((prev) =>
+                prev.map((n) => ({ ...n, read: true }))
+              );
+            });
+          }
+        } catch (error) {
+          console.error("Error setting up socket in AppContext:", error);
         }
-      });
+      } else {
+        // Make sure socket is disconnected when no user
+        socketService.disconnect();
+      }
+    };
 
-      // Notification events
-      socketService.on('notification:new', (notification) => {
-        setNotifications(prev => [notification, ...prev]);
-      });
+    setupSocket();
 
-      socketService.on('notification:read', (notificationId) => {
-        setNotifications(prev => 
-          prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
-        );
-      });
-
-      socketService.on('notification:allRead', () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      });
-
-    } else {
-      socketService.disconnect();
-    }
-
+    // Properly clean up socket listeners when component unmounts or user changes
     return () => {
+      isMounted = false;
       socketService.removeAllListeners();
     };
   }, [user]);
@@ -104,17 +161,21 @@ export function AppProvider({ children }) {
     try {
       const response = await userAPI.login(credentials);
       const data = processApiResponse(response);
-      
+
+      // Make sure token is saved first
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
       // Set user based on backend response structure
       const user = data.user || {
         _id: data._id,
         username: data.username,
         email: data.email,
         phone_number: data.phone_number,
-        photo_url: data.photo_url
+        photo_url: data.photo_url,
         // Add other properties from your user schema
       };
-      socketService.connect();
       setUser(user);
       return data;
     } catch (error) {
@@ -126,16 +187,20 @@ export function AppProvider({ children }) {
     try {
       const response = await userAPI.register(userData);
       const data = processApiResponse(response);
-      
+
+      // Make sure token is saved first
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+
       // Set user based on backend response structure
       const user = data.user || {
         _id: data._id,
         username: data.username,
         email: data.email,
         phone_number: data.phone_number,
-        photo_url: data.photo_url
+        photo_url: data.photo_url,
       };
-      socketService.connect();
       setUser(user);
       return data;
     } catch (error) {
@@ -145,23 +210,26 @@ export function AppProvider({ children }) {
 
   const logout = async () => {
     try {
+      // Disconnect socket first to avoid cleanup issues
+      socketService.disconnect();
+
       await userAPI.logout();
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       setUser(null);
       setNotifications([]);
       setUnreadMessages(0);
-      localStorage.removeItem('token');
-      socketService.disconnect();
+      localStorage.removeItem("token");
     }
   };
 
   const updateUser = async (userData) => {
     try {
-      const updatedUser = await userAPI.updateProfile(userData)
+      const updatedUser = await userAPI
+        .updateProfile(userData)
         .then(processApiResponse);
-      setUser(prev => ({ ...prev, ...updatedUser }));
+      setUser((prev) => ({ ...prev, ...updatedUser }));
       return updatedUser;
     } catch (error) {
       handleApiError(error);
@@ -171,8 +239,8 @@ export function AppProvider({ children }) {
   const markNotificationRead = async (notificationId) => {
     try {
       await notificationAPI.markAsRead(notificationId);
-      setNotifications(prev =>
-        prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === notificationId ? { ...n, read: true } : n))
       );
     } catch (error) {
       handleApiError(error);
@@ -182,7 +250,7 @@ export function AppProvider({ children }) {
   const markAllNotificationsRead = async () => {
     try {
       await notificationAPI.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch (error) {
       handleApiError(error);
     }
@@ -198,7 +266,7 @@ export function AppProvider({ children }) {
     register,
     updateUser,
     markNotificationRead,
-    markAllNotificationsRead
+    markAllNotificationsRead,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
@@ -207,7 +275,7 @@ export function AppProvider({ children }) {
 export const useApp = () => {
   const context = useContext(AppContext);
   if (!context) {
-    throw new Error('useApp must be used within an AppProvider');
+    throw new Error("useApp must be used within an AppProvider");
   }
   return context;
 };

@@ -39,8 +39,13 @@ export const userAPI = {
   },
 
   getProfile: async () => {
-    const res = await apiClient.get("/user/me");
-    return res.user;
+    try {
+      const response = await apiClient.get("/user/me");
+      return response?.user || response?.data?.user || response;
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      throw error;
+    }
   },
 
   getUserById: async (userId) => {

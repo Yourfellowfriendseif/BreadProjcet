@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
-import { breadAPI } from '../api/breadAPI';
-import BreadListing from '../components/bread/BreadListing';
-import LoadingSpinner from '../components/LoadingSpinner';
-import './Home.css';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useApp } from "../context/AppContext";
+import { breadAPI } from "../api/breadAPI";
+import BreadListing from "../components/bread/BreadListing";
+import LoadingSpinner from "../components/LoadingSpinner";
+import "./Home.css";
 
 export default function Home() {
   const { user } = useApp();
@@ -13,9 +13,9 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [filters, setFilters] = useState({
-    status: '',
-    post_type: '',
-    maxDistance: 10000
+    status: "",
+    post_type: "",
+    maxDistance: 10000,
   });
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 6;
@@ -27,7 +27,7 @@ export default function Home() {
         (position) => {
           const location = {
             lat: position.coords.latitude,
-            lng: position.coords.longitude
+            lng: position.coords.longitude,
           };
           setUserLocation(location);
           loadPosts(location);
@@ -50,7 +50,7 @@ export default function Home() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const searchFilters = { ...filters };
       if (location) {
         searchFilters.location = location;
@@ -58,12 +58,26 @@ export default function Home() {
       }
 
       // Remove empty filters
-      Object.keys(searchFilters).forEach(key => 
-        !searchFilters[key] && delete searchFilters[key]
+      Object.keys(searchFilters).forEach(
+        (key) => !searchFilters[key] && delete searchFilters[key]
       );
 
       const response = await breadAPI.searchPosts(searchFilters);
-      setPosts(response.posts || []);
+      console.log("Search posts response:", response);
+
+      // Handle different response structures
+      const postsData =
+        response?.data?.data?.posts ||
+        response?.data?.posts ||
+        response?.posts ||
+        [];
+      console.log("Extracted posts data:", postsData);
+
+      setPosts(postsData);
+
+      if (postsData.length === 0) {
+        console.log("No posts found with the current filters");
+      }
     } catch (error) {
       setError("Failed to load posts");
       console.error("Error loading posts:", error);
@@ -79,12 +93,12 @@ export default function Home() {
         lat: location.lat,
         lng: location.lng,
         maxDistance: filters.maxDistance,
-        ...filters
+        ...filters,
       });
       setPosts(response.data || []);
     } catch (error) {
-      setError('Failed to load nearby posts');
-      console.error('Error loading nearby posts:', error);
+      setError("Failed to load nearby posts");
+      console.error("Error loading nearby posts:", error);
     } finally {
       setLoading(false);
     }
@@ -100,11 +114,14 @@ export default function Home() {
 
   // Calculate paginated posts
   const totalPages = Math.ceil(posts.length / postsPerPage);
-  const paginatedPosts = posts.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage);
+  const paginatedPosts = posts.slice(
+    (currentPage - 1) * postsPerPage,
+    currentPage * postsPerPage
+  );
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Reset to page 1 when filters or posts change
@@ -116,10 +133,7 @@ export default function Home() {
     <div className="home">
       <div className="home-header">
         <h1 className="home-title">Available Bread</h1>
-        <Link
-          to="/posts/create"
-          className="home-create-button"
-        >
+        <Link to="/posts/create" className="home-create-button">
           Create Post
         </Link>
       </div>
@@ -127,7 +141,9 @@ export default function Home() {
       <div className="home-filters">
         <select
           value={filters.status}
-          onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, status: e.target.value }))
+          }
           className="home-filter-select"
         >
           <option value="">All Status</option>
@@ -138,7 +154,9 @@ export default function Home() {
 
         <select
           value={filters.post_type}
-          onChange={(e) => setFilters(prev => ({ ...prev, post_type: e.target.value }))}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, post_type: e.target.value }))
+          }
           className="home-filter-select"
         >
           <option value="">All Types</option>
@@ -149,7 +167,12 @@ export default function Home() {
         {userLocation && (
           <select
             value={filters.maxDistance}
-            onChange={(e) => setFilters(prev => ({ ...prev, maxDistance: Number(e.target.value) }))}
+            onChange={(e) =>
+              setFilters((prev) => ({
+                ...prev,
+                maxDistance: Number(e.target.value),
+              }))
+            }
             className="home-filter-select"
           >
             <option value="5000">Within 5km</option>
@@ -183,7 +206,9 @@ export default function Home() {
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
               key={page}
-              className={`home-pagination-btn${page === currentPage ? ' home-pagination-btn-active' : ''}`}
+              className={`home-pagination-btn${
+                page === currentPage ? " home-pagination-btn-active" : ""
+              }`}
               onClick={() => handlePageChange(page)}
             >
               {page}
