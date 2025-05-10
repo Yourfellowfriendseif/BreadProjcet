@@ -130,3 +130,53 @@ The project includes a comprehensive set of reusable components:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## User Profile Page
+
+- The profile page is accessible at `/profile` (for your own profile) and `/profile/:userId` (for other users).
+- **Note:** Currently, viewing another user's profile uses a workaround: it fetches all users from `/user/all` and filters by ID. This is temporary until a dedicated `/user/:id` endpoint is added to the backend.
+- If you encounter issues on the profile page, check the browser console for debugging logs. The profile page logs the loaded user data and any errors during profile or posts loading.
+
+## Responsive Design
+
+The application is built with a mobile-first approach and is fully responsive across all devices. Key features include:
+
+### Breakpoints
+
+- Extra small (xs): 0px and up
+- Small (sm): 576px and up
+- Medium (md): 768px and up
+- Large (lg): 992px and up
+- Extra large (xl): 1200px and up
+- Extra extra large (xxl): 1400px and up
+
+### Responsive Features
+
+- Fluid typography that scales with viewport size
+- Responsive grid system for layout management
+- Flexible images and media
+- Mobile-first navigation
+- Adaptive spacing and padding
+- Responsive forms and tables
+- Touch-friendly interface elements
+
+### Usage
+
+The project includes utility classes for responsive design:
+
+- `.container`: Responsive container with max-width
+- `.grid-responsive`: Responsive grid layout
+- `.flex-responsive`: Responsive flexbox layout
+- `.text-responsive`: Responsive typography
+- `.spacing-responsive`: Responsive spacing
+- `.img-responsive`: Responsive images
+- `.nav-responsive`: Responsive navigation
+
+### Testing
+
+To ensure proper responsive behavior:
+
+1. Test on multiple devices
+2. Use browser dev tools to simulate different screen sizes
+3. Verify touch interactions on mobile devices
+4. Check content readability at all breakpoints

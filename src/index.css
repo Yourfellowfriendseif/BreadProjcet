@@ -121,3 +121,11 @@ body {
     background-color: #213547;
   }
 }
+
+input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  color: #000;
+}

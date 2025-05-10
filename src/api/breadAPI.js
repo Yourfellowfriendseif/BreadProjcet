@@ -9,11 +9,26 @@ export const breadAPI = {
   // Add a dedicated method for creating posts with images
   createWithImages: async (formData) => {
     const response = await apiClient.post("/posts/create", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
+      headers: { "Content-Type": "multipart/form-data" },
+      withCredentials: true,
+    });
+    return response;
+  },
+
+  uploadImages: async (formData, onProgress) => {
+    const response = await apiClient.post("/upload/multiple", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      withCredentials: true,
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const percent = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          onProgress(percent);
+        }
       },
     });
-    return response.data;
+    return response;
   },
 
   getAll: async (filters = {}) => {

@@ -10,6 +10,7 @@ export function AppProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [globalSearchTerm, setGlobalSearchTerm] = useState('');
 
   const processApiResponse = (response) => {
     // Handle different backend response structures
@@ -267,6 +268,8 @@ export function AppProvider({ children }) {
     updateUser,
     markNotificationRead,
     markAllNotificationsRead,
+    globalSearchTerm,
+    setGlobalSearchTerm,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

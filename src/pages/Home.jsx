@@ -4,6 +4,7 @@ import { useApp } from "../context/AppContext";
 import { breadAPI } from "../api/breadAPI";
 import BreadListing from "../components/bread/BreadListing";
 import LoadingSpinner from "../components/LoadingSpinner";
+import FilterSection from '../components/FilterSection';
 import "./Home.css";
 
 export default function Home() {
@@ -13,15 +14,14 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [filters, setFilters] = useState({
-    status: "",
-    post_type: "",
-    maxDistance: 10000,
+    status: '',
+    type: '',
+    province: '',
   });
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 6;
 
   useEffect(() => {
-    // Get user's location if available
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -33,17 +33,18 @@ export default function Home() {
           loadPosts(location);
         },
         () => {
-          // Fallback to loading all posts if location is not available
           loadPosts();
         }
       );
     } else {
       loadPosts();
     }
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
     loadPosts(userLocation);
+    // eslint-disable-next-line
   }, [filters]);
 
   const loadPosts = async (location = null) => {
@@ -57,62 +58,24 @@ export default function Home() {
         searchFilters.radius = filters.radius;
       }
 
-      // Remove empty filters
       Object.keys(searchFilters).forEach(
         (key) => !searchFilters[key] && delete searchFilters[key]
       );
 
       const response = await breadAPI.searchPosts(searchFilters);
-      console.log("Search posts response:", response);
-
-      // Handle different response structures
       const postsData =
         response?.data?.data?.posts ||
         response?.data?.posts ||
         response?.posts ||
         [];
-      console.log("Extracted posts data:", postsData);
-
       setPosts(postsData);
-
-      if (postsData.length === 0) {
-        console.log("No posts found with the current filters");
-      }
     } catch (error) {
       setError("Failed to load posts");
-      console.error("Error loading posts:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadNearbyPosts = async (location) => {
-    try {
-      setLoading(true);
-      const response = await breadAPI.getNearbyPosts({
-        lat: location.lat,
-        lng: location.lng,
-        maxDistance: filters.maxDistance,
-        ...filters,
-      });
-      setPosts(response.data || []);
-    } catch (error) {
-      setError("Failed to load nearby posts");
-      console.error("Error loading nearby posts:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePostUpdate = () => {
-    if (userLocation) {
-      loadNearbyPosts(userLocation);
-    } else {
-      loadPosts();
-    }
-  };
-
-  // Calculate paginated posts
   const totalPages = Math.ceil(posts.length / postsPerPage);
   const paginatedPosts = posts.slice(
     (currentPage - 1) * postsPerPage,
@@ -124,64 +87,27 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Reset to page 1 when filters or posts change
   useEffect(() => {
     setCurrentPage(1);
   }, [filters, posts.length]);
 
   return (
-    <div className="home">
-      <div className="home-header">
+    <div className="home home-bg">
+      <div className="home-header modern-header">
         <h1 className="home-title">Available Bread</h1>
-        <Link to="/posts/create" className="home-create-button">
+        <Link to="/posts/create" className="home-create-button modern-btn">
+          <span className="material-symbols-outlined">add_circle</span>
           Create Post
         </Link>
       </div>
 
-      <div className="home-filters">
-        <select
-          value={filters.status}
-          onChange={(e) =>
-            setFilters((prev) => ({ ...prev, status: e.target.value }))
-          }
-          className="home-filter-select"
-        >
-          <option value="">All Status</option>
-          <option value="fresh">Fresh</option>
-          <option value="day_old">Day Old</option>
-          <option value="expired">Expired</option>
-        </select>
-
-        <select
-          value={filters.post_type}
-          onChange={(e) =>
-            setFilters((prev) => ({ ...prev, post_type: e.target.value }))
-          }
-          className="home-filter-select"
-        >
-          <option value="">All Types</option>
-          <option value="sell">Sell</option>
-          <option value="request">Request</option>
-        </select>
-
-        {userLocation && (
-          <select
-            value={filters.maxDistance}
-            onChange={(e) =>
-              setFilters((prev) => ({
-                ...prev,
-                maxDistance: Number(e.target.value),
-              }))
-            }
-            className="home-filter-select"
-          >
-            <option value="5000">Within 5km</option>
-            <option value="10000">Within 10km</option>
-            <option value="20000">Within 20km</option>
-            <option value="50000">Within 50km</option>
-          </select>
-        )}
-      </div>
+      <FilterSection
+        filters={filters}
+        setFilters={setFilters}
+        onApply={() => loadPosts(userLocation)}
+        onReset={() => loadPosts(userLocation)}
+        animated
+      />
 
       {error && (
         <div className="home-error">
@@ -200,7 +126,7 @@ export default function Home() {
           <BreadListing posts={paginatedPosts} />
         </div>
       )}
-      {/* Pagination controls */}
+
       {totalPages > 1 && (
         <div className="home-pagination">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (

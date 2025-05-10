@@ -20,18 +20,18 @@ export default function BreadListingPage({ posts = [], onUpdate }) {
 
   return (
     <>
-      <div className="bread-listing-container">
+    <div className="bread-listing-container">
         {uniqueBreads.length === 0 ? (
-          <div className="bread-listing-empty">No bread posts available.</div>
-        ) : (
+        <div className="bread-listing-empty">No bread posts available.</div>
+      ) : (
           uniqueBreads.map((bread) => (
             <BreadItem key={bread._id} post={bread} onUpdate={handleUpdate} />
-          ))
-        )}
+        ))
+      )}
         {modalPost && (
           <PostDetailsModal post={modalPost} onClose={() => setModalPost(null)} />
         )}
-      </div>
+    </div>
       {/* Pagination controls will go here */}
     </>
   );

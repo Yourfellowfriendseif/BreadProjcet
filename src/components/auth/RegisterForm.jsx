@@ -46,7 +46,7 @@ const RegisterForm = () => {
       });
       
       if (response?.token) {
-        navigate('/');
+      navigate('/');
       } else {
         setError('Registration failed. Please try again.');
       }

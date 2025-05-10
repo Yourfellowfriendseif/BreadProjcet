@@ -112,3 +112,39 @@
   box-shadow: 0 2px 8px 0 rgba(255, 106, 43, 0.12);
   cursor: default;
 }
+
+.home-bg {
+  background: #f6f7fb;
+  min-height: 100vh;
+  padding-bottom: 2rem;
+}
+
+.modern-header {
+  background: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modern-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #ff6a2b;
+  color: #fff;
+  border: none;
+  border-radius: 2rem;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px 0 rgba(255, 106, 43, 0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.modern-btn:hover {
+  background: #ff8c42;
+  box-shadow: 0 4px 16px 0 rgba(255, 106, 43, 0.12);
+}

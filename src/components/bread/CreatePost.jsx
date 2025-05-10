@@ -4,6 +4,14 @@ import { useApp } from "../../context/AppContext";
 import { breadAPI } from "../../api/breadAPI";
 import "./CreatePost.css";
 
+const WILAYAS = [
+  'Adrar', 'Chlef', 'Laghouat', 'Oum El Bouaghi', 'Batna', 'Béjaïa', 'Biskra', 'Béchar', 'Blida', 'Bouira',
+  'Tamanrasset', 'Tébessa', 'Tlemcen', 'Tiaret', 'Tizi Ouzou', 'Algiers', 'Djelfa', 'Jijel', 'Sétif', 'Saïda',
+  'Skikda', 'Sidi Bel Abbès', 'Annaba', 'Guelma', 'Constantine', 'Médéa', 'Mostaganem', 'M-Sila', 'Mascara', 'Ouargla',
+  'Oran', 'El Bayadh', 'Illizi', 'Bordj Bou Arréridj', 'Boumerdès', 'El Tarf', 'Tindouf', 'Tissemsilt', 'El Oued', 'Khenchela',
+  'Souk Ahras', 'Tipaza', 'Mila', 'Aïn Defla', 'Naâma', 'Aïn Témouchent', 'Ghardaïa', 'Relizane'
+];
+
 export default function CreatePost() {
   const navigate = useNavigate();
   const { user } = useApp();
@@ -18,9 +26,14 @@ export default function CreatePost() {
     category: "bread", // Added category field
     images: [],
     address: "",
+    province: "",
   });
 
   const [userLocation, setUserLocation] = useState(null);
+  const [imageIds, setImageIds] = useState([]);
+  const [imageUploadLoading, setImageUploadLoading] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState(null);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
 
   // Get user's location when component mounts
   useEffect(() => {
@@ -42,12 +55,44 @@ export default function CreatePost() {
     }
   }, []);
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
     setFormData((prev) => ({
       ...prev,
       images: files,
     }));
+    if (files.length === 0) {
+      setImageIds([]);
+      setImageUploadError(null);
+      setImageUploadProgress(0);
+      return;
+    }
+    setImageUploadLoading(true);
+    setImageUploadError(null);
+    setImageUploadProgress(0);
+    try {
+      const uploadFormData = new FormData();
+      files.forEach((file) => uploadFormData.append("images", file));
+      const res = await breadAPI.uploadImages(uploadFormData, setImageUploadProgress);
+      console.log('Upload response:', res);
+      const ids = (res.data?.data?.images || []).map((img) => img._id);
+      console.log('Selected files:', files, 'Returned IDs:', ids);
+      console.log('files.length:', files.length, 'ids.length:', ids.length);
+      if (ids.length === files.length) {
+        setImageIds(ids);
+        setImageUploadError(null);
+        e.target.value = ""; // Clear the file input after successful upload
+      } else {
+        setImageIds([]);
+        setImageUploadError("Failed to upload all images");
+      }
+    } catch (err) {
+      setImageUploadError("Failed to upload images");
+      setImageIds([]);
+    } finally {
+      setImageUploadLoading(false);
+      setImageUploadProgress(0);
+    }
   };
 
   const validateForm = () => {
@@ -61,18 +106,18 @@ export default function CreatePost() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
       return;
     }
-
+    if (formData.images.length > 0 && (imageIds.length !== formData.images.length || imageUploadLoading)) {
+      setError("Please wait for images to finish uploading.");
+      return;
+    }
     try {
       setLoading(true);
       setError(null);
-
-      // Prepare post data matching backend requirements
       const postData = {
         post_type: formData.post_type,
         status: formData.status,
@@ -85,36 +130,12 @@ export default function CreatePost() {
           coordinates: userLocation,
         },
         address: formData.address,
+        province: formData.province,
+        imageIds: imageIds,
       };
-
-      // Handle image upload if present
-      if (formData.images.length > 0) {
-        const formDataObj = new FormData();
-
-        // Add post data to FormData
-        Object.keys(postData).forEach((key) => {
-          if (typeof postData[key] === "object") {
-            formDataObj.append(key, JSON.stringify(postData[key]));
-          } else {
-            formDataObj.append(key, postData[key]);
-          }
-        });
-
-        // Add images
-        formData.images.forEach((img) => {
-          formDataObj.append("images", img);
-        });
-
-        // Use specific endpoint for form data
-        await breadAPI.createWithImages(formDataObj);
-      } else {
-        // Use regular endpoint for JSON data
-        await breadAPI.create(postData);
-      }
-
+      await breadAPI.create(postData);
       navigate("/");
     } catch (err) {
-      console.error("Post creation error:", err);
       setError(err.message || "Failed to create post");
     } finally {
       setLoading(false);
@@ -215,17 +236,35 @@ export default function CreatePost() {
           </select>
         </div>
 
-        <div className="create-post-form-group">
-          <label className="create-post-label">Address (Optional)</label>
-          <input
-            type="text"
-            value={formData.address}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, address: e.target.value }))
-            }
-            placeholder="Enter a descriptive address"
-            className="create-post-input"
-          />
+        <div className="create-post-grid">
+          <div className="create-post-form-group">
+            <label className="create-post-label">Province</label>
+            <select
+              value={formData.province || ''}
+              onChange={e =>
+                setFormData(prev => ({ ...prev, province: e.target.value }))
+              }
+              className="create-post-select"
+              required
+            >
+              <option value="">Select Province</option>
+              {WILAYAS.map(w => (
+                <option key={w} value={w}>{w}</option>
+              ))}
+            </select>
+          </div>
+          <div className="create-post-form-group">
+            <label className="create-post-label">Address (Optional)</label>
+            <input
+              type="text"
+              value={formData.address}
+              onChange={e =>
+                setFormData(prev => ({ ...prev, address: e.target.value }))
+              }
+              placeholder="Enter a descriptive address"
+              className="create-post-input"
+            />
+          </div>
         </div>
 
         <div className="create-post-form-group">
@@ -236,7 +275,15 @@ export default function CreatePost() {
             accept="image/*"
             onChange={handleImageChange}
             className="create-post-input"
+            disabled={imageUploadLoading}
           />
+          {imageUploadLoading && (
+            <div style={{ width: "100%", margin: "8px 0" }}>
+              <progress value={imageUploadProgress} max="100" style={{ width: "100%" }} />
+              <span>{imageUploadProgress}%</span>
+            </div>
+          )}
+          {imageUploadError && <p className="create-post-error-text">{imageUploadError}</p>}
           <p className="create-post-help-text">
             You can upload multiple images
           </p>
