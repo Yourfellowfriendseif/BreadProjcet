@@ -1,5 +1,6 @@
 // src/api/apiClient.js
 import axios from "axios";
+import { config } from "../utils/config";
 
 /**
  * @typedef {import('../types/schema').ApiError} ApiError
@@ -7,13 +8,17 @@ import axios from "axios";
  * @typedef {import('../types/schema').User} User
  */
 
-export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true,
+// Create axios instance with base URL
+const axiosInstance = axios.create({
+  baseURL: config.apiUrl,
+  timeout: 15000,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 // Request interceptor for adding auth token
-apiClient.interceptors.request.use(
+axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -26,84 +31,40 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for handling common errors
-apiClient.interceptors.response.use(
+// Response interceptor to handle common response formats and errors
+axiosInstance.interceptors.response.use(
   (response) => {
-    // Handle the standard backend response structure
-    if (response.data?.status === "success") {
-      // For upload endpoints, return the image data directly
-      if (response.config.url.includes("/upload")) {
-        return response.data.data.image;
-      }
-      return response.data.data;
-    }
+    // If the response is directly the data we need
     return response.data;
   },
   (error) => {
-    // Network error
-    if (!error.response) {
-      return Promise.reject({
-        status: "error",
-        message: "Network error - please check your internet connection",
-        isNetworkError: true,
-      });
+    // Handle unauthorized responses
+    if (error.response && error.response.status === 401) {
+      // Clear token and notify the app
+      localStorage.removeItem("token");
+      // You could dispatch an event here to notify the app of logout
     }
 
-    // Handle specific error cases
-    const errorResponse = error.response.data || {};
+    // Extract error message from response
+    const message =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      "Something went wrong";
 
-    switch (error.response.status) {
-      case 401:
-        // Clear token if it's invalid or expired
-        localStorage.removeItem("token");
-        if (window.location.pathname !== "/login") {
-          window.location.href = "/login";
-        }
-        return Promise.reject({
-          status: "error",
-          message: errorResponse.message || "Authentication failed",
-        });
+    // Create a custom error object
+    const customError = new Error(message);
+    customError.status = error.response?.status;
+    customError.data = error.response?.data;
 
-      case 409:
-        return Promise.reject({
-          status: "fail",
-          message: errorResponse.message || "A conflict occurred",
-          field: errorResponse.field || "unknown",
-        });
-
-      case 413:
-        return Promise.reject({
-          status: "error",
-          message: "File too large - please upload a smaller file",
-        });
-
-      case 415:
-        return Promise.reject({
-          status: "error",
-          message: "Unsupported file type",
-        });
-    }
-
-    // Format validation errors
-    if (errorResponse.errors) {
-      const validationErrors = {};
-      errorResponse.errors.forEach((err) => {
-        validationErrors[err.param] = err.msg;
-      });
-      return Promise.reject({
-        status: "fail",
-        message: "Validation failed",
-        errors: validationErrors,
-      });
-    }
-
-    // Return formatted error
-    return Promise.reject({
-      status: errorResponse.status || "error",
-      message: errorResponse.message || "An error occurred",
-      data: errorResponse.data,
-    });
+    return Promise.reject(customError);
   }
 );
 
-export default apiClient;
+export const apiClient = {
+  get: (url, config) => axiosInstance.get(url, config),
+  post: (url, data, config) => axiosInstance.post(url, data, config),
+  put: (url, data, config) => axiosInstance.put(url, data, config),
+  patch: (url, data, config) => axiosInstance.patch(url, data, config),
+  delete: (url, config) => axiosInstance.delete(url, config),
+};

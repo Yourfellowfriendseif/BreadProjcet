@@ -12,4 +12,8 @@ export const notificationAPI = {
   markAllAsRead: async () => {
     return apiClient.put("/notifications/mark-all-read");
   },
+
+  getUnreadCount: async () => {
+    return apiClient.get("/notifications/unread-count");
+  },
 };

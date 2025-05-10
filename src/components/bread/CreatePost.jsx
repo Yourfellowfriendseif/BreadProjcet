@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
-import { breadAPI } from '../../api/breadAPI';
-import './CreatePost.css';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useApp } from "../../context/AppContext";
+import { breadAPI } from "../../api/breadAPI";
+import "./CreatePost.css";
 
 export default function CreatePost() {
   const navigate = useNavigate();
@@ -10,14 +10,14 @@ export default function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
-    post_type: 'sell', // Changed from 'offer' to match backend
-    description: '',
+    post_type: "sell", // Changed from 'offer' to match backend
+    description: "",
     quantity: 1,
-    quantity_unit: 'pieces', // Changed default to match backend
-    status: 'fresh',
-    category: 'bread', // Added category field
+    quantity_unit: "pieces", // Changed default to match backend
+    status: "fresh",
+    category: "bread", // Added category field
     images: [],
-    address: ''
+    address: "",
   });
 
   const [userLocation, setUserLocation] = useState(null);
@@ -29,38 +29,39 @@ export default function CreatePost() {
         (position) => {
           setUserLocation([
             position.coords.longitude,
-            position.coords.latitude
+            position.coords.latitude,
           ]);
         },
         (error) => {
-          console.error('Error getting location:', error);
-          setError('Please enable location services to create a post');
+          console.error("Error getting location:", error);
+          setError("Please enable location services to create a post");
         }
       );
     } else {
-      setError('Geolocation is not supported by your browser');
+      setError("Geolocation is not supported by your browser");
     }
   }, []);
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      images: files
+      images: files,
     }));
   };
 
   const validateForm = () => {
-    if (!formData.post_type) return 'Post type is required';
-    if (!formData.status) return 'Status is required';
-    if (!formData.quantity || formData.quantity < 1) return 'Quantity must be at least 1';
-    if (!userLocation) return 'Location is required';
+    if (!formData.post_type) return "Post type is required";
+    if (!formData.status) return "Status is required";
+    if (!formData.quantity || formData.quantity < 1)
+      return "Quantity must be at least 1";
+    if (!userLocation) return "Location is required";
     return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -71,28 +72,6 @@ export default function CreatePost() {
       setLoading(true);
       setError(null);
 
-      // First upload images if any
-      let imageIds = [];
-      if (formData.images.length > 0) {
-        try {
-          const uploadPromises = formData.images.map(file => 
-            breadAPI.uploadImage(file)
-          );
-          const uploadResponses = await Promise.all(uploadPromises);
-          console.log('Upload responses:', uploadResponses); // Debug log
-          imageIds = uploadResponses.map(response => {
-            if (!response || !response._id) {
-              console.error('Invalid image response:', response);
-              throw new Error('Invalid image upload response');
-            }
-            return response._id;
-          });
-        } catch (uploadError) {
-          console.error('Image upload error:', uploadError);
-          throw new Error('Failed to upload images');
-        }
-      }
-
       // Prepare post data matching backend requirements
       const postData = {
         post_type: formData.post_type,
@@ -102,18 +81,41 @@ export default function CreatePost() {
         quantity: formData.quantity,
         quantity_unit: formData.quantity_unit,
         location: {
-          type: 'Point',
-          coordinates: userLocation
+          type: "Point",
+          coordinates: userLocation,
         },
-        imageIds: imageIds.length > 0 ? imageIds : undefined, // Only include if there are images
-        address: formData.address
+        address: formData.address,
       };
 
-      const response = await breadAPI.create(postData);
-      navigate('/');
+      // Handle image upload if present
+      if (formData.images.length > 0) {
+        const formDataObj = new FormData();
+
+        // Add post data to FormData
+        Object.keys(postData).forEach((key) => {
+          if (typeof postData[key] === "object") {
+            formDataObj.append(key, JSON.stringify(postData[key]));
+          } else {
+            formDataObj.append(key, postData[key]);
+          }
+        });
+
+        // Add images
+        formData.images.forEach((img) => {
+          formDataObj.append("images", img);
+        });
+
+        // Use specific endpoint for form data
+        await breadAPI.createWithImages(formDataObj);
+      } else {
+        // Use regular endpoint for JSON data
+        await breadAPI.create(postData);
+      }
+
+      navigate("/");
     } catch (err) {
-      setError(err.message || 'Failed to create post');
-      console.error('Post creation error:', err);
+      console.error("Post creation error:", err);
+      setError(err.message || "Failed to create post");
     } finally {
       setLoading(false);
     }
@@ -134,7 +136,9 @@ export default function CreatePost() {
           <label className="create-post-label">Post Type</label>
           <select
             value={formData.post_type}
-            onChange={(e) => setFormData(prev => ({ ...prev, post_type: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, post_type: e.target.value }))
+            }
             className="create-post-select"
           >
             <option value="sell">Sell</option>
@@ -146,7 +150,9 @@ export default function CreatePost() {
           <label className="create-post-label">Description</label>
           <textarea
             value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, description: e.target.value }))
+            }
             rows={4}
             className="create-post-textarea"
             placeholder="Describe what you're offering or requesting"
@@ -162,7 +168,12 @@ export default function CreatePost() {
               min="1"
               required
               value={formData.quantity}
-              onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  quantity: parseInt(e.target.value) || 1,
+                }))
+              }
               className="create-post-input"
             />
           </div>
@@ -171,7 +182,12 @@ export default function CreatePost() {
             <label className="create-post-label">Unit</label>
             <select
               value={formData.quantity_unit}
-              onChange={(e) => setFormData(prev => ({ ...prev, quantity_unit: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  quantity_unit: e.target.value,
+                }))
+              }
               className="create-post-select"
             >
               <option value="pieces">Pieces</option>
@@ -188,7 +204,9 @@ export default function CreatePost() {
           <label className="create-post-label">Status</label>
           <select
             value={formData.status}
-            onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, status: e.target.value }))
+            }
             className="create-post-select"
           >
             <option value="fresh">Fresh</option>
@@ -202,7 +220,9 @@ export default function CreatePost() {
           <input
             type="text"
             value={formData.address}
-            onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, address: e.target.value }))
+            }
             placeholder="Enter a descriptive address"
             className="create-post-input"
           />
@@ -217,13 +237,15 @@ export default function CreatePost() {
             onChange={handleImageChange}
             className="create-post-input"
           />
-          <p className="create-post-help-text">You can upload multiple images</p>
+          <p className="create-post-help-text">
+            You can upload multiple images
+          </p>
         </div>
 
         <div className="create-post-actions">
           <button
             type="button"
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="create-post-button create-post-button-secondary"
           >
             Cancel
@@ -233,7 +255,7 @@ export default function CreatePost() {
             disabled={loading}
             className="create-post-button create-post-button-primary"
           >
-            {loading ? 'Creating...' : 'Create Post'}
+            {loading ? "Creating..." : "Create Post"}
           </button>
         </div>
       </form>

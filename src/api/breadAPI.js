@@ -6,6 +6,16 @@ export const breadAPI = {
     return response.data;
   },
 
+  // Add a dedicated method for creating posts with images
+  createWithImages: async (formData) => {
+    const response = await apiClient.post("/posts/create", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+
   getAll: async (filters = {}) => {
     try {
       const response = await apiClient.get("/posts/all", { params: filters });
