@@ -5,11 +5,54 @@ import { breadAPI } from "../../api/breadAPI";
 import "./CreatePost.css";
 
 const WILAYAS = [
-  'Adrar', 'Chlef', 'Laghouat', 'Oum El Bouaghi', 'Batna', 'Béjaïa', 'Biskra', 'Béchar', 'Blida', 'Bouira',
-  'Tamanrasset', 'Tébessa', 'Tlemcen', 'Tiaret', 'Tizi Ouzou', 'Algiers', 'Djelfa', 'Jijel', 'Sétif', 'Saïda',
-  'Skikda', 'Sidi Bel Abbès', 'Annaba', 'Guelma', 'Constantine', 'Médéa', 'Mostaganem', 'M-Sila', 'Mascara', 'Ouargla',
-  'Oran', 'El Bayadh', 'Illizi', 'Bordj Bou Arréridj', 'Boumerdès', 'El Tarf', 'Tindouf', 'Tissemsilt', 'El Oued', 'Khenchela',
-  'Souk Ahras', 'Tipaza', 'Mila', 'Aïn Defla', 'Naâma', 'Aïn Témouchent', 'Ghardaïa', 'Relizane'
+  "Adrar",
+  "Chlef",
+  "Laghouat",
+  "Oum El Bouaghi",
+  "Batna",
+  "Béjaïa",
+  "Biskra",
+  "Béchar",
+  "Blida",
+  "Bouira",
+  "Tamanrasset",
+  "Tébessa",
+  "Tlemcen",
+  "Tiaret",
+  "Tizi Ouzou",
+  "Algiers",
+  "Djelfa",
+  "Jijel",
+  "Sétif",
+  "Saïda",
+  "Skikda",
+  "Sidi Bel Abbès",
+  "Annaba",
+  "Guelma",
+  "Constantine",
+  "Médéa",
+  "Mostaganem",
+  "M-Sila",
+  "Mascara",
+  "Ouargla",
+  "Oran",
+  "El Bayadh",
+  "Illizi",
+  "Bordj Bou Arréridj",
+  "Boumerdès",
+  "El Tarf",
+  "Tindouf",
+  "Tissemsilt",
+  "El Oued",
+  "Khenchela",
+  "Souk Ahras",
+  "Tipaza",
+  "Mila",
+  "Aïn Defla",
+  "Naâma",
+  "Aïn Témouchent",
+  "Ghardaïa",
+  "Relizane",
 ];
 
 export default function CreatePost() {
@@ -73,21 +116,46 @@ export default function CreatePost() {
     try {
       const uploadFormData = new FormData();
       files.forEach((file) => uploadFormData.append("images", file));
-      const res = await breadAPI.uploadImages(uploadFormData, setImageUploadProgress);
-      console.log('Upload response:', res);
-      const ids = (res.data?.data?.images || []).map((img) => img._id);
-      console.log('Selected files:', files, 'Returned IDs:', ids);
-      console.log('files.length:', files.length, 'ids.length:', ids.length);
+      const res = await breadAPI.uploadImages(
+        uploadFormData,
+        setImageUploadProgress
+      );
+
+      console.log("Upload response:", res);
+
+      // Extract images from the response based on the actual structure
+      // {status, message, data: {images: [{_id, filename, url, ...}]}};
+      const uploadedImages = res?.data?.images;
+
+      console.log("Uploaded images data:", uploadedImages);
+
+      if (!uploadedImages || !Array.isArray(uploadedImages)) {
+        console.error("Unexpected response structure:", res);
+        throw new Error("Invalid response from server");
+      }
+
+      console.log("Uploaded images:", uploadedImages);
+
+      // Extract IDs from the response
+      const ids = uploadedImages.map((img) => img._id);
+      console.log("Image IDs:", ids);
+
       if (ids.length === files.length) {
         setImageIds(ids);
         setImageUploadError(null);
         e.target.value = ""; // Clear the file input after successful upload
       } else {
-        setImageIds([]);
-        setImageUploadError("Failed to upload all images");
+        console.warn(
+          `Mismatch: ${ids.length} images processed, ${files.length} uploaded`
+        );
+        setImageIds(ids); // Still use the IDs we got back - they were uploaded successfully
+        setImageUploadError(
+          `Note: ${ids.length} of ${files.length} images processed. Your post will include the processed images.`
+        );
       }
     } catch (err) {
-      setImageUploadError("Failed to upload images");
+      console.error("Image upload error:", err);
+      setImageUploadError(err.message || "Failed to upload images");
       setImageIds([]);
     } finally {
       setImageUploadLoading(false);
@@ -111,7 +179,10 @@ export default function CreatePost() {
       setError(validationError);
       return;
     }
-    if (formData.images.length > 0 && (imageIds.length !== formData.images.length || imageUploadLoading)) {
+    if (
+      formData.images.length > 0 &&
+      (imageIds.length !== formData.images.length || imageUploadLoading)
+    ) {
       setError("Please wait for images to finish uploading.");
       return;
     }
@@ -240,16 +311,18 @@ export default function CreatePost() {
           <div className="create-post-form-group">
             <label className="create-post-label">Province</label>
             <select
-              value={formData.province || ''}
-              onChange={e =>
-                setFormData(prev => ({ ...prev, province: e.target.value }))
+              value={formData.province || ""}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, province: e.target.value }))
               }
               className="create-post-select"
               required
             >
               <option value="">Select Province</option>
-              {WILAYAS.map(w => (
-                <option key={w} value={w}>{w}</option>
+              {WILAYAS.map((w) => (
+                <option key={w} value={w}>
+                  {w}
+                </option>
               ))}
             </select>
           </div>
@@ -258,8 +331,8 @@ export default function CreatePost() {
             <input
               type="text"
               value={formData.address}
-              onChange={e =>
-                setFormData(prev => ({ ...prev, address: e.target.value }))
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, address: e.target.value }))
               }
               placeholder="Enter a descriptive address"
               className="create-post-input"
@@ -279,11 +352,17 @@ export default function CreatePost() {
           />
           {imageUploadLoading && (
             <div style={{ width: "100%", margin: "8px 0" }}>
-              <progress value={imageUploadProgress} max="100" style={{ width: "100%" }} />
+              <progress
+                value={imageUploadProgress}
+                max="100"
+                style={{ width: "100%" }}
+              />
               <span>{imageUploadProgress}%</span>
             </div>
           )}
-          {imageUploadError && <p className="create-post-error-text">{imageUploadError}</p>}
+          {imageUploadError && (
+            <p className="create-post-error-text">{imageUploadError}</p>
+          )}
           <p className="create-post-help-text">
             You can upload multiple images
           </p>
