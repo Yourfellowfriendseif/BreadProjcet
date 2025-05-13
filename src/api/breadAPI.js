@@ -153,9 +153,21 @@ export const breadAPI = {
   getReservedPosts: async () => {
     return apiClient.get("/posts/reserved");
   },
-
   getUserPosts: async (userId, params = {}) => {
     const endpoint = userId ? `/posts/user/${userId}` : "/posts/user";
     return apiClient.get(endpoint, { params });
+  },
+
+  // Delete an uploaded image by filename or ID
+  deleteImage: async (filename) => {
+    return apiClient.delete(`/upload/${filename}`);
+  },
+
+  // Delete multiple uploaded images
+  deleteImages: async (filenames) => {
+    const deletePromises = filenames.map((filename) =>
+      apiClient.delete(`/upload/${filename}`)
+    );
+    return Promise.all(deletePromises);
   },
 };

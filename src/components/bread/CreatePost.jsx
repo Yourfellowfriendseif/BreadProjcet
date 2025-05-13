@@ -71,9 +71,10 @@ export default function CreatePost() {
     address: "",
     province: "",
   });
-
   const [userLocation, setUserLocation] = useState(null);
   const [imageIds, setImageIds] = useState([]);
+  const [imageUrls, setImageUrls] = useState([]);
+  const [imageFilenames, setImageFilenames] = useState([]); // Add state for filenames
   const [imageUploadLoading, setImageUploadLoading] = useState(false);
   const [imageUploadError, setImageUploadError] = useState(null);
   const [imageUploadProgress, setImageUploadProgress] = useState(0);
@@ -97,6 +98,22 @@ export default function CreatePost() {
       setError("Geolocation is not supported by your browser");
     }
   }, []);
+  // Cleanup effect: Delete uploaded images when component unmounts if they haven't been used in a post
+  useEffect(() => {
+    // Return cleanup function
+    return () => {
+      // If there are uploaded images when the component unmounts, delete them
+      if (imageFilenames.length > 0) {
+        console.log("Cleaning up unused images on unmount");
+        breadAPI
+          .deleteImages(imageFilenames)
+          .then(() => console.log("Successfully cleaned up images on unmount"))
+          .catch((err) =>
+            console.error("Failed to clean up images on unmount:", err)
+          );
+      }
+    };
+  }, [imageFilenames]);
 
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
@@ -133,15 +150,18 @@ export default function CreatePost() {
         console.error("Unexpected response structure:", res);
         throw new Error("Invalid response from server");
       }
-
-      console.log("Uploaded images:", uploadedImages);
-
-      // Extract IDs from the response
+      console.log("Uploaded images:", uploadedImages); // Extract IDs, URLs, and filenames from the response
       const ids = uploadedImages.map((img) => img._id);
+      const urls = uploadedImages.map((img) => img.url);
+      const filenames = uploadedImages.map((img) => img.filename);
       console.log("Image IDs:", ids);
+      console.log("Image URLs for display:", urls);
+      console.log("Image filenames for deletion:", filenames);
 
       if (ids.length === files.length) {
         setImageIds(ids);
+        setImageUrls(urls); // Store the URLs for display
+        setImageFilenames(filenames); // Store filenames for deletion
         setImageUploadError(null);
         e.target.value = ""; // Clear the file input after successful upload
       } else {
@@ -149,6 +169,8 @@ export default function CreatePost() {
           `Mismatch: ${ids.length} images processed, ${files.length} uploaded`
         );
         setImageIds(ids); // Still use the IDs we got back - they were uploaded successfully
+        setImageUrls(urls); // Store whatever URLs we got
+        setImageFilenames(filenames); // Store filenames for deletion
         setImageUploadError(
           `Note: ${ids.length} of ${files.length} images processed. Your post will include the processed images.`
         );
@@ -203,7 +225,11 @@ export default function CreatePost() {
         address: formData.address,
         province: formData.province,
         imageIds: imageIds,
+        // Include image URLs for reference
+        images: imageUrls,
       };
+
+      console.log("Submitting post with image data:", { imageIds, imageUrls });
       await breadAPI.create(postData);
       navigate("/");
     } catch (err) {
@@ -237,7 +263,6 @@ export default function CreatePost() {
             <option value="request">Request</option>
           </select>
         </div>
-
         <div className="create-post-form-group">
           <label className="create-post-label">Description</label>
           <textarea
@@ -251,7 +276,6 @@ export default function CreatePost() {
             maxLength={1000}
           />
         </div>
-
         <div className="create-post-grid">
           <div className="create-post-form-group">
             <label className="create-post-label">Quantity</label>
@@ -291,7 +315,6 @@ export default function CreatePost() {
             </select>
           </div>
         </div>
-
         <div className="create-post-form-group">
           <label className="create-post-label">Status</label>
           <select
@@ -306,7 +329,6 @@ export default function CreatePost() {
             <option value="stale">Stale</option>
           </select>
         </div>
-
         <div className="create-post-grid">
           <div className="create-post-form-group">
             <label className="create-post-label">Province</label>
@@ -339,7 +361,6 @@ export default function CreatePost() {
             />
           </div>
         </div>
-
         <div className="create-post-form-group">
           <label className="create-post-label">Images (Optional)</label>
           <input
@@ -359,20 +380,64 @@ export default function CreatePost() {
               />
               <span>{imageUploadProgress}%</span>
             </div>
-          )}
+          )}{" "}
           {imageUploadError && (
             <p className="create-post-error-text">{imageUploadError}</p>
           )}
           <p className="create-post-help-text">
             You can upload multiple images
           </p>
-        </div>
-
+          {/* Display uploaded images preview */}
+          {imageUrls.length > 0 && (
+            <div className="create-post-image-previews">
+              <p>Uploaded images:</p>
+              <div className="create-post-image-grid">
+                {imageUrls.map((url, index) => (
+                  <div key={index} className="create-post-image-preview">
+                    <img
+                      src={url}
+                      alt={`Upload preview ${index + 1}`}
+                      className="create-post-preview-img"
+                      onError={(e) => {
+                        // If the URL fails, use a fallback
+                        e.target.onerror = null;
+                        e.target.src = "/no-image.png";
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>{" "}
         <div className="create-post-actions">
+          {" "}
           <button
             type="button"
-            onClick={() => navigate("/")}
+            onClick={async () => {
+              // Show confirmation if there are changes or uploaded images
+              if (
+                imageFilenames.length > 0 ||
+                formData.description ||
+                formData.address
+              ) {
+                if (imageFilenames.length > 0) {
+                  try {
+                    setLoading(true);
+                    await breadAPI.deleteImages(imageFilenames);
+                    console.log("Uploaded images cleaned up successfully");
+                  } catch (err) {
+                    console.error("Failed to clean up images:", err);
+                  } finally {
+                    setLoading(false);
+                  }
+                }
+              }
+              // Navigate back to home page
+              navigate("/");
+            }}
             className="create-post-button create-post-button-secondary"
+            disabled={loading}
           >
             Cancel
           </button>
