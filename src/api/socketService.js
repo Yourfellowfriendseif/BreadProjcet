@@ -30,7 +30,7 @@ class SocketService {
 
     try {
       // IMPORTANT: Using exact same URL and structure as the working test HTML
-      this.socket = io("http://localhost:5000", {
+      this.socket = io(Vite, {
         auth: { token },
       });
 
