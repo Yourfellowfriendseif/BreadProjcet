@@ -17,6 +17,7 @@ import MessagesPage from "./pages/MessagesPage";
 import EditPost from "./pages/EditPost";
 import ReservedPosts from "./pages/ReservedPosts";
 import "./App.css";
+import MapLinkGenerator from "./pages/testLocation/MapLinkGenerator";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -53,8 +54,9 @@ function App() {
 
   return (
     <AppProvider value={{ user, setUser }}>
-        <Router>
-            <div className="w-full max-w-[1280px] mx-auto p-6">
+      <Router>
+        <div id="webcrumbs" className="min-h-screen bg-gray-50">
+          <div className="w-full max-w-[1280px] mx-auto p-6">
             <Navbar />
             <main className="container mx-auto px-4 py-6">
               <Routes>
@@ -64,7 +66,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/search" element={<SearchResults />} />
                 <Route path="/bread/:id" element={<PostDetail />} />
-
+                <Route path="/map" element={<MapLinkGenerator />} />
                 {/* Protected Routes */}
                 <Route element={<ProtectedRoute />}>
                   <Route path="/posts/create" element={<CreatePost />} />
