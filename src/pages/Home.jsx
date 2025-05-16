@@ -51,7 +51,7 @@ export default function Home() {
     try {
       setLoading(true);
       setError(null);
-
+      
       const searchFilters = { ...filters };
       if (location) {
         searchFilters.location = location;

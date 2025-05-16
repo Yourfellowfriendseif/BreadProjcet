@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './BreadItem.css';
+import { AppContext } from '../../context/AppContext';
 
 const fallbackImg = '/no-image.png'; // Use a default image in your public folder
 
@@ -15,11 +16,10 @@ const typeLabels = {
   request: { label: 'Request', className: 'bread-badge-request' },
 };
 
-const BreadItem = ({ post, onUpdate }) => {
+const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit }) => {
   const navigate = useNavigate();
-  const imageUrl = post.images && post.images.length > 0
-    ? (post.images[0].url || post.images[0])
-    : fallbackImg;
+  const { user } = useContext(AppContext);
+  const isOwner = user && post.user && user._id === post.user._id;
 
   const handleMessageClick = () => {
     if (post.user?._id) {
@@ -27,15 +27,56 @@ const BreadItem = ({ post, onUpdate }) => {
     }
   };
 
+  const handleReserve = () => {
+    if (onReserve) onReserve(post);
+  };
+
+  const handleEdit = () => {
+    if (onEdit) onEdit(post);
+  };
+
+  const handleDelete = () => {
+    if (onDelete) onDelete(post);
+  };
+
+  // Dynamic grid logic
+  const images = post.images && post.images.length > 0 ? post.images.slice(0, 5) : [];
+  const imageCount = images.length;
+  let gridClass = 'bread-card-image-grid';
+  if (imageCount === 1) gridClass += ' grid-1';
+  else if (imageCount === 2) gridClass += ' grid-2';
+  else if (imageCount === 3 || imageCount === 4) gridClass += ' grid-4';
+  else if (imageCount >= 5) gridClass += ' grid-6';
+
   return (
     <div className="bread-card">
       <div className="bread-card-image-wrapper">
-        <img
-          src={imageUrl}
-          alt={post.description?.slice(0, 30) || 'Bread post'}
-          className="bread-card-image"
-          onError={e => { e.target.onerror = null; e.target.src = fallbackImg; }}
-        />
+        <div className={gridClass}>
+          {imageCount > 0 ? (
+            images.map((img, idx) => (
+              <div className="bread-card-image-thumb" key={img._id || idx}>
+                <img
+                  src={img.url || (img.filename ? `/uploads/${img.filename}` : fallbackImg)}
+                  alt={post.description?.slice(0, 30) || 'Bread post'}
+                  className="bread-card-image"
+                  onError={e => { e.target.onerror = null; e.target.src = fallbackImg; }}
+                />
+                {/* Overlay for the last image if there are more than 5 */}
+                {idx === 4 && post.images.length > 5 && (
+                  <div className="bread-card-image-overlay">
+                    +{post.images.length - 5}
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <img
+              src={fallbackImg}
+              alt="No image"
+              className="bread-card-image"
+            />
+          )}
+        </div>
       </div>
       <div className="bread-card-content">
         <div className="bread-card-badges-row">
@@ -71,8 +112,18 @@ const BreadItem = ({ post, onUpdate }) => {
           </span>
         </div>
         <div className="bread-card-actions">
-          <button className="bread-card-btn bread-card-btn-outline" onClick={handleMessageClick}>Message</button>
-          <button className="bread-card-btn bread-card-btn-primary" onClick={() => onUpdate && onUpdate('viewDetails', post)}>View Details</button>
+          {isOwner ? (
+            <>
+              <button className="bread-card-btn bread-card-btn-outline" onClick={handleEdit}>Edit</button>
+              <button className="bread-card-btn bread-card-btn-danger" onClick={handleDelete}>Delete</button>
+            </>
+          ) : (
+            <>
+              <button className="bread-card-btn bread-card-btn-outline" onClick={handleMessageClick}>Message</button>
+              <button className="bread-card-btn bread-card-btn-primary" onClick={() => onUpdate && onUpdate('viewDetails', post)}>View Details</button>
+              <button className="bread-card-btn bread-card-btn-reserve" onClick={handleReserve}>Reserve</button>
+            </>
+          )}
         </div>
       </div>
     </div>

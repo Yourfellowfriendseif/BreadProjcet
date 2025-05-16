@@ -1,5 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import './PostDetailsModal.css';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 const fallbackImg = '/no-image.png';
 
@@ -18,17 +23,33 @@ export default function PostDetailsModal({ post, onClose }) {
     if (e.target === modalRef.current) onClose();
   };
 
+  const images = post.images && post.images.length > 0 ? post.images : [{ url: fallbackImg }];
+
   return (
     <div className="post-modal-backdrop" ref={modalRef} onClick={handleBackdropClick}>
       <div className="post-modal-card">
         <button className="post-modal-close" onClick={onClose}>&times;</button>
         <div className="post-modal-image-wrapper">
-          <img
-            src={post.images && post.images.length > 0 ? (post.images[0].url || post.images[0]) : fallbackImg}
-            alt={post.title || 'Bread post'}
-            className="post-modal-image"
-            onError={e => { e.target.onerror = null; e.target.src = fallbackImg; }}
-          />
+          <Swiper
+            modules={[Navigation, Pagination]}
+            spaceBetween={10}
+            slidesPerView={1}
+            navigation
+            pagination={{ clickable: true }}
+            loop={images.length > 1}
+          >
+            {images.map((img, idx) => (
+              <SwiperSlide key={img._id || idx}>
+                <img
+                  src={img.url || (img.filename ? `/uploads/${img.filename}` : fallbackImg)}
+                  alt={post.title || 'Bread post'}
+                  className="post-modal-image"
+                  onError={e => { e.target.onerror = null; e.target.src = fallbackImg; }}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+          
         </div>
         <div className="post-modal-content">
           <h2 className="post-modal-title">{post.title || (post.post_type === 'sell' ? 'Bread for Sale' : 'Bread Request')}</h2>

@@ -3,7 +3,7 @@ import { socketService } from "../api/socketService";
 import { userAPI } from "../api/userAPI";
 import { notificationAPI } from "../api/notificationAPI";
 
-const AppContext = createContext();
+export const AppContext = createContext();
 
 export function AppProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -26,8 +26,8 @@ export function AppProvider({ children }) {
   const handleApiError = (error) => {
     const message =
       error.response?.data?.message ||
-      error.response?.data?.error ||
-      error.message ||
+                   error.response?.data?.error || 
+                   error.message || 
       "An error occurred";
     throw new Error(message);
   };
@@ -43,14 +43,14 @@ export function AppProvider({ children }) {
 
           if (userData) {
             console.log("Successfully loaded user profile");
-            setUser(userData);
-
-            // Load initial notifications
+          setUser(userData);
+          
+          // Load initial notifications
             try {
               const notificationsData = await notificationAPI
                 .getNotifications()
-                .then(processApiResponse);
-              setNotifications(notificationsData?.notifications || []);
+            .then(processApiResponse);
+          setNotifications(notificationsData?.notifications || []);
             } catch (notifError) {
               console.error("Error loading notifications:", notifError);
             }
@@ -79,7 +79,7 @@ export function AppProvider({ children }) {
     let isMounted = true;
 
     const setupSocket = async () => {
-      if (user) {
+    if (user) {
         const token = localStorage.getItem("token");
         if (!token) {
           console.warn("User is set but no token found");
@@ -96,32 +96,32 @@ export function AppProvider({ children }) {
           await userAPI.getProfile();
 
           // Then connect socket - exactly like the HTML test
-          socketService.connect(token);
+      socketService.connect(token);
 
           if (isMounted) {
-            // Chat events
+      // Chat events
             socketService.on("chat:message:new", (message) => {
               console.log("Socket received new message:", message);
-              if (message.sender._id !== user._id) {
+        if (message.sender._id !== user._id) {
                 setUnreadMessages((prev) => prev + 1);
-              }
-            });
+        }
+      });
 
             socketService.on("chat:message:read", ({ messageId, readBy }) => {
               console.log("Socket received message read:", {
                 messageId,
                 readBy,
               });
-              if (readBy === user._id) {
+        if (readBy === user._id) {
                 setUnreadMessages((prev) => Math.max(0, prev - 1));
-              }
-            });
+        }
+      });
 
-            // Notification events
+      // Notification events
             socketService.on("notification:new", (notification) => {
               console.log("Socket received new notification:", notification);
               setNotifications((prev) => [notification, ...prev]);
-            });
+      });
 
             socketService.on("notification:read", (data) => {
               console.log("Socket received notification read:", data);
@@ -130,23 +130,23 @@ export function AppProvider({ children }) {
                 prev.map((n) =>
                   n._id === notificationId ? { ...n, read: true } : n
                 )
-              );
-            });
+        );
+      });
 
             socketService.on("notification:allRead", () => {
               console.log("Socket received all notifications read");
               setNotifications((prev) =>
                 prev.map((n) => ({ ...n, read: true }))
               );
-            });
+      });
           }
         } catch (error) {
           console.error("Error setting up socket in AppContext:", error);
         }
-      } else {
+    } else {
         // Make sure socket is disconnected when no user
-        socketService.disconnect();
-      }
+      socketService.disconnect();
+    }
     };
 
     setupSocket();
@@ -167,7 +167,7 @@ export function AppProvider({ children }) {
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
-
+      
       // Set user based on backend response structure
       const user = data.user || {
         _id: data._id,

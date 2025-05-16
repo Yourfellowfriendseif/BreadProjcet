@@ -98,22 +98,7 @@ export default function CreatePost() {
       setError("Geolocation is not supported by your browser");
     }
   }, []);
-  // Cleanup effect: Delete uploaded images when component unmounts if they haven't been used in a post
-  useEffect(() => {
-    // Return cleanup function
-    return () => {
-      // If there are uploaded images when the component unmounts, delete them
-      if (imageFilenames.length > 0) {
-        console.log("Cleaning up unused images on unmount");
-        breadAPI
-          .deleteImages(imageFilenames)
-          .then(() => console.log("Successfully cleaned up images on unmount"))
-          .catch((err) =>
-            console.error("Failed to clean up images on unmount:", err)
-          );
-      }
-    };
-  }, [imageFilenames]);
+  
 
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
