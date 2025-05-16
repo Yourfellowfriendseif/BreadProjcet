@@ -73,9 +73,10 @@ function App() {
                   <Route path="/profile" element={<UserProfile />} />
                   <Route path="/user/:userId" element={<UserProfile />} />
                   <Route path="/messages" element={<MessagesPage />} />
-                  <Route path="/posts/edit/:id" element={<EditPost />} />
-                  <Route path="/posts/update/:id" element={<EditPost />} />
-                  <Route path="/reserved-posts" element={<ReservedPosts />} />
+                <Route path="/messages/:userId" element={<MessagesPage />} />
+                <Route path="/posts/edit/:id" element={<EditPost />} />
+                <Route path="/posts/update/:id" element={<EditPost />} />
+                <Route path="/reserved-posts" element={<ReservedPosts />} />
                   <Route
                     path="/notifications"
                     element={
@@ -90,7 +91,6 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
-          </div>
         </div>
       </Router>
     </AppProvider>

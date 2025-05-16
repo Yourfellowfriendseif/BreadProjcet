@@ -17,6 +17,11 @@ export default function ChatWindow({ recipientId, onClose }) {
   const [typingTimeout, setTypingTimeout] = useState(null);
 
   useEffect(() => {
+    if (!recipientId) {
+      setError("No recipient specified");
+      return;
+    }
+
     loadMessages();
     loadRecipientInfo();
 
@@ -33,6 +38,8 @@ export default function ChatWindow({ recipientId, onClose }) {
   }, [recipientId]);
 
   const handleNewMessage = (message) => {
+    if (!message || !message.sender || !message.recipient) return;
+    
     // Only add the message if it's from the current conversation
     if (
       message.sender._id === recipientId ||
@@ -56,27 +63,30 @@ export default function ChatWindow({ recipientId, onClose }) {
   };
 
   const loadRecipientInfo = async () => {
+    if (!recipientId) return;
+    
     try {
-      // Assuming your API has a method to get user info
-      const response = (await chatAPI.getUserInfo)
-        ? chatAPI.getUserInfo(recipientId)
-        : { data: { username: "User" } }; // Fallback
-      setRecipient(response.data);
+      const response = await chatAPI.getUserInfo(recipientId);
+      setRecipient(response?.data || { username: "User" });
     } catch (error) {
       console.error("Error loading recipient info:", error);
+      setRecipient({ username: "User" });
     }
   };
 
   const loadMessages = async () => {
+    if (!recipientId) return;
+    
     try {
       setLoading(true);
       const response = await chatAPI.getMessageHistory(recipientId);
-      setMessages(response.data?.messages || []);
+      const messageList = response.data?.messages || [];
+      setMessages(messageList);
       scrollToBottom();
 
       // Mark all received messages as read
-      response.data?.messages?.forEach((msg) => {
-        if (msg.sender._id === recipientId && !msg.read) {
+      messageList.forEach((msg) => {
+        if (msg?.sender?._id === recipientId && !msg.read) {
           markMessageAsRead(msg._id);
         }
       });
@@ -94,6 +104,8 @@ export default function ChatWindow({ recipientId, onClose }) {
   };
 
   const markMessageAsRead = async (messageId) => {
+    if (!messageId) return;
+    
     try {
       await chatAPI.markAsRead(messageId);
     } catch (error) {
@@ -103,14 +115,16 @@ export default function ChatWindow({ recipientId, onClose }) {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || sending) return;
+    if (!newMessage.trim() || sending || !recipientId) return;
 
     try {
       setSending(true);
-      const response = await chatAPI.sendMessage(recipientId, newMessage);
+      const response = await chatAPI.sendMessage(recipientId, newMessage.trim());
+      if (response?.data) {
       setMessages((prev) => [...prev, response.data]);
       setNewMessage("");
       scrollToBottom();
+      }
     } catch (error) {
       console.error("Error sending message:", error);
       setError("Failed to send message. Please try again.");
@@ -121,6 +135,8 @@ export default function ChatWindow({ recipientId, onClose }) {
 
   const handleInputChange = (e) => {
     setNewMessage(e.target.value);
+
+    if (!recipientId) return;
 
     // Send typing indicator
     socketService.emitTyping(recipientId, true);
@@ -148,6 +164,9 @@ export default function ChatWindow({ recipientId, onClose }) {
     return (
       <div className="chat-window-error">
         <p className="chat-window-error-text">{error}</p>
+        <button onClick={onClose} className="chat-window-error-close">
+          Close
+        </button>
       </div>
     );
   }
@@ -159,11 +178,11 @@ export default function ChatWindow({ recipientId, onClose }) {
         <div className="chat-window-header-user">
           <img
             src={recipient?.photo_url || "/default-avatar.png"}
-            alt={recipient?.username}
+            alt={recipient?.username || "User"}
             className="chat-window-avatar"
           />
           <div>
-            <h3 className="chat-window-username">{recipient?.username}</h3>
+            <h3 className="chat-window-username">{recipient?.username || "User"}</h3>
             <p className="chat-window-status">
               {recipient?.isOnline ? "Online" : "Offline"}
             </p>
@@ -187,7 +206,9 @@ export default function ChatWindow({ recipientId, onClose }) {
       {/* Messages */}
       <div className="chat-window-messages">
         {messages.map((message) => {
-          const isSender = message.sender._id === user._id;
+          if (!message?.sender?._id) return null;
+          
+          const isSender = message.sender._id === user?._id;
           return (
             <div
               key={message._id}
@@ -197,23 +218,11 @@ export default function ChatWindow({ recipientId, onClose }) {
                   : "chat-window-message-received"
               }`}
             >
-              <div
-                className={`chat-window-message-content ${
-                  isSender
-                    ? "chat-window-message-content-sent"
-                    : "chat-window-message-content-received"
-                }`}
-              >
+              <div className="chat-window-message-content">
                 <p>{message.content}</p>
-                <p
-                  className={`chat-window-message-time ${
-                    isSender
-                      ? "chat-window-message-time-sent"
-                      : "chat-window-message-time-received"
-                  }`}
-                >
+                <span className="chat-window-message-time">
                   {new Date(message.createdAt).toLocaleTimeString()}
-                </p>
+                </span>
               </div>
             </div>
           );
@@ -223,33 +232,35 @@ export default function ChatWindow({ recipientId, onClose }) {
 
       {/* Message Input */}
       <form onSubmit={handleSend} className="chat-window-input">
-        <div className="chat-window-input-form">
           <input
             type="text"
             value={newMessage}
             onChange={handleInputChange}
             placeholder="Type a message..."
+          disabled={sending}
             className="chat-window-input-field"
           />
           <button
             type="submit"
             disabled={!newMessage.trim() || sending}
-            className={`chat-window-send-button ${
-              !newMessage.trim() || sending
-                ? "chat-window-send-button-disabled"
-                : "chat-window-send-button-enabled"
-            }`}
+          className="chat-window-send-button"
           >
             {sending ? (
-              <span className="chat-window-send-button-content">
-                <LoadingSpinner size="sm" />
-                <span>Sending...</span>
-              </span>
-            ) : (
-              "Send"
+            <LoadingSpinner size="small" />
+          ) : (
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
             )}
           </button>
-        </div>
       </form>
     </div>
   );
