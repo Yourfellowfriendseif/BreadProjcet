@@ -76,6 +76,13 @@ export default function Home() {
     }
   };
 
+  const handlePostUpdate = (action, post) => {
+    if (action === 'deleted') {
+      // Remove the deleted post from the state
+      setPosts(currentPosts => currentPosts.filter(p => p._id !== post._id));
+    }
+  };
+
   const totalPages = Math.ceil(posts.length / postsPerPage);
   const paginatedPosts = posts.slice(
     (currentPage - 1) * postsPerPage,
@@ -123,7 +130,7 @@ export default function Home() {
         <div className="home-posts-error">{error}</div>
       ) : (
         <div className="home-posts-grid">
-          <BreadListing posts={paginatedPosts} />
+          <BreadListing posts={paginatedPosts} onUpdate={handlePostUpdate} />
         </div>
       )}
 

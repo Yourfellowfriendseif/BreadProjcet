@@ -2,6 +2,7 @@ import { useState } from "react";
 import BreadItem from "./BreadItem";
 import './BreadListing.css';
 import PostDetailsModal from './PostDetailsModal';
+import breadAPI from '../../api/breadAPI';
 
 export default function BreadListingPage({ posts = [], onUpdate }) {
   const [modalPost, setModalPost] = useState(null);
@@ -11,6 +12,18 @@ export default function BreadListingPage({ posts = [], onUpdate }) {
       setModalPost(post);
     }
     if (onUpdate) onUpdate(action, post);
+  };
+
+  const handleDelete = async (post) => {
+    try {
+      await breadAPI.deletePost(post._id);
+      if (onUpdate) {
+        onUpdate('deleted', post);
+      }
+    } catch (err) {
+      console.error('Failed to delete post:', err);
+      // Optionally show an error message to the user
+    }
   };
 
   // Deduplicate posts by _id
@@ -25,7 +38,7 @@ export default function BreadListingPage({ posts = [], onUpdate }) {
         <div className="bread-listing-empty">No bread posts available.</div>
       ) : (
           uniqueBreads.map((bread) => (
-            <BreadItem key={bread._id} post={bread} onUpdate={handleUpdate} />
+            <BreadItem key={bread._id} post={bread} onUpdate={handleUpdate} onDelete={handleDelete} />
         ))
       )}
         {modalPost && (
