@@ -37,7 +37,7 @@ export default function MessagesPage() {
         setError(err.message || "Failed to load user information");
       } finally {
         setLoading(false);
-      }
+    }
     };
 
     initializeChat();

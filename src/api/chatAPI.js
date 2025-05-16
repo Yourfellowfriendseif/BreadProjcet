@@ -64,82 +64,63 @@ export const chatAPI = {
   getConversations: async () => {
     try {
       console.log("Fetching conversations...");
-      const response = await apiClient.get("/chat/users");
-      console.log("Chat users response:", response);
 
+      // Get current user first
       const currentUser = await userAPI.getProfile();
       console.log("Current user:", currentUser);
 
-      // If no users returned, try to get conversations from messages
-      if (!response?.data?.users || response.data.users.length === 0) {
-        console.log(
-          "No users found in chat users response, trying to get from messages..."
-        );
+      // Get chat users first
+      const chatUsersResponse = await apiClient.get("/chat/users");
+      console.log("Chat users response:", chatUsersResponse);
+
+      // Extract users from the response
+      const users = chatUsersResponse?.data?.data?.users || [];
+      console.log("Users from response:", users);
+
+      // Create conversations from users
+      const conversations = users
+        .filter((user) => user._id !== currentUser._id)
+        .map((user) => ({
+          _id: `chat_${user._id}`,
+          participants: [currentUser, user],
+          lastMessage: null,
+          updatedAt: new Date().toISOString(),
+          unreadCount: 0,
+        }));
+
+      // For each user, get their last message
+      for (const conversation of conversations) {
         try {
-          // Get all messages for the current user
-          const messagesResponse = await apiClient.get("/chat/messages/all");
-          console.log("All messages response:", messagesResponse);
+          const otherUser = conversation.participants.find(
+            (p) => p._id !== currentUser._id
+          );
+          const messagesResponse = await apiClient.get(
+            `/chat/messages/${otherUser._id}`,
+            {
+              params: { limit: 1 },
+            }
+          );
 
-          if (messagesResponse?.data?.messages) {
-            const uniqueUsers = new Set();
-            const userMessages = new Map();
-
-            // Process messages to get unique users and their last messages
-            messagesResponse.data.messages.forEach((msg) => {
-              const otherUserId =
-                msg.sender._id === currentUser._id
-                  ? msg.recipient._id
-                  : msg.sender._id;
-              uniqueUsers.add(otherUserId);
-
-              // Keep track of the latest message for each user
-              if (
-                !userMessages.has(otherUserId) ||
-                new Date(msg.createdAt) >
-                  new Date(userMessages.get(otherUserId).createdAt)
-              ) {
-                userMessages.set(otherUserId, msg);
-              }
-            });
-
-            // Convert to the expected format
-            const conversations = Array.from(uniqueUsers).map((userId) => {
-              const lastMessage = userMessages.get(userId);
-              const otherUser =
-                lastMessage.sender._id === currentUser._id
-                  ? lastMessage.recipient
-                  : lastMessage.sender;
-
-              return {
-                _id: `chat_${userId}`,
-                participants: [currentUser, otherUser],
-                lastMessage,
-                updatedAt: lastMessage.createdAt,
-                unreadCount: 0, // You might want to calculate this properly
-              };
-            });
-
-            return {
-              data: { conversations },
-            };
+          if (messagesResponse?.data?.data?.messages?.length > 0) {
+            const lastMessage = messagesResponse.data.data.messages[0];
+            conversation.lastMessage = lastMessage;
+            conversation.updatedAt = lastMessage.createdAt;
           }
         } catch (error) {
-          console.error("Error fetching messages:", error);
+          console.error(
+            `Error fetching messages for user ${conversation._id}:`,
+            error
+          );
         }
       }
 
-      // If we have users from the original response, use those
-      return {
-        data: {
-          conversations: (response?.data?.users || []).map((user) => ({
-            _id: `chat_${user._id}`,
-            participants: [currentUser, user],
-            lastMessage: user.lastMessage,
-            updatedAt: user.lastMessage?.createdAt,
-            unreadCount: user.unreadCount || 0,
-          })),
-        },
-      };
+      // Sort conversations by most recent message
+      conversations.sort(
+        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+      );
+
+      console.log("Final conversations:", conversations);
+      return { data: { conversations } };
     } catch (error) {
       console.error("Error fetching conversations:", error);
       return { data: { conversations: [] } };

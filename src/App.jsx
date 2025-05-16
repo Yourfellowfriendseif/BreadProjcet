@@ -91,6 +91,7 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
+          </div>
         </div>
       </Router>
     </AppProvider>
