@@ -27,7 +27,7 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
 
   const handleMessageClick = () => {
     if (post.user?._id) {
-      navigate(`/messages?userId=${post.user._id}`);
+      navigate(`/messages/${post.user._id}`);
     }
   };
 
@@ -78,12 +78,12 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
           {imageCount > 0 ? (
             images.map((img, idx) => (
               <div className="bread-card-image-thumb" key={img._id || idx}>
-                <img
+        <img
                   src={img.url || (img.filename ? `/uploads/${img.filename}` : fallbackImg)}
-                  alt={post.description?.slice(0, 30) || 'Bread post'}
-                  className="bread-card-image"
-                  onError={e => { e.target.onerror = null; e.target.src = fallbackImg; }}
-                />
+          alt={post.description?.slice(0, 30) || 'Bread post'}
+          className="bread-card-image"
+          onError={e => { e.target.onerror = null; e.target.src = fallbackImg; }}
+        />
                 {/* Overlay for the last image if there are more than 5 */}
                 {idx === 4 && post.images.length > 5 && (
                   <div className="bread-card-image-overlay">
@@ -142,8 +142,8 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
             </>
           ) : (
             <>
-              <button className="bread-card-btn bread-card-btn-outline" onClick={handleMessageClick}>Message</button>
-              <button className="bread-card-btn bread-card-btn-primary" onClick={() => onUpdate && onUpdate('viewDetails', post)}>View Details</button>
+          <button className="bread-card-btn bread-card-btn-outline" onClick={handleMessageClick}>Message</button>
+          <button className="bread-card-btn bread-card-btn-primary" onClick={() => onUpdate && onUpdate('viewDetails', post)}>View Details</button>
               {!hideReserveButton && (
                 <button
                   className={`bread-card-btn bread-card-btn-reserve${reserved ? ' reserved' : ''}`}

@@ -54,7 +54,6 @@ function App() {
   return (
     <AppProvider value={{ user, setUser }}>
         <Router>
-          <div id="webcrumbs" className="min-h-screen bg-gray-50">
             <div className="w-full max-w-[1280px] mx-auto p-6">
             <Navbar />
             <main className="container mx-auto px-4 py-6">
@@ -72,9 +71,10 @@ function App() {
                   <Route path="/profile" element={<UserProfile />} />
                   <Route path="/user/:userId" element={<UserProfile />} />
                   <Route path="/messages" element={<MessagesPage />} />
-                  <Route path="/posts/edit/:id" element={<EditPost />} />
-                  <Route path="/posts/update/:id" element={<EditPost />} />
-                  <Route path="/reserved-posts" element={<ReservedPosts />} />
+                <Route path="/messages/:userId" element={<MessagesPage />} />
+                <Route path="/posts/edit/:id" element={<EditPost />} />
+                <Route path="/posts/update/:id" element={<EditPost />} />
+                <Route path="/reserved-posts" element={<ReservedPosts />} />
                   <Route
                     path="/notifications"
                     element={
@@ -89,7 +89,6 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
-          </div>
         </div>
       </Router>
     </AppProvider>

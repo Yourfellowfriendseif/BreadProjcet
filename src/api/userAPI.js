@@ -49,14 +49,49 @@ export const userAPI = {
   },
 
   getUserById: async (userId) => {
-    // Workaround: fetch all users and find the one with the matching ID
-    const allUsers = await apiClient.get("/user/all");
-    if (Array.isArray(allUsers)) {
-      return allUsers.find((u) => u._id === userId);
-    } else if (allUsers?.users) {
-      return allUsers.users.find((u) => u._id === userId);
+    try {
+      if (!userId) throw new Error("User ID is required");
+
+      // Get users from chat endpoint which includes user details
+      const response = await apiClient.get("/chat/users");
+      let chatUsers = [];
+
+      if (response?.data?.users) {
+        chatUsers = response.data.users;
+      } else if (response?.users) {
+        chatUsers = response.users;
+      } else if (Array.isArray(response)) {
+        chatUsers = response;
+      }
+
+      // Find the specific user
+      const user = chatUsers.find((u) => u._id === userId);
+
+      if (!user) {
+        // If user not found in chat users, try getting from all users
+        const allUsersResponse = await apiClient.get("/user/all");
+        let allUsers = [];
+
+        if (allUsersResponse?.data?.users) {
+          allUsers = allUsersResponse.data.users;
+        } else if (allUsersResponse?.users) {
+          allUsers = allUsersResponse.users;
+        } else if (Array.isArray(allUsersResponse)) {
+          allUsers = allUsersResponse;
+        }
+
+        const userFromAll = allUsers.find((u) => u._id === userId);
+        if (!userFromAll) {
+          throw new Error("User not found");
+        }
+        return userFromAll;
+      }
+
+      return user;
+    } catch (error) {
+      console.error("Error in getUserById:", error);
+      throw error;
     }
-    throw new Error("User not found");
   },
 
   updateProfile: async (updateData) => {
