@@ -1,23 +1,28 @@
-.reserved-posts-container {
+.my-posts-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
 }
 
-.reserved-posts-header {
+.my-posts-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 2rem;
 }
 
-.reserved-posts-header h2 {
+.my-posts-header h2 {
   font-size: 2rem;
   font-weight: 700;
   margin: 0;
 }
 
-.reserved-posts-filter {
+.my-posts-filters {
+  display: flex;
+  gap: 1rem;
+}
+
+.my-posts-filter {
   padding: 0.5em 1em;
   border-radius: 20px;
   border: 1px solid #ddd;
@@ -26,21 +31,21 @@
   color: #333;
 }
 
-.reserved-posts-loading,
-.reserved-posts-empty {
+.my-posts-loading,
+.my-posts-empty {
   text-align: center;
   font-size: 1.2em;
   color: #888;
   margin-top: 3rem;
 }
 
-.reserved-posts-grid {
+.my-posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
 }
 
-.reserved-posts-card {
+.my-posts-card {
   background: #fff;
   border-radius: 18px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.06);
@@ -49,24 +54,4 @@
   flex-direction: column;
   align-items: stretch;
   position: relative;
-}
-
-.reserved-posts-unreserve-btn {
-  margin-top: 1rem;
-  width: 100%;
-  align-self: stretch;
-  padding: 0.5em 1.2em;
-  border-radius: 24px;
-  border: 2px solid #d32f2f;
-  background: #fff0f0;
-  color: #d32f2f;
-  font-size: 1em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-
-.reserved-posts-unreserve-btn:hover {
-  background: #d32f2f;
-  color: #fff;
 }

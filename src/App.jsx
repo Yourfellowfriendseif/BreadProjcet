@@ -14,6 +14,8 @@ import NotificationsList from "./components/notifications/NotificationsList";
 import Navbar from "./components/NavBar";
 import PostDetail from "./components/bread/PostDetail";
 import MessagesPage from "./pages/MessagesPage";
+import EditPost from "./pages/EditPost";
+import ReservedPosts from "./pages/ReservedPosts";
 import "./App.css";
 
 function App() {
@@ -70,6 +72,9 @@ function App() {
                   <Route path="/profile" element={<UserProfile />} />
                   <Route path="/user/:userId" element={<UserProfile />} />
                   <Route path="/messages" element={<MessagesPage />} />
+                  <Route path="/posts/edit/:id" element={<EditPost />} />
+                  <Route path="/posts/update/:id" element={<EditPost />} />
+                  <Route path="/reserved-posts" element={<ReservedPosts />} />
                   <Route
                     path="/notifications"
                     element={

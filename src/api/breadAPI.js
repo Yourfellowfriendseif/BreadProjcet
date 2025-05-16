@@ -171,3 +171,5 @@ export const breadAPI = {
     return Promise.all(deletePromises);
   },
 };
+
+export default breadAPI;

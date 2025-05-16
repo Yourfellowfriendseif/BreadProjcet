@@ -105,6 +105,13 @@ export default function NavBar() {
                 <span className="material-symbols-outlined navbar-button-icon">add_circle</span>
                 Post Item
               </button>
+              <button
+                className={`navbar-button ${isActive('/reserved-posts') ? 'navbar-button-active' : ''}`}
+                onClick={() => { navigate('/reserved-posts'); setHamburgerOpen(false); }}
+              >
+                <span className="material-symbols-outlined navbar-button-icon">bookmark</span>
+                Reserved Posts
+              </button>
               <div className="navbar-search">
                 <span className="material-symbols-outlined navbar-search-icon">search</span>
                 <input
@@ -195,6 +202,13 @@ export default function NavBar() {
         >
           <span className="material-symbols-outlined navbar-button-icon">add_circle</span>
           Post Item
+        </button>
+        <button
+          className={`navbar-button ${isActive('/reserved-posts') ? 'navbar-button-active' : ''}`}
+          onClick={() => navigate('/reserved-posts')}
+        >
+          <span className="material-symbols-outlined navbar-button-icon">bookmark</span>
+          Reserved Posts
         </button>
       </div>
       <div className="navbar-actions-right">

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useContext } from 'react';
 import BreadItem from '../components/bread/BreadItem';
-import { UserContext } from '../context/UserContext';
+import { AppContext } from '../context/AppContext';
 import breadAPI from '../api/breadAPI';
+import PostDetailsModal from '../components/bread/PostDetailsModal';
 import './ReservedPosts.css';
 
 const statusOptions = [
@@ -12,10 +13,11 @@ const statusOptions = [
 ];
 
 const ReservedPosts = () => {
-  const { currentUser } = useContext(UserContext);
+  const { currentUser } = useContext(AppContext);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedPost, setSelectedPost] = useState(null);
 
   useEffect(() => {
     fetchPosts();
@@ -26,7 +28,7 @@ const ReservedPosts = () => {
     setLoading(true);
     try {
       const response = await breadAPI.getReservedPosts();
-      let filtered = response.posts || [];
+      let filtered = response.data?.posts || [];
       if (statusFilter !== 'all') {
         filtered = filtered.filter(post => post.status === statusFilter);
       }
@@ -40,11 +42,18 @@ const ReservedPosts = () => {
 
   const handleUnreserve = async (postId) => {
     try {
-      await breadAPI.unreservePost(postId);
+      await breadAPI.cancelReservation(postId);
       fetchPosts();
       // Optionally show a toast
     } catch (err) {
       // handle error, e.g. toast
+    }
+  };
+
+  const handleViewDetails = (action, post) => {
+    if (action === 'viewDetails') {
+      setSelectedPost(post);
+      // You can show a modal here if you have one
     }
   };
 
@@ -72,10 +81,11 @@ const ReservedPosts = () => {
             <div className="reserved-posts-card" key={post._id}>
               <BreadItem
                 post={post}
-                onUpdate={() => {}}
+                onUpdate={handleViewDetails}
                 onReserve={null}
                 onDelete={null}
                 onEdit={null}
+                hideReserveButton={true}
               />
               <button className="reserved-posts-unreserve-btn" onClick={() => handleUnreserve(post._id)}>
                 Cancel Reservation
@@ -83,6 +93,9 @@ const ReservedPosts = () => {
             </div>
           ))}
         </div>
+      )}
+      {selectedPost && (
+        <PostDetailsModal post={selectedPost} onClose={() => setSelectedPost(null)} />
       )}
     </div>
   );

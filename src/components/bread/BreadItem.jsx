@@ -1,7 +1,8 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './BreadItem.css';
 import { AppContext } from '../../context/AppContext';
+import breadAPI from '../../api/breadAPI';
 
 const fallbackImg = '/no-image.png'; // Use a default image in your public folder
 
@@ -16,10 +17,13 @@ const typeLabels = {
   request: { label: 'Request', className: 'bread-badge-request' },
 };
 
-const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit }) => {
+const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveButton }) => {
   const navigate = useNavigate();
   const { user } = useContext(AppContext);
   const isOwner = user && post.user && user._id === post.user._id;
+  const isReservedByMe = post.reserved_by && post.reserved_by._id === user?._id;
+  const [reserved, setReserved] = useState(isReservedByMe);
+  const [reserveLoading, setReserveLoading] = useState(false);
 
   const handleMessageClick = () => {
     if (post.user?._id) {
@@ -27,16 +31,35 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit }) => {
     }
   };
 
-  const handleReserve = () => {
-    if (onReserve) onReserve(post);
+  const handleReserve = async () => {
+    setReserveLoading(true);
+    try {
+      if (!reserved) {
+        await breadAPI.reservePost(post._id);
+        setReserved(true);
+        if (onReserve) onReserve(post);
+        // Optionally: navigate('/reserved-posts');
+      } else {
+        await breadAPI.cancelReservation(post._id);
+        setReserved(false);
+        if (onReserve) onReserve(post);
+      }
+    } catch (err) {
+      // Optionally show a toast
+    } finally {
+      setReserveLoading(false);
+    }
   };
 
   const handleEdit = () => {
+    navigate(`/posts/edit/${post._id}`);
     if (onEdit) onEdit(post);
   };
 
   const handleDelete = () => {
-    if (onDelete) onDelete(post);
+    if (window.confirm('Are you sure you want to delete this post?')) {
+      if (onDelete) onDelete(post);
+    }
   };
 
   // Dynamic grid logic
@@ -121,7 +144,15 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit }) => {
             <>
               <button className="bread-card-btn bread-card-btn-outline" onClick={handleMessageClick}>Message</button>
               <button className="bread-card-btn bread-card-btn-primary" onClick={() => onUpdate && onUpdate('viewDetails', post)}>View Details</button>
-              <button className="bread-card-btn bread-card-btn-reserve" onClick={handleReserve}>Reserve</button>
+              {!hideReserveButton && (
+                <button
+                  className={`bread-card-btn bread-card-btn-reserve${reserved ? ' reserved' : ''}`}
+                  onClick={handleReserve}
+                  disabled={reserveLoading}
+                >
+                  {reserved ? 'Post Reserved' : 'Reserve'}
+                </button>
+              )}
             </>
           )}
         </div>
