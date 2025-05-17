@@ -103,6 +103,32 @@ export default function EditPost() {
     }
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.add('dragging');
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('dragging');
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('dragging');
+    
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type.startsWith('image/')
+    );
+    
+    if (files.length > 0) {
+      handleImageChange({ target: { files } });
+    }
+  };
+
   const validateForm = () => {
     if (!formData.post_type) return "Post type is required";
     if (!formData.status) return "Status is required";
@@ -273,32 +299,124 @@ export default function EditPost() {
         </div>
         <div className="create-post-form-group">
           <label className="create-post-label">Images</label>
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleImageChange}
-            className="create-post-input"
-          />
+          <div 
+            className="create-post-image-dropzone"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => document.getElementById('image-upload-edit').click()}
+          >
+            <span className="material-symbols-outlined create-post-image-icon">
+              add_photo_alternate
+            </span>
+            <p className="create-post-image-text">
+              Drag and drop your images here, or click to select files
+            </p>
+            <p className="create-post-image-subtext">
+              Supports: JPG, PNG • Max size: 5MB per image
+            </p>
+            <input
+              id="image-upload-edit"
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageChange}
+              className="create-post-input"
+              style={{ display: 'none' }}
+              disabled={imageUploadLoading}
+            />
+          </div>
+
           {imageUploadLoading && (
             <div className="create-post-image-progress">
-              Uploading... {imageUploadProgress}%
+              <div className="create-post-progress-bar">
+                <div 
+                  className="create-post-progress-fill" 
+                  style={{ width: `${imageUploadProgress}%` }}
+                />
+              </div>
+              <p className="create-post-progress-text">
+                Uploading... {imageUploadProgress}%
+              </p>
             </div>
           )}
+
           {imageUploadError && (
-            <div className="create-post-error">
-              <p className="create-post-error-text">{imageUploadError}</p>
+            <p className="create-post-error-text">{imageUploadError}</p>
+          )}
+
+          {imageUrls.length > 0 && (
+            <div className="create-post-image-previews">
+              {imageUrls.map((url, index) => (
+                <div key={index} className="create-post-image-preview">
+                  <img
+                    src={url}
+                    alt={`Upload preview ${index + 1}`}
+                    className="create-post-preview-img"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/no-image.png";
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="create-post-image-remove"
+                    onClick={() => {
+                      const newUrls = [...imageUrls];
+                      const newIds = [...imageIds];
+                      const newFilenames = [...imageFilenames];
+                      
+                      // Remove the image from all arrays
+                      newUrls.splice(index, 1);
+                      newIds.splice(index, 1);
+                      newFilenames.splice(index, 1);
+                      
+                      setImageUrls(newUrls);
+                      setImageIds(newIds);
+                      setImageFilenames(newFilenames);
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
           )}
-          <div className="create-post-image-preview">
-            {imageUrls.map((url, idx) => (
-              <img key={idx} src={url} alt="Preview" className="create-post-image-thumb" />
-            ))}
-          </div>
         </div>
-        <button type="submit" className="create-post-submit-btn" disabled={loading}>
-          {loading ? "Saving..." : "Save Changes"}
-        </button>
+        <div className="create-post-actions">
+          <button
+            type="button"
+            onClick={() => navigate("/my-posts")}
+            className="create-post-button create-post-button-secondary"
+            disabled={loading}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '1.2rem', marginRight: '0.5rem', verticalAlign: 'middle' }}>
+              arrow_back
+            </span>
+            <span style={{ verticalAlign: 'middle' }}>Cancel</span>
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="create-post-button create-post-button-primary"
+          >
+            {loading ? (
+              <>
+                <span className="material-symbols-outlined" style={{ fontSize: '1.2rem', marginRight: '0.5rem', verticalAlign: 'middle' }}>
+                  sync
+                </span>
+                <span style={{ verticalAlign: 'middle' }}>Saving...</span>
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined" style={{ fontSize: '1.2rem', marginRight: '0.5rem', verticalAlign: 'middle' }}>
+                  save
+                </span>
+                <span style={{ verticalAlign: 'middle' }}>Save Changes</span>
+              </>
+            )}
+          </button>
+        </div>
       </form>
     </div>
   );

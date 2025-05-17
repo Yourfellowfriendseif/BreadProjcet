@@ -1,65 +1,78 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { formatDistanceToNow } from 'date-fns';
 import { useApp } from "../../context/AppContext";
 import { notificationAPI } from "../../api/notificationAPI";
+import { socketService } from "../../api/socketService";
 import LoadingSpinner from "../LoadingSpinner";
 import "./NotificationsList.css";
 
 export default function NotificationsList() {
-  const {
-    notifications: contextNotifications,
-    markNotificationRead,
-    markAllNotificationsRead,
-  } = useApp();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load notifications when component mounts
   useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        setLoading(true);
-        const response = await notificationAPI.getNotifications();
-        const data = response?.data?.data || response?.data || response;
-        const fetchedNotifications = data?.notifications || [];
-
-        console.log("Fetched notifications:", fetchedNotifications);
-        setNotifications(fetchedNotifications);
-      } catch (err) {
-        console.error("Failed to load notifications:", err);
-        setError(err.message || "Failed to load notifications");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadNotifications();
+
+    // Setup socket listeners for real-time notifications
+    socketService.onNewNotification((notification) => {
+      console.log('New notification received:', notification);
+      setNotifications(prev => [notification, ...prev]);
+    });
+
+    socketService.onNotificationRead((notificationId) => {
+      console.log('Notification marked as read:', notificationId);
+      setNotifications(prev =>
+        prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
+      );
+    });
   }, []);
 
-  // Keep local notifications in sync with context notifications
-  useEffect(() => {
-    if (contextNotifications.length > 0) {
-      setNotifications(contextNotifications);
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
+      const response = await notificationAPI.getNotifications();
+      console.log('Fetched notifications response:', response);
+      
+      const data = response?.data?.data || response?.data || response;
+      console.log('Processed notification data:', data);
+      
+      const fetchedNotifications = Array.isArray(data) ? data : data?.notifications || [];
+      console.log('Final notifications array:', fetchedNotifications);
+      
+      setNotifications(fetchedNotifications);
+      setError(null);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      setError(error.message || 'Failed to load notifications');
+    } finally {
+      setLoading(false);
     }
-  }, [contextNotifications]);
+  };
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await markNotificationRead(notificationId);
-      // Immediately update the UI
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === notificationId ? { ...n, read: true } : n))
+      console.log('Marking notification as read:', notificationId);
+      await notificationAPI.markAsRead(notificationId);
+      socketService.markNotificationRead(notificationId);
+      setNotifications(prev =>
+        prev.map(n => {
+          if (n._id === notificationId) {
+            console.log('Updated notification:', { ...n, read: true });
+            return { ...n, read: true };
+          }
+          return n;
+        })
       );
-    } catch (err) {
-      setError(err.message || "Failed to mark notification as read");
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
     }
   };
 
   const handleMarkAllAsRead = async () => {
     try {
-      await markAllNotificationsRead();
-      // Immediately update the UI
+      await notificationAPI.markAllAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch (err) {
       setError(err.message || "Failed to mark all notifications as read");
@@ -67,44 +80,76 @@ export default function NotificationsList() {
   };
 
   const getNotificationContent = (notification) => {
+    console.log('Processing notification:', notification);
+    console.log('Notification sender:', notification.sender);
+    console.log('Notification user:', notification.user);
+    
+    const username = notification.sender?.username || notification.user?.username || 'Anonymous';
+    console.log('Resolved username:', username);
+
     switch (notification.type) {
-      case "post_reserved":
+      case 'post_reserved':
         return {
-          icon: "🔒",
+          icon: '🔒',
           link: `/bread/${notification.post?._id}`,
-          action: "reserved your post",
+          action: `${username} reserved your post`,
+          title: 'Post Reserved'
         };
-      case "reservation_cancelled":
+      case 'reservation_cancelled':
         return {
-          icon: "🔓",
+          icon: '🔓',
           link: `/bread/${notification.post?._id}`,
-          action: "cancelled their reservation",
+          action: `${username} cancelled their reservation`,
+          title: 'Reservation Cancelled'
         };
-      case "new_message":
+      case 'new_message':
         return {
-          icon: "💬",
-          link: "/messages",
-          action: "sent you a message",
+          icon: '💬',
+          link: '/messages',
+          action: `${username} sent you a message`,
+          title: 'New Message'
         };
-      case "post_completed":
+      case 'post_completed':
         return {
-          icon: "✅",
+          icon: '✅',
           link: `/bread/${notification.post?._id}`,
-          action: "marked the exchange as completed",
+          action: `${username} marked the exchange as completed`,
+          title: 'Exchange Completed'
         };
       default:
         return {
-          icon: "📢",
-          link: "#",
-          action: "interacted with your post",
+          icon: '📢',
+          link: '#',
+          action: `${username} interacted with your post`,
+          title: 'New Activity'
         };
     }
   };
 
+  const unreadCount = notifications.filter(n => !n.read).length;
+
   if (loading) {
     return (
-      <div className="notifications-list-loading">
-        <LoadingSpinner />
+      <div className="notifications-list">
+        <div className="notifications-list-header">
+          <h1 className="notifications-list-title">Notifications</h1>
+        </div>
+        <div className="notifications-list-loading">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="notifications-list">
+        <div className="notifications-list-header">
+          <h1 className="notifications-list-title">Notifications</h1>
+        </div>
+        <div className="notifications-list-error">
+          <p className="notifications-list-error-text">{error}</p>
+        </div>
       </div>
     );
   }
@@ -112,8 +157,8 @@ export default function NotificationsList() {
   return (
     <div className="notifications-list">
       <div className="notifications-list-header">
-        <h2 className="notifications-list-title">Notifications</h2>
-        {notifications.some((n) => !n.read) && (
+        <h1 className="notifications-list-title">Notifications</h1>
+        {unreadCount > 0 && (
           <button
             onClick={handleMarkAllAsRead}
             className="notifications-list-mark-all"
@@ -123,53 +168,49 @@ export default function NotificationsList() {
         )}
       </div>
 
-      {error && (
-        <div className="notifications-list-error">
-          <p className="notifications-list-error-text">{error}</p>
-        </div>
-      )}
-
       {notifications.length === 0 ? (
-        <div className="notifications-list-empty">No notifications yet</div>
+        <div className="notifications-list-empty">
+          <div className="notifications-list-empty-icon">
+            <span className="material-symbols-outlined" style={{ fontSize: 'inherit' }}>
+              notifications
+            </span>
+          </div>
+          <h2 className="notifications-list-empty-text">No notifications yet</h2>
+          <p className="notifications-list-empty-subtext">
+            We'll notify you when something important happens in your bread-sharing journey!
+          </p>
+        </div>
       ) : (
         <div className="notifications-list-items">
           {notifications.map((notification) => {
-            const { icon, link, action } = getNotificationContent(notification);
+            const { icon, link, action, title } = getNotificationContent(notification);
+            const timeAgo = formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true });
+            const username = notification.sender?.username || notification.user?.username || 'Anonymous';
 
             return (
               <div
                 key={notification._id}
-                className={`notification-item ${
-                  !notification.read ? "notification-item-unread" : ""
-                }`}
+                className={`notification-item ${!notification.read ? 'notification-item-unread' : ''} type-${notification.type}`}
+                onClick={() => !notification.read && handleMarkAsRead(notification._id)}
               >
                 <div className="notification-item-content">
-                  <span className="notification-item-icon">{icon}</span>
+                  <div className="notification-item-icon">{icon}</div>
                   <div className="notification-item-details">
-                    <div className="notification-item-header">
-                      <Link
-                        to={link}
-                        className="notification-item-link"
-                        onClick={() =>
-                          !notification.read &&
-                          handleMarkAsRead(notification._id)
-                        }
-                      >
-                        <span className="notification-item-username">
-                          {(notification.user && notification.user.username) ||
-                            "Unknown user"}
-                        </span>{" "}
-                        {action}
-                      </Link>
-                      <span className="notification-item-date">
-                        {new Date(notification.createdAt).toLocaleDateString()}
+                    <div className="notification-item-title">{title}</div>
+                    <Link
+                      to={link}
+                      className="notification-item-link"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <span className="notification-item-username">
+                        {username}
                       </span>
-                    </div>
+                      {' '}{action.replace(username, '')}
+                    </Link>
                     {notification.message && (
-                      <p className="notification-item-message">
-                        {notification.message}
-                      </p>
+                      <p className="notification-item-message">{notification.message}</p>
                     )}
+                    <div className="notification-item-time">{timeAgo}</div>
                   </div>
                 </div>
               </div>

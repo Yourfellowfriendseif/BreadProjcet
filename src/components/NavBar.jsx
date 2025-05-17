@@ -6,7 +6,6 @@ import './NavBar.css';
 export default function NavBar() {
   const { user, logout, notifications, unreadMessages, setGlobalSearchTerm, globalSearchTerm } = useApp();
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showMessages, setShowMessages] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showHamburger, setShowHamburger] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
@@ -33,29 +32,17 @@ export default function NavBar() {
   // Notification dropdown toggle
   const handleNotificationClick = () => {
     setShowNotifications((prev) => !prev);
-    setShowMessages(false);
-    setShowUserMenu(false);
-  };
-
-  // Messages dropdown toggle
-  const handleMessagesClick = () => {
-    setShowMessages((prev) => !prev);
-    setShowNotifications(false);
-    setShowUserMenu(false);
   };
 
   // User menu dropdown toggle
   const handleUserClick = () => {
     setShowUserMenu((prev) => !prev);
-    setShowNotifications(false);
-    setShowMessages(false);
   };
 
   // Close dropdowns on outside click
   const handleBlur = (e) => {
     if (!e.currentTarget.contains(e.relatedTarget)) {
       setShowNotifications(false);
-      setShowMessages(false);
       setShowUserMenu(false);
     }
   };
@@ -155,41 +142,25 @@ export default function NavBar() {
                     )}
                   </div>
                   <div className="navbar-hamburger-dropdown-wrapper">
-                    <button className="navbar-icon-button" onClick={() => handleHamburgerDropdown('messages')} tabIndex={0}>
-                      <span className="material-symbols-outlined">chat</span>
-                      {unreadMessages > 0 && (
-                        <span className="navbar-badge">{unreadMessages}</span>
-                      )}
+                    <button className="navbar-icon-button" onClick={() => handleHamburgerDropdown('profile')} tabIndex={0}>
+                      <span className="material-symbols-outlined">person</span>
                     </button>
-                    {hamburgerDropdown === 'messages' && (
-                      <div className="navbar-dropdown navbar-dropdown-messages">
-                        <div className="navbar-dropdown-header">Messages</div>
-                        <Link to="/messages" className="navbar-dropdown-footer" onClick={()=>{setHamburgerDropdown(null); setHamburgerOpen(false);}}>
-                          View all messages
-                        </Link>
+                    {hamburgerDropdown === 'profile' && (
+                      <div className="navbar-dropdown navbar-dropdown-user">
+                        <div className="navbar-dropdown-header">{user ? user.username : 'Guest'}</div>
+                        {user ? (
+                          <>
+                            <Link to="/profile" className="navbar-dropdown-item" onClick={()=>{setHamburgerDropdown(null); setHamburgerOpen(false);}}>Profile</Link>
+                            <button className="navbar-dropdown-item" onClick={()=>{handleLogout(); setHamburgerDropdown(null); setHamburgerOpen(false);}}>Logout</button>
+                          </>
+                        ) : (
+                          <Link to="/login" className="navbar-dropdown-item" onClick={()=>{setHamburgerDropdown(null); setHamburgerOpen(false);}}>Login</Link>
+                        )}
                       </div>
                     )}
                   </div>
                 </>
               )}
-              <div className="navbar-hamburger-dropdown-wrapper">
-                <button className="navbar-icon-button" onClick={() => handleHamburgerDropdown('profile')} tabIndex={0}>
-                  <span className="material-symbols-outlined">person</span>
-                </button>
-                {hamburgerDropdown === 'profile' && (
-                  <div className="navbar-dropdown navbar-dropdown-user">
-                    <div className="navbar-dropdown-header">{user ? user.username : 'Guest'}</div>
-                    {user ? (
-                      <>
-                        <Link to="/profile" className="navbar-dropdown-item" onClick={()=>{setHamburgerDropdown(null); setHamburgerOpen(false);}}>Profile</Link>
-                        <button className="navbar-dropdown-item" onClick={()=>{handleLogout(); setHamburgerDropdown(null); setHamburgerOpen(false);}}>Logout</button>
-                      </>
-                    ) : (
-                      <Link to="/login" className="navbar-dropdown-item" onClick={()=>{setHamburgerDropdown(null); setHamburgerOpen(false);}}>Login</Link>
-                    )}
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </>
@@ -261,22 +232,16 @@ export default function NavBar() {
                 </div>
               )}
             </div>
-            <div className="navbar-dropdown-wrapper">
-              <button className="navbar-icon-button navbar-icon-messages" onClick={handleMessagesClick} tabIndex={0}>
-                <span className="material-symbols-outlined">chat</span>
-                {unreadMessages > 0 && (
-                  <span className="navbar-badge">{unreadMessages}</span>
-                )}
-              </button>
-              {showMessages && (
-                <div className="navbar-dropdown navbar-dropdown-messages">
-                  <div className="navbar-dropdown-header">Messages</div>
-                  <Link to="/messages" className="navbar-dropdown-footer" onClick={()=>setShowMessages(false)}>
-                    View all messages
-                  </Link>
-                </div>
+            <Link 
+              to="/messages" 
+              className="navbar-icon-button navbar-icon-messages"
+              title="Messages"
+            >
+              <span className="material-symbols-outlined">chat</span>
+              {unreadMessages > 0 && (
+                <span className="navbar-badge">{unreadMessages}</span>
               )}
-            </div>
+            </Link>
           </>
         )}
         <div className="navbar-dropdown-wrapper">

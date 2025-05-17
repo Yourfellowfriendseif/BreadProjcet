@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './BreadItem.css';
 import { AppContext } from '../../context/AppContext';
@@ -23,6 +23,15 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
   const isOwner = user && post.user && user._id === post.user._id;
   const [error, setError] = useState(null);
   const [reserveLoading, setReserveLoading] = useState(false);
+  const [isDescriptionTruncated, setIsDescriptionTruncated] = useState(false);
+  const descriptionRef = useRef(null);
+
+  useEffect(() => {
+    if (descriptionRef.current) {
+      const element = descriptionRef.current;
+      setIsDescriptionTruncated(element.scrollHeight > element.clientHeight);
+    }
+  }, [post.description]);
 
   const handleMessageClick = () => {
     if (post.user?._id) {
@@ -86,6 +95,12 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
     }
   };
 
+  const handleViewMore = () => {
+    if (onUpdate) {
+      onUpdate('viewDetails', post);
+    }
+  };
+
   // Dynamic grid logic
   const images = post.images && post.images.length > 0 ? post.images.slice(0, 5) : [];
   const imageCount = images.length;
@@ -138,7 +153,22 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
           </span>
         </div>
         <h3 className="bread-card-title">{post.title || (post.post_type === 'sell' ? 'Bread for Sale' : 'Bread Request')}</h3>
-        <p className="bread-card-description">{post.description}</p>
+        <div style={{ position: 'relative' }}>
+          <p 
+            ref={descriptionRef}
+            className="bread-card-description"
+          >
+            {post.description}
+          </p>
+          {isDescriptionTruncated && (
+            <button 
+              className="bread-card-view-more"
+              onClick={handleViewMore}
+            >
+              ... view more
+            </button>
+          )}
+        </div>
         <div className="bread-card-qty-loc">
           <span className="bread-card-quantity">
             {post.quantity} {post.quantity_unit}

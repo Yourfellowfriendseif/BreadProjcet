@@ -141,51 +141,52 @@
   }
 }
 
-.register-avatar-section {
+.register-photo-section {
+  margin-bottom: 2rem;
   display: flex;
   justify-content: center;
-  margin-bottom: 2rem;
 }
 
-.register-avatar-container {
+.register-photo-container {
   position: relative;
   width: 120px;
   height: 120px;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: #f3f4f6;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.register-avatar-preview {
+.register-photo-preview {
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   object-fit: cover;
+  border: 3px solid #ff6a2b;
+  padding: 3px;
 }
 
-.register-avatar-upload {
+.register-photo-upload {
   position: absolute;
   bottom: 0;
-  left: 0;
   right: 0;
-  background: rgba(255, 106, 43, 0.9);
+  background: #ff6a2b;
   color: white;
-  text-align: center;
   padding: 0.5rem;
+  border-radius: 9999px;
   cursor: pointer;
   font-size: 0.875rem;
-  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
 }
 
-.register-avatar-upload:hover {
-  background: rgba(255, 106, 43, 1);
+.register-photo-upload:hover {
+  background: #ff8f5e;
+  transform: translateY(-1px);
 }
 
-.register-avatar-input {
+.register-photo-input {
   display: none;
 }
 
-.register-avatar-upload-text {
-  display: block;
+.register-photo-upload-text {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
   font-weight: 500;
 }

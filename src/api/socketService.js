@@ -6,7 +6,8 @@ class SocketService {
     this.socket = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
-    this.listeners = new Map(); // Keep track of all attached listeners
+    this.listeners = new Map();
+    this.isInitialized = false;
   }
 
   initialize(token) {
@@ -16,7 +17,6 @@ class SocketService {
     }
 
     if (this.socket) {
-      // Clean up existing socket if it exists but is not connected
       this.socket.disconnect();
       this.socket = null;
     }
@@ -26,18 +26,21 @@ class SocketService {
       return;
     }
 
-    console.log("Initializing socket connection with token");
-
     try {
-      // IMPORTANT: Using exact same URL and structure as the working test HTML
-      this.socket = io("http://localhost:5000", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      this.socket = io(apiUrl, {
         auth: { token },
+        reconnection: true,
+        reconnectionAttempts: this.maxReconnectAttempts,
+        reconnectionDelay: 1000,
       });
 
       this.setupEventHandlers();
+      this.isInitialized = true;
     } catch (error) {
       console.error("Error initializing socket:", error);
       this.socket = null;
+      this.isInitialized = false;
     }
   }
 
@@ -51,6 +54,10 @@ class SocketService {
 
     this.socket.on("disconnect", (reason) => {
       console.log("Socket disconnected:", reason);
+      if (reason === "io server disconnect") {
+        // Server initiated disconnect, try to reconnect
+        this.connect();
+      }
     });
 
     this.socket.on("connect_error", (error) => {
@@ -69,34 +76,6 @@ class SocketService {
     });
   }
 
-  removeAllListeners() {
-    if (!this.socket) {
-      console.log("No socket to clean up listeners from");
-      return;
-    }
-
-    try {
-      // Clean up all listeners that we've tracked
-      this.listeners.forEach((callback, event) => {
-        if (Array.isArray(callback)) {
-          callback.forEach((cb) => this.socket.off(event, cb));
-        } else {
-          this.socket.off(event, callback);
-        }
-      });
-
-      // Also use native removeAllListeners as a fallback
-      this.socket.removeAllListeners();
-
-      // Clear our listener tracking
-      this.listeners.clear();
-
-      console.log("All socket listeners removed");
-    } catch (err) {
-      console.error("Error removing socket listeners:", err);
-    }
-  }
-
   connect(token) {
     if (!token) {
       console.warn("Cannot connect socket: No token provided");
@@ -104,10 +83,9 @@ class SocketService {
     }
 
     try {
-      if (!this.socket) {
+      if (!this.isInitialized) {
         this.initialize(token);
-      } else if (!this.socket.connected) {
-        // Update auth token if socket exists but is disconnected
+      } else if (this.socket && !this.socket.connected) {
         this.socket.auth = { token };
         this.socket.connect();
       }
@@ -118,53 +96,52 @@ class SocketService {
 
   disconnect() {
     if (this.socket) {
-      // First remove all listeners to prevent any callbacks during disconnect
       this.removeAllListeners();
-
-      // Then disconnect
       this.socket.disconnect();
       this.socket = null;
-
+      this.isInitialized = false;
       console.log("Socket disconnected and reset");
     }
     this.reconnectAttempts = 0;
   }
 
   emit(event, data) {
-    if (!this.socket) {
-      console.log(`Cannot emit ${event}: Socket not initialized`);
+    if (!this.socket?.connected) {
+      console.warn(`Cannot emit ${event}: Socket not connected`);
       return;
     }
+    console.log(`Emitting ${event}:`, data);
     this.socket.emit(event, data);
   }
 
   on(event, callback) {
     if (!this.socket) {
-      console.log(`Cannot listen to ${event}: Socket not initialized`);
+      console.warn(`Cannot listen to ${event}: Socket not initialized`);
       return;
     }
 
-    // Track the listener
     if (!this.listeners.has(event)) {
       this.listeners.set(event, [callback]);
     } else {
       const callbacks = this.listeners.get(event);
-      callbacks.push(callback);
-      this.listeners.set(event, callbacks);
+      if (!callbacks.includes(callback)) {
+        callbacks.push(callback);
+        this.listeners.set(event, callbacks);
+      }
     }
 
     this.socket.on(event, callback);
+    return () => this.off(event, callback);
   }
 
   off(event, callback) {
     if (!this.socket) {
-      console.log(
+      console.warn(
         `Cannot remove listener for ${event}: Socket not initialized`
       );
       return;
     }
 
-    // Remove from our tracking
     if (this.listeners.has(event)) {
       const callbacks = this.listeners.get(event);
       const index = callbacks.indexOf(callback);
@@ -179,6 +156,17 @@ class SocketService {
     }
 
     this.socket.off(event, callback);
+  }
+
+  removeAllListeners() {
+    if (this.socket) {
+      this.listeners.forEach((callbacks, event) => {
+        callbacks.forEach((callback) => {
+          this.socket.off(event, callback);
+        });
+      });
+      this.listeners.clear();
+    }
   }
 
   isConnected() {
@@ -231,14 +219,13 @@ class SocketService {
 
   // Notification-specific events
   onNewNotification(callback) {
-    this.on(SOCKET_EVENTS.NOTIFICATION_NEW, callback);
+    return this.on(SOCKET_EVENTS.NOTIFICATION_NEW, callback);
   }
 
   onNotificationRead(callback) {
-    this.on(SOCKET_EVENTS.NOTIFICATION_READ, callback);
+    return this.on(SOCKET_EVENTS.NOTIFICATION_READ, callback);
   }
 
-  // Handle notification updates
   markNotificationRead(notificationId) {
     this.emit(SOCKET_EVENTS.NOTIFICATION_MARK_READ, { notificationId });
   }

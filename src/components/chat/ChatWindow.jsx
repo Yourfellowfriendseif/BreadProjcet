@@ -328,37 +328,24 @@ export default function ChatWindow({ recipientId, onClose }) {
       </div>
 
       {/* Message Input */}
-      <form onSubmit={handleSend} className="chat-window-input">
+      <div className="chat-window-input-container">
+        <form className="chat-window-input-form" onSubmit={handleSend}>
           <input
             type="text"
             value={newMessage}
             onChange={handleInputChange}
             placeholder="Type a message..."
-            disabled={sending}
-            className="chat-window-input-field"
+            className="chat-window-input"
           />
-          <button
-            type="submit"
-            disabled={!newMessage.trim() || sending}
+          <button 
+            type="submit" 
             className="chat-window-send-button"
+            disabled={!newMessage.trim() || sending}
           >
-            {sending ? (
-              <LoadingSpinner size="small" />
-            ) : (
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-            )}
+            <span className="material-symbols-outlined">send</span>
           </button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

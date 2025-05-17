@@ -100,42 +100,58 @@ export default function UserProfile() {
     const file = e.target.files[0];
     if (!file) return;
 
-      try {
+    try {
       setUploadProgress(0);
-        const formData = new FormData();
-      formData.append('photo', file);
       
-      console.log('Uploading file:', file);
-      console.log('FormData contents:');
-      for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
+      // If there's an existing photo, delete it first
+      if (profileUser.photo_url) {
+        console.log('Existing photo_url:', profileUser.photo_url);
+        const filename = profileUser.photo_url.split('/').pop();
+        console.log('Deleting old photo:', filename);
+        await uploadAPI.deleteImage(filename);
       }
-        
-        const updatedUser = await userAPI.updateProfile(formData);
+
+      // Upload the new image
+      console.log('Uploading new photo:', file);
+      const response = await uploadAPI.uploadSingleImage(file);
+      console.log('Upload response:', response);
+      const uploadedPhotoUrl = response.data.url;
+      
+      // Update user profile with new photo URL
+      const updatedUser = await userAPI.updateProfile({
+        photo_url: uploadedPhotoUrl
+      });
+
       console.log('Profile update response:', updatedUser);
 
-      // Extract user data from response
-      const userData = updatedUser?.data?.user || updatedUser?.data || updatedUser;
-      console.log('Extracted user data:', userData);
-      
-      if (!userData) {
-        throw new Error('No user data received from server');
-      }
-
+      // Process the updated user data
       const processedUser = {
-        ...userData,
-        avatar: uploadAPI.getAvatarUrl(userData)
+        ...updatedUser,
+        photo_url: uploadedPhotoUrl,
+        avatar: uploadAPI.getAvatarUrl({ ...updatedUser, photo_url: uploadedPhotoUrl })
       };
       
-      console.log('Processed user with avatar:', processedUser);
+      console.log('Processed user with new photo:', processedUser);
       setProfileUser(processedUser);
-      updateUser(processedUser);
+      
+      // Update global user state if it's own profile
+      if (isOwnProfile) {
+        updateUser(prev => ({
+          ...prev,
+          ...processedUser,
+          photo_url: uploadedPhotoUrl,
+          avatar: uploadAPI.getAvatarUrl({ ...processedUser, photo_url: uploadedPhotoUrl })
+        }));
+      }
+      
       setUploadProgress(100);
 
-      // Reload profile to ensure we have the latest data
-      await loadProfile();
+      // Show success message
+      setUpdateSuccess('Profile picture updated successfully!');
+      setTimeout(() => setUpdateSuccess(''), 3000);
+
     } catch (err) {
-      console.error('Avatar update error:', err);
+      console.error('Photo update error:', err);
       setError(err.response?.data?.message || err.message || 'Failed to update profile picture. Please try again.');
       setUploadProgress(0);
     }
@@ -288,7 +304,7 @@ export default function UserProfile() {
       </div>
     );
   }
-
+  console.log('profileUser',currentUser);
   return (
     <div className="user-profile">
       <div className="user-profile-container">
@@ -463,6 +479,7 @@ export default function UserProfile() {
             >
               Active Posts
             </button>
+            {/* Completed Posts Tab - Temporarily disabled
             <button
               className={`user-profile-tab ${
                 activeTab === 'completed' ? 'user-profile-tab-active' : ''
@@ -471,6 +488,7 @@ export default function UserProfile() {
             >
               Completed Posts
             </button>
+            */}
           </div>
         </div>
 

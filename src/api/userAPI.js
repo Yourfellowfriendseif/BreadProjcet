@@ -17,7 +17,7 @@ export const userAPI = {
           username: userData.username,
           email: userData.email,
           password: userData.password,
-          phone: userData.phone,
+          phone_number: userData.phone_number,
           address: userData.address,
         };
         console.log("Regular data being sent:", data);

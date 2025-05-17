@@ -25,10 +25,20 @@ export default function PostDetailsModal({ post, onClose }) {
 
   const images = post.images && post.images.length > 0 ? post.images : [{ url: fallbackImg }];
 
+  const formatDate = (dateString) => {
+    const options = { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
   return (
     <div className="post-modal-backdrop" ref={modalRef} onClick={handleBackdropClick}>
       <div className="post-modal-card">
-        <button className="post-modal-close" onClick={onClose}>&times;</button>
         <div className="post-modal-image-wrapper">
           <Swiper
             modules={[Navigation, Pagination]}
@@ -49,28 +59,99 @@ export default function PostDetailsModal({ post, onClose }) {
               </SwiperSlide>
             ))}
           </Swiper>
-          
         </div>
+        
         <div className="post-modal-content">
-          <h2 className="post-modal-title">{post.title || (post.post_type === 'sell' ? 'Bread for Sale' : 'Bread Request')}</h2>
-          <div className="post-modal-badges">
-            <span className="post-modal-badge post-modal-badge-type">{post.post_type === 'sell' ? 'For Sale' : 'Request'}</span>
-            <span className={`post-modal-badge post-modal-badge-status post-modal-badge-${post.status}`}>{post.status}</span>
-            {post.price && <span className="post-modal-badge post-modal-badge-price">${parseFloat(post.price).toFixed(2)}</span>}
+          <button className="post-modal-close" onClick={onClose}>&times;</button>
+          
+          <div>
+            <h2 className="post-modal-title">
+              {post.title || (post.post_type === 'sell' ? 'Bread for Sale' : 'Bread Request')}
+            </h2>
+            
+            <div className="post-modal-badges">
+              <span className="post-modal-badge post-modal-badge-type">
+                <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>
+                  {post.post_type === 'sell' ? 'sell' : 'shopping_cart'}
+                </span>
+                {post.post_type === 'sell' ? 'For Sale' : 'Request'}
+              </span>
+              <span className={`post-modal-badge post-modal-badge-${post.status}`}>
+                <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>
+                  {post.status === 'fresh' ? 'new_releases' : post.status === 'day_old' ? 'schedule' : 'warning'}
+                </span>
+                {post.status}
+              </span>
+              {post.price && (
+                <span className="post-modal-badge post-modal-badge-price">
+                  <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>
+                    payments
+                  </span>
+                  ${parseFloat(post.price).toFixed(2)}
+                </span>
+              )}
+            </div>
           </div>
+
           <p className="post-modal-description">{post.description}</p>
+
           <div className="post-modal-info">
-            <div><strong>Quantity:</strong> {post.quantity} {post.quantity_unit}</div>
-            {post.address && <div><strong>Location:</strong> {post.address}</div>}
-            <div><strong>Posted:</strong> {post.createdAt ? new Date(post.createdAt).toLocaleString() : ''}</div>
+            <div>
+              <strong>
+                <span className="material-symbols-outlined" style={{ fontSize: '1.2rem', verticalAlign: 'middle', marginRight: '0.35rem' }}>
+                  inventory_2
+                </span>
+                Quantity:
+              </strong>
+              {post.quantity} {post.quantity_unit}
+            </div>
+            {post.province && (
+              <div>
+                <strong>
+                  <span className="material-symbols-outlined" style={{ fontSize: '1.2rem', verticalAlign: 'middle', marginRight: '0.35rem' }}>
+                    location_on
+                  </span>
+                  Province:
+                </strong>
+                {post.province}
+              </div>
+            )}
+            {post.address && (
+              <div>
+                <strong>
+                  <span className="material-symbols-outlined" style={{ fontSize: '1.2rem', verticalAlign: 'middle', marginRight: '0.35rem' }}>
+                    home
+                  </span>
+                  Address:
+                </strong>
+                {post.address}
+              </div>
+            )}
+            <div>
+              <strong>
+                <span className="material-symbols-outlined" style={{ fontSize: '1.2rem', verticalAlign: 'middle', marginRight: '0.35rem' }}>
+                  schedule
+                </span>
+                Posted:
+              </strong>
+              {formatDate(post.createdAt)}
+            </div>
           </div>
+
           <div className="post-modal-user">
             <img
               src={post.user?.photo_url || '/default-avatar.png'}
               alt={post.user?.username || 'User'}
               className="post-modal-avatar"
             />
-            <span className="post-modal-username">{post.user?.username || 'Anonymous'}</span>
+            <div>
+              <span className="post-modal-username">{post.user?.username || 'Anonymous'}</span>
+              {post.user?.email && (
+                <div style={{ fontSize: '0.95rem', color: '#6b7280', marginTop: '0.2rem' }}>
+                  {post.user.email}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

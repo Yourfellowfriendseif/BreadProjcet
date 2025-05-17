@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
+import { uploadAPI } from '../../api/uploadAPI';
 import './RegisterForm.css';
 
 const RegisterForm = () => {
@@ -11,11 +12,12 @@ const RegisterForm = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    phone: '',
+    phone_number: '',
     address: ''
   });
-  const [avatar, setAvatar] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoUrl, setPhotoUrl] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -27,15 +29,32 @@ const RegisterForm = () => {
     }));
   };
 
-  const handleAvatarChange = (e) => {
+  const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setAvatar(file);
+    if (!file) return;
+    
+    try {
+      if (photoUrl) {
+        console.log('photoUrl', photoUrl);
+        const filename = photoUrl.split('/').pop();
+        console.log('filename', filename);
+        await uploadAPI.deleteImage(filename);
+      }
+
+      const response = await uploadAPI.uploadSingleImage(file);
+      const uploadedPhotoUrl = response.data.url;
+
+      setPhoto(file);
+      setPhotoUrl(uploadedPhotoUrl);
+      
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAvatarPreview(reader.result);
+        setPhotoPreview(reader.result);
       };
       reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Error handling photo upload:', err);
+      setError('Failed to upload photo. Please try again.');
     }
   };
 
@@ -44,7 +63,6 @@ const RegisterForm = () => {
     setError('');
     setLoading(true);
 
-    // Basic validation
     if (!formData.username || !formData.email || !formData.password) {
       setError('Username, email and password are required');
       setLoading(false);
@@ -57,7 +75,6 @@ const RegisterForm = () => {
       return;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError('Please enter a valid email address');
@@ -66,33 +83,18 @@ const RegisterForm = () => {
     }
 
     try {
-      // If we have an avatar, use FormData
-      if (avatar) {
-        const userData = new FormData();
-        userData.append('username', formData.username);
-        userData.append('email', formData.email);
-        userData.append('password', formData.password);
-        if (formData.phone) userData.append('phone', formData.phone);
-        if (formData.address) userData.append('address', formData.address);
-        userData.append('avatar', avatar);
-
-        const response = await register(userData);
-        if (response?.token) {
-          navigate('/');
-        }
-      } else {
-        // If no avatar, send regular JSON
-      const response = await register({
+      const registrationData = {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-          phone: formData.phone || undefined,
-          address: formData.address || undefined
-      });
-      
+        phone_number: formData.phone_number || undefined,
+        address: formData.address || undefined,
+        photo_url: photoUrl || undefined
+      };
+
+      const response = await register(registrationData);
       if (response?.token) {
-      navigate('/');
-        }
+        navigate('/');
       }
     } catch (err) {
       console.error('Registration error:', err);
@@ -101,6 +103,18 @@ const RegisterForm = () => {
         || err.message 
         || 'Failed to register';
       setError(errorMessage);
+
+      if (photoUrl) {
+        try {
+          const filename = photoUrl.split('/').pop();
+          await uploadAPI.deleteImage(filename);
+          setPhoto(null);
+          setPhotoUrl(null);
+          setPhotoPreview(null);
+        } catch (deleteErr) {
+          console.error('Error cleaning up photo after failed registration:', deleteErr);
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -126,22 +140,22 @@ const RegisterForm = () => {
         )}
 
         <form onSubmit={handleSubmit} className="register-form">
-          <div className="register-avatar-section">
-            <div className="register-avatar-container">
+          <div className="register-photo-section">
+            <div className="register-photo-container">
               <img
-                src={avatarPreview || '/default-avatar.png'}
+                src={photoPreview || '/default-avatar.png'}
                 alt="Profile preview"
-                className="register-avatar-preview"
+                className="register-photo-preview"
               />
-              <label className="register-avatar-upload">
+              <label className="register-photo-upload">
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handleAvatarChange}
-                  className="register-avatar-input"
+                  onChange={handlePhotoChange}
+                  className="register-photo-input"
                 />
-                <span className="register-avatar-upload-text">
-                  {avatar ? 'Change Photo' : 'Add Photo'}
+                <span className="register-photo-upload-text">
+                  {photo ? 'Change Photo' : 'Add Photo'}
                 </span>
               </label>
             </div>
@@ -186,8 +200,8 @@ const RegisterForm = () => {
             />
             <input
               type="tel"
-              name="phone"
-              value={formData.phone}
+              name="phone_number"
+              value={formData.phone_number}
               onChange={handleChange}
               placeholder="Phone Number"
               className="register-input"

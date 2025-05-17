@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { socketService } from "../api/socketService";
 import { userAPI } from "../api/userAPI";
 import { notificationAPI } from "../api/notificationAPI";
+import { SOCKET_EVENTS } from "../api/socketEvents";
 
 export const AppContext = createContext();
 
@@ -13,21 +14,20 @@ export function AppProvider({ children }) {
   const [globalSearchTerm, setGlobalSearchTerm] = useState('');
 
   const processApiResponse = (response) => {
-    // Handle different backend response structures
     if (response?.data?.data) {
-      return response.data.data; // For nested data responses
+      return response.data.data;
     }
     if (response?.data) {
-      return response.data; // For most auth responses
+      return response.data;
     }
-    return response; // If data is at root level
+    return response;
   };
 
   const handleApiError = (error) => {
     const message =
       error.response?.data?.message ||
-                   error.response?.data?.error || 
-                   error.message || 
+      error.response?.data?.error ||
+      error.message ||
       "An error occurred";
     throw new Error(message);
   };
@@ -37,7 +37,6 @@ export function AppProvider({ children }) {
     
     const user = userData.user || userData;
     
-    // Ensure avatar URL is complete
     if (user.avatar && !user.avatar.startsWith('http')) {
       user.avatar = `${import.meta.env.VITE_API_URL}/${user.avatar}`;
     }
@@ -63,7 +62,10 @@ export function AppProvider({ children }) {
               const notificationsData = await notificationAPI
                 .getNotifications()
                 .then(processApiResponse);
-              setNotifications(notificationsData?.notifications || []);
+              const fetchedNotifications = Array.isArray(notificationsData) 
+                ? notificationsData 
+                : notificationsData?.notifications || [];
+              setNotifications(fetchedNotifications);
             } catch (notifError) {
               console.error("Error loading notifications:", notifError);
             }
@@ -74,9 +76,7 @@ export function AppProvider({ children }) {
         } catch (error) {
           console.error("Error initializing session:", error);
           if (error.response?.status === 401) {
-            console.warn(
-              "Token expired or invalid, removing from localStorage"
-            );
+            console.warn("Token expired or invalid, removing from localStorage");
             localStorage.removeItem("token");
           }
         }
@@ -89,85 +89,79 @@ export function AppProvider({ children }) {
 
   // Handle socket connections and events
   useEffect(() => {
-    let isMounted = true;
-
-    const setupSocket = async () => {
-    if (user) {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          console.warn("User is set but no token found");
-          return;
-        }
-
-        try {
-          console.log(
-            "Setting up socket connection with token:",
-            token.substring(0, 10) + "..."
-          );
-
-          // First verify the token with the server
-          await userAPI.getProfile();
-
-          // Then connect socket - exactly like the HTML test
-      socketService.connect(token);
-
-          if (isMounted) {
-      // Chat events
-            socketService.on("chat:message:new", (message) => {
-              console.log("Socket received new message:", message);
-        if (message.sender._id !== user._id) {
-                setUnreadMessages((prev) => prev + 1);
-        }
-      });
-
-            socketService.on("chat:message:read", ({ messageId, readBy }) => {
-              console.log("Socket received message read:", {
-                messageId,
-                readBy,
-              });
-        if (readBy === user._id) {
-                setUnreadMessages((prev) => Math.max(0, prev - 1));
-        }
-      });
-
-      // Notification events
-            socketService.on("notification:new", (notification) => {
-              console.log("Socket received new notification:", notification);
-              setNotifications((prev) => [notification, ...prev]);
-      });
-
-            socketService.on("notification:read", (data) => {
-              console.log("Socket received notification read:", data);
-              const notificationId = data.notificationId;
-              setNotifications((prev) =>
-                prev.map((n) =>
-                  n._id === notificationId ? { ...n, read: true } : n
-                )
-        );
-      });
-
-            socketService.on("notification:allRead", () => {
-              console.log("Socket received all notifications read");
-              setNotifications((prev) =>
-                prev.map((n) => ({ ...n, read: true }))
-              );
-      });
-          }
-        } catch (error) {
-          console.error("Error setting up socket in AppContext:", error);
-        }
-    } else {
-        // Make sure socket is disconnected when no user
+    if (!user) {
       socketService.disconnect();
+      return;
     }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.warn("User is set but no token found");
+      return;
+    }
+
+    console.log("Setting up socket connection");
+    socketService.connect(token);
+
+    // Chat events
+    const messageHandler = (message) => {
+      console.log("Socket received new message:", message);
+      if (message.sender._id !== user._id) {
+        setUnreadMessages((prev) => prev + 1);
+      }
     };
 
-    setupSocket();
+    const messageReadHandler = ({ messageId, readBy }) => {
+      console.log("Socket received message read:", { messageId, readBy });
+      if (readBy === user._id) {
+        setUnreadMessages((prev) => Math.max(0, prev - 1));
+      }
+    };
 
-    // Properly clean up socket listeners when component unmounts or user changes
+    // Notification events
+    const newNotificationHandler = (notification) => {
+      console.log("Socket received new notification:", notification);
+      setNotifications((prev) => [notification, ...prev]);
+    };
+
+    const notificationReadHandler = (data) => {
+      console.log("Socket received notification read:", data);
+      const notificationId = data.notificationId;
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n._id === notificationId ? { ...n, read: true } : n
+        )
+      );
+    };
+
+    const allNotificationsReadHandler = () => {
+      console.log("Socket received all notifications read");
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, read: true }))
+      );
+    };
+
+    // Add event listeners
+    const eventHandlers = {
+      [SOCKET_EVENTS.CHAT_MESSAGE_NEW]: messageHandler,
+      [SOCKET_EVENTS.CHAT_MESSAGE_READ]: messageReadHandler,
+      [SOCKET_EVENTS.NOTIFICATION_NEW]: newNotificationHandler,
+      [SOCKET_EVENTS.NOTIFICATION_READ]: notificationReadHandler,
+      [SOCKET_EVENTS.NOTIFICATION_MARK_ALL_READ]: allNotificationsReadHandler,
+    };
+
+    // Register all event listeners
+    Object.entries(eventHandlers).forEach(([event, handler]) => {
+      socketService.on(event, handler);
+    });
+
+    // Cleanup function
     return () => {
-      isMounted = false;
-      socketService.removeAllListeners();
+      // Unregister all event listeners
+      Object.entries(eventHandlers).forEach(([event, handler]) => {
+        socketService.off(event, handler);
+      });
+      socketService.disconnect();
     };
   }, [user]);
 
@@ -176,12 +170,10 @@ export function AppProvider({ children }) {
       const response = await userAPI.login(credentials);
       const data = processApiResponse(response);
 
-      // Make sure token is saved first
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
       
-      // Process and set user data
       const userData = processUserData(data);
       setUser(userData);
       return data;
@@ -190,101 +182,76 @@ export function AppProvider({ children }) {
     }
   };
 
-  const register = async (userData) => {
-    try {
-      const response = await userAPI.register(userData);
-      const data = processApiResponse(response);
-
-      // Make sure token is saved first
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-      }
-
-      // Process and set user data
-      const user = processUserData(data);
-      setUser(user);
-      return data;
-    } catch (error) {
-      handleApiError(error);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      // Disconnect socket first to avoid cleanup issues
-      socketService.disconnect();
-
-      await userAPI.logout();
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      setUser(null);
-      setNotifications([]);
-      setUnreadMessages(0);
-      localStorage.removeItem("token");
-    }
-  };
-
-  const updateUser = async (userData) => {
-    try {
-      // Process and set user data
-      const processedUser = processUserData(userData);
-      setUser(processedUser);
-      return processedUser;
-    } catch (error) {
-      handleApiError(error);
-    }
+  const logout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+    setNotifications([]);
+    setUnreadMessages(0);
+    socketService.disconnect();
   };
 
   const markNotificationRead = async (notificationId) => {
     try {
       await notificationAPI.markAsRead(notificationId);
+      socketService.markNotificationRead(notificationId);
       setNotifications((prev) =>
         prev.map((n) => (n._id === notificationId ? { ...n, read: true } : n))
       );
     } catch (error) {
-      handleApiError(error);
+      console.error("Error marking notification as read:", error);
+      throw error;
     }
   };
 
   const markAllNotificationsRead = async () => {
     try {
       await notificationAPI.markAllAsRead();
+      socketService.markAllNotificationsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      throw error;
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      const response = await userAPI.register(userData);
+      const data = processApiResponse(response);
+
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
+      
+      const processedUserData = processUserData(data);
+      setUser(processedUserData);
+      return data;
     } catch (error) {
       handleApiError(error);
     }
   };
 
-  const contextValue = {
+  const value = {
     user,
-    setUser,
-    notifications,
-    setNotifications,
-    unreadMessages,
-    setUnreadMessages,
     loading,
+    notifications,
+    unreadMessages,
     globalSearchTerm,
     setGlobalSearchTerm,
     login,
-    register,
     logout,
-    updateUser,
+    register,
     markNotificationRead,
-    markAllNotificationsRead
+    markAllNotificationsRead,
   };
 
-  return (
-    <AppContext.Provider value={contextValue}>
-      {children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
 export const useApp = () => {
   const context = useContext(AppContext);
   if (!context) {
-    throw new Error('useApp must be used within an AppProvider');
+    throw new Error("useApp must be used within an AppProvider");
   }
   return context;
 };

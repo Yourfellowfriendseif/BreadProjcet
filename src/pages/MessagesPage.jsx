@@ -54,7 +54,8 @@ export default function MessagesPage() {
 
   if (loading) {
     return (
-      <div className="page-content">
+      <div className="messages-page">
+        <h1 className="page-title">Messages</h1>
         <div className="loading-spinner">Loading...</div>
       </div>
     );
@@ -62,15 +63,18 @@ export default function MessagesPage() {
 
   if (error) {
     return (
-      <div className="page-content">
+      <div className="messages-page">
+        <h1 className="page-title">Messages</h1>
         <div className="error-message">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="page-content">
-      <h1 className="page-title">Messages</h1>
+    <div className="messages-page">
+      <h1 className="page-title">
+        <span>Messages</span>
+      </h1>
 
       <div className="messages-container">
         {/* Chat list sidebar */}
