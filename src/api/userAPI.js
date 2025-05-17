@@ -2,19 +2,37 @@ import { apiClient } from "./apiClient";
 
 export const userAPI = {
   register: async (userData) => {
-    const response = await apiClient.post("/auth/register", {
-      username: userData.username,
-      email: userData.email,
-      password: userData.password,
-      phone_number: userData.phone,
-      address: userData.address,
-    });
+    let response;
 
-    if (response?.token) {
-      localStorage.setItem("token", response.token);
+    try {
+      if (userData instanceof FormData) {
+        // Log FormData contents for debugging
+        for (let pair of userData.entries()) {
+          console.log("FormData entry:", pair[0], pair[1]);
+        }
+
+        response = await apiClient.post("/auth/register", userData);
+      } else {
+        const data = {
+          username: userData.username,
+          email: userData.email,
+          password: userData.password,
+          phone: userData.phone,
+          address: userData.address,
+        };
+        console.log("Regular data being sent:", data);
+        response = await apiClient.post("/auth/register", data);
+      }
+
+      if (response?.token) {
+        localStorage.setItem("token", response.token);
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Registration API error:", error.response?.data || error);
+      throw error;
     }
-
-    return response;
   },
 
   login: async (credentials) => {
@@ -95,26 +113,68 @@ export const userAPI = {
   },
 
   updateProfile: async (updateData) => {
-    const formData = new FormData();
+    try {
+      console.log("Update Profile - Request Data:", updateData);
 
-    if (updateData.avatar) {
-      formData.append("photo", updateData.avatar);
-      delete updateData.avatar;
-    }
+      // Map frontend field names to match exactly what backend expects
+      const requestBody = {};
 
-    Object.keys(updateData).forEach((key) => {
-      if (typeof updateData[key] === "object") {
-        formData.append(key, JSON.stringify(updateData[key]));
-      } else {
-        formData.append(key, updateData[key]);
+      // Backend expects 'name' instead of 'username'
+      if (updateData.username !== undefined) {
+        requestBody.name = updateData.username;
       }
-    });
 
-    return apiClient.put("/user/profile", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+      // Email field name matches
+      if (updateData.email !== undefined) {
+        requestBody.email = updateData.email;
+      }
+
+      // Backend expects 'phone_number' instead of 'phone'
+      if (updateData.phone !== undefined) {
+        requestBody.phone_number = updateData.phone;
+      }
+
+      // Backend expects 'photo_url' for photos
+      if (updateData.photo !== undefined) {
+        requestBody.photo_url = updateData.photo;
+      }
+
+      console.log("Sending request body:", requestBody);
+
+      const response = await apiClient.put("/user/profile", requestBody);
+      console.log("Raw server response:", response);
+
+      // Extract user data from response
+      const serverUserData =
+        response?.data?.user || response?.user || response?.data || response;
+
+      if (!serverUserData) {
+        throw new Error("No user data received from server");
+      }
+
+      // Map the server response back to frontend field names
+      const mappedUserData = {
+        ...serverUserData,
+        username: serverUserData.name || serverUserData.username,
+        phone: serverUserData.phone_number || serverUserData.phone,
+        photo: serverUserData.photo_url || serverUserData.photo,
+        // Preserve other fields
+        _id: serverUserData._id,
+        email: serverUserData.email,
+        createdAt: serverUserData.createdAt,
+        location: serverUserData.location,
+      };
+
+      console.log("Processed user data to be returned:", mappedUserData);
+      return mappedUserData;
+    } catch (error) {
+      console.error("Profile update error:", {
+        error: error,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      throw error;
+    }
   },
 
   updatePassword: async ({ currentPassword, newPassword }) => {

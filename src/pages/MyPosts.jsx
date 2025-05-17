@@ -35,9 +35,12 @@ const MyPosts = () => {
       if (statusFilter !== 'all') params.status = statusFilter;
       if (typeFilter !== 'all') params.post_type = typeFilter;
       const response = await breadAPI.getUserPosts(params);
-      setPosts(response.posts || []);
+      // Handle different response structures
+      const postsData = response?.data?.data?.posts || response?.data?.posts || [];
+      setPosts(postsData);
     } catch (err) {
-      // handle error, e.g. toast
+      console.error('Error fetching posts:', err);
+      // You might want to show an error message to the user here
     } finally {
       setLoading(false);
     }

@@ -119,16 +119,16 @@ export default function EditPost() {
       setError(validationError);
       return;
     }
-    if (
-      formData.images.length > 0 &&
-      (imageIds.length !== formData.images.length || imageUploadLoading)
-    ) {
+    if (imageUploadLoading) {
       setError("Please wait for images to finish uploading.");
       return;
     }
+
     try {
       setLoading(true);
       setError(null);
+
+      // Prepare the update data
       const updateData = {
         post_type: formData.post_type,
         status: formData.status,
@@ -138,16 +138,20 @@ export default function EditPost() {
         quantity_unit: formData.quantity_unit,
         location: {
           type: "Point",
-          coordinates: userLocation,
+          coordinates: userLocation
         },
         address: formData.address,
         province: formData.province,
-        imageIds: imageIds,
-        images: imageUrls,
+        imageIds: imageIds // Send only the image IDs
       };
-      await breadAPI.updatePost(id, updateData);
+      
+      const response = await breadAPI.updatePost(id, updateData);
+      if (!response.data) {
+        throw new Error("Failed to update post");
+      }
       navigate("/my-posts");
     } catch (err) {
+      console.error("Update error:", err);
       setError(err.message || "Failed to update post");
     } finally {
       setLoading(false);

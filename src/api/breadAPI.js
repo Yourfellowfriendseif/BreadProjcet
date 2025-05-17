@@ -89,37 +89,17 @@ export const breadAPI = {
   },
 
   updatePost: async (postId, updateData) => {
-    const formData = new FormData();
+    // Create the request body object
+    const requestBody = {
+      ...updateData,
+      location: updateData.location || null,
+      imageIds: updateData.imageIds || [],
+    };
 
-    if (updateData.images?.length > 0) {
-      updateData.images.forEach((image) => {
-        formData.append("images", image);
-      });
-    }
+    // Remove the images field since we're not handling file uploads here
+    delete requestBody.images;
 
-    // Convert location to GeoJSON Point format if not already
-    if (updateData.location && !updateData.location.type) {
-      updateData.location = {
-        type: "Point",
-        coordinates: [updateData.location[0], updateData.location[1]],
-      };
-    }
-
-    Object.keys(updateData).forEach((key) => {
-      if (key !== "images") {
-        if (typeof updateData[key] === "object") {
-          formData.append(key, JSON.stringify(updateData[key]));
-        } else {
-          formData.append(key, updateData[key]);
-        }
-      }
-    });
-
-    return apiClient.put(`/posts/update/${postId}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    return apiClient.put(`/posts/update/${postId}`, requestBody);
   },
 
   deletePost: async (postId) => {
@@ -153,9 +133,14 @@ export const breadAPI = {
   getReservedPosts: async () => {
     return apiClient.get("/posts/reserved");
   },
-  getUserPosts: async (userId, params = {}) => {
-    const endpoint = userId ? `/posts/user/${userId}` : "/posts/user";
-    return apiClient.get(endpoint, { params });
+
+  getUserPosts: async (paramsOrUserId = {}, params = {}) => {
+    // If first argument is a string (userId), use it in the endpoint
+    if (typeof paramsOrUserId === "string") {
+      return apiClient.get(`/posts/user/${paramsOrUserId}`, { params });
+    }
+    // If first argument is an object (params), use it as query parameters
+    return apiClient.get("/posts/user", { params: paramsOrUserId });
   },
 
   // Delete an uploaded image by filename or ID

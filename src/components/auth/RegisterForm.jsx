@@ -14,6 +14,8 @@ const RegisterForm = () => {
     phone: '',
     address: ''
   });
+  const [avatar, setAvatar] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -25,10 +27,29 @@ const RegisterForm = () => {
     }));
   };
 
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatar(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Basic validation
+    if (!formData.username || !formData.email || !formData.password) {
+      setError('Username, email and password are required');
+      setLoading(false);
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -36,23 +57,50 @@ const RegisterForm = () => {
       return;
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await register({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone,
-        address: formData.address
-      });
-      
-      if (response?.token) {
-      navigate('/');
+      // If we have an avatar, use FormData
+      if (avatar) {
+        const userData = new FormData();
+        userData.append('username', formData.username);
+        userData.append('email', formData.email);
+        userData.append('password', formData.password);
+        if (formData.phone) userData.append('phone', formData.phone);
+        if (formData.address) userData.append('address', formData.address);
+        userData.append('avatar', avatar);
+
+        const response = await register(userData);
+        if (response?.token) {
+          navigate('/');
+        }
       } else {
-        setError('Registration failed. Please try again.');
+        // If no avatar, send regular JSON
+        const response = await register({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          phone: formData.phone || undefined,
+          address: formData.address || undefined
+        });
+        
+        if (response?.token) {
+          navigate('/');
+        }
       }
     } catch (err) {
-      setError(err.message || 'Failed to register');
       console.error('Registration error:', err);
+      const errorMessage = err.response?.data?.message 
+        || err.response?.data?.error 
+        || err.message 
+        || 'Failed to register';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -78,6 +126,27 @@ const RegisterForm = () => {
         )}
 
         <form onSubmit={handleSubmit} className="register-form">
+          <div className="register-avatar-section">
+            <div className="register-avatar-container">
+              <img
+                src={avatarPreview || '/default-avatar.png'}
+                alt="Profile preview"
+                className="register-avatar-preview"
+              />
+              <label className="register-avatar-upload">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="register-avatar-input"
+                />
+                <span className="register-avatar-upload-text">
+                  {avatar ? 'Change Photo' : 'Add Photo'}
+                </span>
+              </label>
+            </div>
+          </div>
+
           <div className="register-input-group">
             <input
               type="text"

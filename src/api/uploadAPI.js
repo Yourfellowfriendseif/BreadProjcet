@@ -30,6 +30,15 @@ export const uploadAPI = {
   },
 
   getImageUrl: (filename) => {
+    if (!filename) return "/no-image.png";
     return `${import.meta.env.VITE_API_BASE_URL}/uploads/${filename}`;
+  },
+
+  // Helper function specifically for avatar URLs
+  getAvatarUrl: (user) => {
+    if (!user) return "/no-image.png";
+    const avatarField = user.photo || user.avatar || user.profilePicture;
+    if (!avatarField) return "@no-image.png";
+    return `${import.meta.env.VITE_API_BASE_URL}/uploads/${avatarField}`;
   },
 };

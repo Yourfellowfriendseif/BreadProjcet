@@ -106,6 +106,13 @@ export default function NavBar() {
                 Post Item
               </button>
               <button
+                className={`navbar-button ${isActive('/my-posts') ? 'navbar-button-active' : ''}`}
+                onClick={() => { navigate('/my-posts'); setHamburgerOpen(false); }}
+              >
+                <span className="material-symbols-outlined navbar-button-icon">list_alt</span>
+                My Posts
+              </button>
+              <button
                 className={`navbar-button ${isActive('/reserved-posts') ? 'navbar-button-active' : ''}`}
                 onClick={() => { navigate('/reserved-posts'); setHamburgerOpen(false); }}
               >
@@ -202,6 +209,13 @@ export default function NavBar() {
         >
           <span className="material-symbols-outlined navbar-button-icon">add_circle</span>
           Post Item
+        </button>
+        <button
+          className={`navbar-button ${isActive('/my-posts') ? 'navbar-button-active' : ''}`}
+          onClick={() => navigate('/my-posts')}
+        >
+          <span className="material-symbols-outlined navbar-button-icon">list_alt</span>
+          My Posts
         </button>
         <button
           className={`navbar-button ${isActive('/reserved-posts') ? 'navbar-button-active' : ''}`}

@@ -12,18 +12,21 @@ import { config } from "../utils/config";
 const axiosInstance = axios.create({
   baseURL: config.apiUrl,
   timeout: 15000,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
-// Request interceptor for adding auth token
+// Request interceptor for adding auth token and handling content type
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Don't set Content-Type for FormData
+    if (!(config.data instanceof FormData)) {
+      config.headers["Content-Type"] = "application/json";
+    }
+
     return config;
   },
   (error) => {
@@ -34,15 +37,18 @@ axiosInstance.interceptors.request.use(
 // Response interceptor to handle common response formats and errors
 axiosInstance.interceptors.response.use(
   (response) => {
-    // If the response is directly the data we need
     return response.data;
   },
   (error) => {
+    console.error("API Error:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+
     // Handle unauthorized responses
-    if (error.response && error.response.status === 401) {
-      // Clear token and notify the app
+    if (error.response?.status === 401) {
       localStorage.removeItem("token");
-      // You could dispatch an event here to notify the app of logout
     }
 
     // Extract error message from response

@@ -32,6 +32,19 @@ export function AppProvider({ children }) {
     throw new Error(message);
   };
 
+  const processUserData = (userData) => {
+    if (!userData) return null;
+    
+    const user = userData.user || userData;
+    
+    // Ensure avatar URL is complete
+    if (user.avatar && !user.avatar.startsWith('http')) {
+      user.avatar = `${import.meta.env.VITE_API_URL}/${user.avatar}`;
+    }
+    
+    return user;
+  };
+
   // Initialize user session
   useEffect(() => {
     const initializeSession = async () => {
@@ -43,14 +56,14 @@ export function AppProvider({ children }) {
 
           if (userData) {
             console.log("Successfully loaded user profile");
-          setUser(userData);
+            setUser(processUserData(userData));
           
-          // Load initial notifications
+            // Load initial notifications
             try {
               const notificationsData = await notificationAPI
                 .getNotifications()
-            .then(processApiResponse);
-          setNotifications(notificationsData?.notifications || []);
+                .then(processApiResponse);
+              setNotifications(notificationsData?.notifications || []);
             } catch (notifError) {
               console.error("Error loading notifications:", notifError);
             }
@@ -168,16 +181,9 @@ export function AppProvider({ children }) {
         localStorage.setItem("token", data.token);
       }
       
-      // Set user based on backend response structure
-      const user = data.user || {
-        _id: data._id,
-        username: data.username,
-        email: data.email,
-        phone_number: data.phone_number,
-        photo_url: data.photo_url,
-        // Add other properties from your user schema
-      };
-      setUser(user);
+      // Process and set user data
+      const userData = processUserData(data);
+      setUser(userData);
       return data;
     } catch (error) {
       handleApiError(error);
@@ -194,14 +200,8 @@ export function AppProvider({ children }) {
         localStorage.setItem("token", data.token);
       }
 
-      // Set user based on backend response structure
-      const user = data.user || {
-        _id: data._id,
-        username: data.username,
-        email: data.email,
-        phone_number: data.phone_number,
-        photo_url: data.photo_url,
-      };
+      // Process and set user data
+      const user = processUserData(data);
       setUser(user);
       return data;
     } catch (error) {
@@ -227,11 +227,10 @@ export function AppProvider({ children }) {
 
   const updateUser = async (userData) => {
     try {
-      const updatedUser = await userAPI
-        .updateProfile(userData)
-        .then(processApiResponse);
-      setUser((prev) => ({ ...prev, ...updatedUser }));
-      return updatedUser;
+      // Process and set user data
+      const processedUser = processUserData(userData);
+      setUser(processedUser);
+      return processedUser;
     } catch (error) {
       handleApiError(error);
     }
@@ -257,28 +256,35 @@ export function AppProvider({ children }) {
     }
   };
 
-  const value = {
+  const contextValue = {
     user,
-    loading,
+    setUser,
     notifications,
+    setNotifications,
     unreadMessages,
-    login,
-    logout,
-    register,
-    updateUser,
-    markNotificationRead,
-    markAllNotificationsRead,
+    setUnreadMessages,
+    loading,
     globalSearchTerm,
     setGlobalSearchTerm,
+    login,
+    register,
+    logout,
+    updateUser,
+    markNotificationRead,
+    markAllNotificationsRead
   };
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={contextValue}>
+      {children}
+    </AppContext.Provider>
+  );
 }
 
 export const useApp = () => {
   const context = useContext(AppContext);
   if (!context) {
-    throw new Error("useApp must be used within an AppProvider");
+    throw new Error('useApp must be used within an AppProvider');
   }
   return context;
 };
