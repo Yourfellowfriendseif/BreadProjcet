@@ -9,12 +9,17 @@ export default function ChatWindow({ recipientId, onClose }) {
   const { user } = useApp();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef(null);
   const [recipient, setRecipient] = useState(null);
   const [typingTimeout, setTypingTimeout] = useState(null);
+  const processedMessageIds = useRef(new Set());
+  const [hasMore, setHasMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const messagesContainerRef = useRef(null);
 
   useEffect(() => {
     if (!recipientId) {
@@ -22,6 +27,12 @@ export default function ChatWindow({ recipientId, onClose }) {
       return;
     }
 
+    // Reset state when recipient changes
+    setMessages([]);
+    setCurrentPage(1);
+    setHasMore(false);
+    processedMessageIds.current.clear();
+    
     loadMessages();
     loadRecipientInfo();
 
@@ -37,14 +48,68 @@ export default function ChatWindow({ recipientId, onClose }) {
     };
   }, [recipientId]);
 
+  const handleScroll = async (e) => {
+    const element = e.target;
+    if (element.scrollTop === 0 && hasMore && !loadingMore) {
+      await loadMoreMessages();
+    }
+  };
+
+  const loadMoreMessages = async () => {
+    if (loadingMore || !hasMore) return;
+
+    try {
+      setLoadingMore(true);
+      const nextPage = currentPage + 1;
+      const response = await chatAPI.getMessageHistory(recipientId, {
+        page: nextPage,
+        limit: 50
+      });
+
+      const newMessages = response.data?.messages || [];
+      const currentScrollHeight = messagesContainerRef.current?.scrollHeight || 0;
+
+      // Add new messages to processed set
+      newMessages.forEach(msg => {
+        if (msg._id) {
+          processedMessageIds.current.add(msg._id);
+        }
+      });
+
+      setMessages(prev => [...newMessages, ...prev]);
+      setCurrentPage(nextPage);
+      setHasMore(response.data?.hasMore || false);
+
+      // Maintain scroll position
+      setTimeout(() => {
+        if (messagesContainerRef.current) {
+          const newScrollHeight = messagesContainerRef.current.scrollHeight;
+          messagesContainerRef.current.scrollTop = newScrollHeight - currentScrollHeight;
+        }
+      }, 0);
+
+    } catch (error) {
+      console.error("Error loading more messages:", error);
+      setError("Failed to load more messages");
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   const handleNewMessage = (message) => {
-    if (!message || !message.sender || !message.recipient) return;
+    if (!message || !message.sender || !message.recipient || !message._id) return;
+    
+    // Check if we've already processed this message
+    if (processedMessageIds.current.has(message._id)) {
+      return;
+    }
     
     // Only add the message if it's from the current conversation
     if (
       message.sender._id === recipientId ||
       message.recipient._id === recipientId
     ) {
+      processedMessageIds.current.add(message._id);
       setMessages((prev) => [...prev, message]);
       scrollToBottom();
 
@@ -79,9 +144,23 @@ export default function ChatWindow({ recipientId, onClose }) {
     
     try {
       setLoading(true);
-      const response = await chatAPI.getMessageHistory(recipientId);
+      const response = await chatAPI.getMessageHistory(recipientId, {
+        page: 1,
+        limit: 50
+      });
+      
       const messageList = response.data?.messages || [];
+      
+      // Add all loaded messages to processed set
+      messageList.forEach(msg => {
+        if (msg._id) {
+          processedMessageIds.current.add(msg._id);
+        }
+      });
+      
       setMessages(messageList);
+      setHasMore(response.data?.hasMore || false);
+      setCurrentPage(1);
       scrollToBottom();
 
       // Mark all received messages as read
@@ -117,17 +196,24 @@ export default function ChatWindow({ recipientId, onClose }) {
     e.preventDefault();
     if (!newMessage.trim() || sending || !recipientId) return;
 
+    const messageContent = newMessage.trim();
+    setNewMessage(""); // Clear input immediately for better UX
+
     try {
       setSending(true);
-      const response = await chatAPI.sendMessage(recipientId, newMessage.trim());
-      if (response?.data) {
-      setMessages((prev) => [...prev, response.data]);
-      setNewMessage("");
-      scrollToBottom();
+      const response = await chatAPI.sendMessage(recipientId, messageContent);
+      if (response?.data?._id) {
+        // Only add the message if we haven't processed it yet
+        if (!processedMessageIds.current.has(response.data._id)) {
+          processedMessageIds.current.add(response.data._id);
+          setMessages((prev) => [...prev, response.data]);
+          scrollToBottom();
+        }
       }
     } catch (error) {
       console.error("Error sending message:", error);
       setError("Failed to send message. Please try again.");
+      setNewMessage(messageContent); // Restore the message content if sending failed
     } finally {
       setSending(false);
     }
@@ -204,14 +290,25 @@ export default function ChatWindow({ recipientId, onClose }) {
       </div>
 
       {/* Messages */}
-      <div className="chat-window-messages">
+      <div 
+        className="chat-window-messages"
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+      >
+        {loadingMore && (
+          <div className="chat-window-loading-more">
+            <LoadingSpinner size="small" />
+          </div>
+        )}
         {messages.map((message) => {
-          if (!message?.sender?._id) return null;
+          if (!message?.sender?._id || !message?._id) return null;
           
           const isSender = message.sender._id === user?._id;
+          const messageKey = `${message._id}-${message.sender._id}-${message.createdAt}`;
+          
           return (
             <div
-              key={message._id}
+              key={messageKey}
               className={`chat-window-message ${
                 isSender
                   ? "chat-window-message-sent"
@@ -237,28 +334,28 @@ export default function ChatWindow({ recipientId, onClose }) {
             value={newMessage}
             onChange={handleInputChange}
             placeholder="Type a message..."
-          disabled={sending}
+            disabled={sending}
             className="chat-window-input-field"
           />
           <button
             type="submit"
             disabled={!newMessage.trim() || sending}
-          className="chat-window-send-button"
+            className="chat-window-send-button"
           >
             {sending ? (
-            <LoadingSpinner size="small" />
-          ) : (
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
+              <LoadingSpinner size="small" />
+            ) : (
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
             )}
           </button>
       </form>

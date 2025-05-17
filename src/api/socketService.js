@@ -228,6 +228,24 @@ class SocketService {
   emitTyping(userId, isTyping) {
     this.emit(SOCKET_EVENTS.CHAT_TYPING, { userId, isTyping });
   }
+
+  // Notification-specific events
+  onNewNotification(callback) {
+    this.on(SOCKET_EVENTS.NOTIFICATION_NEW, callback);
+  }
+
+  onNotificationRead(callback) {
+    this.on(SOCKET_EVENTS.NOTIFICATION_READ, callback);
+  }
+
+  // Handle notification updates
+  markNotificationRead(notificationId) {
+    this.emit(SOCKET_EVENTS.NOTIFICATION_MARK_READ, { notificationId });
+  }
+
+  markAllNotificationsRead() {
+    this.emit(SOCKET_EVENTS.NOTIFICATION_MARK_ALL_READ);
+  }
 }
 
 export const socketService = new SocketService();

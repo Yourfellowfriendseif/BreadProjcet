@@ -4,6 +4,7 @@ import { useApp } from "../../context/AppContext";
 import { chatAPI } from "../../api/chatAPI";
 import { socketService } from "../../api/socketService";
 import { formatDistanceToNow } from "date-fns";
+import LoadingSpinner from "../LoadingSpinner";
 import "./ChatList.css";
 
 const ChatList = ({ selectedChat, onSelectChat }) => {
@@ -31,7 +32,12 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
       setLoading(true);
       setError(null);
       const response = await chatAPI.getConversations();
+      console.log("Raw chat response:", response);
+
+      // Get conversations directly from the response
       const conversationList = response?.data?.conversations || [];
+      console.log("Conversations from response:", conversationList);
+
       setConversations(sortConversationsByDate(conversationList));
     } catch (error) {
       console.error("Error fetching conversations:", error);
@@ -47,11 +53,11 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
     setConversations((prev) => {
       // Find if conversation exists
       const conversationIndex = prev.findIndex((conv) => {
-        const participants = conv.participants || [];
-        return (
-          participants.some((p) => p._id === message.sender._id) &&
-          participants.some((p) => p._id === message.recipient._id)
-      );
+        const otherParticipant = conv.participants.find(p => p._id !== user?._id);
+        return otherParticipant && (
+          message.sender._id === otherParticipant._id ||
+          message.recipient._id === otherParticipant._id
+        );
       });
 
       let updatedConversations = [...prev];
@@ -67,11 +73,11 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
         }
         
         updatedConversations[conversationIndex] = conversation;
-      } else if (message.sender._id === user?._id || message.recipient._id === user?._id) {
+      } else {
         // Create new conversation
         const otherUser = message.sender._id === user?._id ? message.recipient : message.sender;
         const newConversation = {
-          _id: `temp_${Date.now()}`,
+          _id: `chat_${otherUser._id}`,
           participants: [user, otherUser],
           lastMessage: message,
           updatedAt: message.createdAt,
@@ -119,11 +125,15 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
     }
 
     // Navigate to the chat with the other user
-      navigate(`/messages/${otherUser._id}`);
+    navigate(`/messages/${otherUser._id}`);
   };
 
   if (loading) {
-    return <div className="chat-list-loading">Loading conversations...</div>;
+    return (
+      <div className="chat-list-loading">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   if (error) {
@@ -159,6 +169,11 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
 
         if (!otherUser) return null;
 
+        const lastMessage = conversation.lastMessage;
+        const lastMessageTime = lastMessage?.createdAt 
+          ? formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: true })
+          : "";
+
         return (
           <div
             key={conversation._id}
@@ -184,17 +199,12 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
                     {otherUser.username || "Unknown user"}
                   </span>
                   <span className="chat-list-date">
-                    {conversation.lastMessage?.createdAt
-                      ? formatDistanceToNow(
-                          new Date(conversation.lastMessage.createdAt),
-                          { addSuffix: true }
-                        )
-                      : ""}
+                    {lastMessageTime}
                   </span>
                 </div>
                 <div className="chat-list-message">
                   <span className="chat-list-message-text">
-                    {conversation.lastMessage?.content || "No messages yet"}
+                    {lastMessage?.content || "No messages yet"}
                   </span>
                   {conversation.unreadCount > 0 && (
                     <span className="chat-list-unread">

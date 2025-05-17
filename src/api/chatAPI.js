@@ -5,7 +5,36 @@ export const chatAPI = {
   getMessageHistory: async (userId, params = {}) => {
     try {
       if (!userId) throw new Error("User ID is required");
-      return await apiClient.get(`/chat/messages/${userId}`, { params });
+
+      // Set default pagination parameters if not provided
+      const defaultParams = {
+        page: 1,
+        limit: 50,
+        ...params,
+      };
+
+      const response = await apiClient.get(`/chat/messages/${userId}`, {
+        params: defaultParams,
+      });
+
+      // Extract messages from the response
+      const messages =
+        response?.data?.messages || response?.data?.data?.messages || [];
+
+      console.log("Messages from API:", {
+        userId,
+        params: defaultParams,
+        messageCount: messages.length,
+        messages,
+      });
+
+      return {
+        data: {
+          messages,
+          hasMore: messages.length === defaultParams.limit,
+          page: defaultParams.page,
+        },
+      };
     } catch (error) {
       console.error("Error fetching message history:", error);
       throw error;
@@ -18,10 +47,14 @@ export const chatAPI = {
       if (!content || !content.trim())
         throw new Error("Message content is required");
 
-      return await apiClient.post("/chat/send", {
+      const response = await apiClient.post("/chat/send", {
         recipientId,
         content: content.trim(),
       });
+
+      return {
+        data: response?.data?.data?.message || response?.data?.message,
+      };
     } catch (error) {
       console.error("Error sending message:", error);
       throw error;
@@ -31,7 +64,10 @@ export const chatAPI = {
   markAsRead: async (messageId) => {
     try {
       if (!messageId) throw new Error("Message ID is required");
-      return await apiClient.put(`/chat/messages/${messageId}/read`);
+      const response = await apiClient.put(`/chat/messages/${messageId}/read`);
+      return {
+        data: response?.data?.data?.message || response?.data?.message,
+      };
     } catch (error) {
       console.error("Error marking message as read:", error);
       throw error;
@@ -40,7 +76,12 @@ export const chatAPI = {
 
   getUnreadCount: async () => {
     try {
-      return await apiClient.get("/chat/unread");
+      const response = await apiClient.get("/chat/unread");
+      return {
+        data: {
+          count: response?.data?.data?.count || 0,
+        },
+      };
     } catch (error) {
       console.error("Error getting unread count:", error);
       throw error;
@@ -69,55 +110,30 @@ export const chatAPI = {
       const currentUser = await userAPI.getProfile();
       console.log("Current user:", currentUser);
 
-      // Get chat users first
-      const chatUsersResponse = await apiClient.get("/chat/users");
-      console.log("Chat users response:", chatUsersResponse);
+      // Get chat users with their last messages and unread counts
+      const response = await apiClient.get("/chat/users");
+      console.log("Raw chat response:", response);
 
-      // Extract users from the response
-      const users = chatUsersResponse?.data?.data?.users || [];
+      // Extract users directly from the response data
+      const users = response?.data?.users || [];
       console.log("Users from response:", users);
 
-      // Create conversations from users
-      const conversations = users
-        .filter((user) => user._id !== currentUser._id)
-        .map((user) => ({
-          _id: `chat_${user._id}`,
-          participants: [currentUser, user],
-          lastMessage: null,
-          updatedAt: new Date().toISOString(),
-          unreadCount: 0,
-        }));
-
-      // For each user, get their last message
-      for (const conversation of conversations) {
-        try {
-          const otherUser = conversation.participants.find(
-            (p) => p._id !== currentUser._id
-          );
-          const messagesResponse = await apiClient.get(
-            `/chat/messages/${otherUser._id}`,
-            {
-              params: { limit: 1 },
+      // Transform the users data into conversations format
+      const conversations = users.map((user) => ({
+        _id: `chat_${user._id}`,
+        participants: [currentUser, user],
+        lastMessage: user.lastMessage
+          ? {
+              _id: Date.now().toString(), // Temporary ID if not provided
+              content: user.lastMessage.content,
+              createdAt: user.lastMessage.createdAt,
+              sender: user.lastMessage.isFromUser ? currentUser : user,
+              recipient: user.lastMessage.isFromUser ? user : currentUser,
             }
-          );
-
-          if (messagesResponse?.data?.data?.messages?.length > 0) {
-            const lastMessage = messagesResponse.data.data.messages[0];
-            conversation.lastMessage = lastMessage;
-            conversation.updatedAt = lastMessage.createdAt;
-          }
-        } catch (error) {
-          console.error(
-            `Error fetching messages for user ${conversation._id}:`,
-            error
-          );
-        }
-      }
-
-      // Sort conversations by most recent message
-      conversations.sort(
-        (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-      );
+          : null,
+        updatedAt: user.lastMessage?.createdAt || new Date().toISOString(),
+        unreadCount: user.unreadCount || 0,
+      }));
 
       console.log("Final conversations:", conversations);
       return { data: { conversations } };

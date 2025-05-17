@@ -7,12 +7,13 @@ export const SOCKET_EVENTS = {
   // Notification events
   NOTIFICATION_NEW: "notification:new",
   NOTIFICATION_READ: "notification:read",
-  NOTIFICATION_CLEAR: "notification:clear",
+  NOTIFICATION_MARK_READ: "notification:mark:read",
+  NOTIFICATION_MARK_ALL_READ: "notification:mark:all:read",
 
   // Chat events
   CHAT_MESSAGE: "chat:message",
   CHAT_TYPING: "chat:typing",
-  CHAT_READ: "chat:read",
+  CHAT_MESSAGE_READ: "chat:message:read",
 
   // Bread post events
   BREAD_CREATED: "bread:created",
@@ -32,7 +33,6 @@ export const SOCKET_EVENTS = {
   USER_OFFLINE: "user:offline",
   USER_ACTIVITY: "user:activity",
 
-  CHAT_MESSAGE_NEW: 'chat:message:new',
-  CHAT_MESSAGE_READ: 'chat:message:read',
-  CHAT_TYPING: 'chat:typing',
+  CHAT_MESSAGE_NEW: "chat:message:new",
+  CHAT_TYPING: "chat:typing",
 };
