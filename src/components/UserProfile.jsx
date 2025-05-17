@@ -100,9 +100,9 @@ export default function UserProfile() {
     const file = e.target.files[0];
     if (!file) return;
 
-    try {
+      try {
       setUploadProgress(0);
-      const formData = new FormData();
+        const formData = new FormData();
       formData.append('photo', file);
       
       console.log('Uploading file:', file);
@@ -110,8 +110,8 @@ export default function UserProfile() {
       for (let pair of formData.entries()) {
         console.log(pair[0], pair[1]);
       }
-
-      const updatedUser = await userAPI.updateProfile(formData);
+        
+        const updatedUser = await userAPI.updateProfile(formData);
       console.log('Profile update response:', updatedUser);
 
       // Extract user data from response
@@ -216,7 +216,7 @@ export default function UserProfile() {
       }, 1000);
 
       setTimeout(() => setUpdateSuccess(''), 3000);
-    } catch (err) {
+      } catch (err) {
       console.error('Profile update error:', {
         error: err,
         message: err.message,

@@ -21,8 +21,7 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
   const navigate = useNavigate();
   const { user } = useContext(AppContext);
   const isOwner = user && post.user && user._id === post.user._id;
-  const isReservedByMe = post.reserved_by && post.reserved_by._id === user?._id;
-  const [reserved, setReserved] = useState(isReservedByMe);
+  const [error, setError] = useState(null);
   const [reserveLoading, setReserveLoading] = useState(false);
 
   const handleMessageClick = () => {
@@ -32,20 +31,45 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
   };
 
   const handleReserve = async () => {
+    if (post.is_reserved) {
+      setError('This post has already been reserved');
+      return;
+    }
+
     setReserveLoading(true);
+    setError(null);
+    
     try {
-      if (!reserved) {
-        await breadAPI.reservePost(post._id);
-        setReserved(true);
-        if (onReserve) onReserve(post);
-        // Optionally: navigate('/reserved-posts');
-      } else {
-        await breadAPI.cancelReservation(post._id);
-        setReserved(false);
-        if (onReserve) onReserve(post);
+      await breadAPI.reservePost(post._id);
+      if (onReserve) {
+        onReserve({ ...post, is_reserved: true, reserved_by: user });
       }
     } catch (err) {
-      // Optionally show a toast
+      if (err.response?.data?.message === 'Post already reserved') {
+        setError('This post has just been reserved by someone else');
+        // Refresh the post data
+        if (onUpdate) {
+          onUpdate('refresh', post);
+        }
+      } else {
+        setError(err.message || 'Failed to reserve post');
+      }
+    } finally {
+      setReserveLoading(false);
+    }
+  };
+
+  const handleCancelReservation = async () => {
+    setReserveLoading(true);
+    setError(null);
+    
+    try {
+      await breadAPI.cancelReservation(post._id);
+      if (onReserve) {
+        onReserve({ ...post, is_reserved: false, reserved_by: null });
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to cancel reservation');
     } finally {
       setReserveLoading(false);
     }
@@ -134,6 +158,12 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
             {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}
           </span>
         </div>
+        {error && (
+          <div className="bread-card-error">
+            <span className="material-symbols-outlined">error</span>
+            <p>{error}</p>
+          </div>
+        )}
         <div className="bread-card-actions">
           {isOwner ? (
             <>
@@ -145,13 +175,30 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
           <button className="bread-card-btn bread-card-btn-outline" onClick={handleMessageClick}>Message</button>
           <button className="bread-card-btn bread-card-btn-primary" onClick={() => onUpdate && onUpdate('viewDetails', post)}>View Details</button>
               {!hideReserveButton && (
-                <button
-                  className={`bread-card-btn bread-card-btn-reserve${reserved ? ' reserved' : ''}`}
-                  onClick={handleReserve}
-                  disabled={reserveLoading}
-                >
-                  {reserved ? 'Post Reserved' : 'Reserve'}
-                </button>
+                post.is_reserved ? (
+                  post.reserved_by?._id === user?._id ? (
+                    <button
+                      className="bread-card-btn bread-card-btn-cancel"
+                      onClick={handleCancelReservation}
+                      disabled={reserveLoading}
+                    >
+                      {reserveLoading ? 'Canceling...' : 'Cancel Reservation'}
+                    </button>
+                  ) : (
+                    <div className="bread-card-reserved">
+                      <span className="material-symbols-outlined">lock</span>
+                      Reserved
+                    </div>
+                  )
+                ) : (
+                  <button
+                    className="bread-card-btn bread-card-btn-reserve"
+                    onClick={handleReserve}
+                    disabled={reserveLoading || post.is_reserved}
+                  >
+                    {reserveLoading ? 'Reserving...' : 'Reserve'}
+                  </button>
+                )
               )}
             </>
           )}

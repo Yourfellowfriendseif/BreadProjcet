@@ -82,16 +82,16 @@ const RegisterForm = () => {
         }
       } else {
         // If no avatar, send regular JSON
-        const response = await register({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
+      const response = await register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
           phone: formData.phone || undefined,
           address: formData.address || undefined
-        });
-        
-        if (response?.token) {
-          navigate('/');
+      });
+      
+      if (response?.token) {
+      navigate('/');
         }
       }
     } catch (err) {

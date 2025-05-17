@@ -15,8 +15,9 @@ export default function Home() {
   const [userLocation, setUserLocation] = useState(null);
   const [filters, setFilters] = useState({
     status: '',
-    type: '',
+    post_type: '',
     province: '',
+    radius: 50 // Default radius in kilometers
   });
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 6;
@@ -42,35 +43,41 @@ export default function Home() {
     // eslint-disable-next-line
   }, []);
 
-  useEffect(() => {
-    loadPosts(userLocation);
-    // eslint-disable-next-line
-  }, [filters]);
-
   const loadPosts = async (location = null) => {
     try {
       setLoading(true);
       setError(null);
       
-      const searchFilters = { ...filters };
-      if (location) {
-        searchFilters.location = location;
-        searchFilters.radius = filters.radius;
-      }
-
-      Object.keys(searchFilters).forEach(
-        (key) => !searchFilters[key] && delete searchFilters[key]
+      // Create a clean copy of filters without empty values
+      const searchFilters = Object.fromEntries(
+        Object.entries(filters).filter(([_, value]) => value !== '')
       );
 
+      // Add location if available
+      if (location) {
+        searchFilters.location = {
+          type: "Point",
+          coordinates: [location.lng, location.lat]
+        };
+        if (filters.radius) {
+          searchFilters.maxDistance = filters.radius * 1000; // Convert km to meters
+        }
+      }
+
+      console.log('Searching with filters:', searchFilters); // Debug log
+
       const response = await breadAPI.searchPosts(searchFilters);
-      const postsData =
-        response?.data?.data?.posts ||
-        response?.data?.posts ||
-        response?.posts ||
-        [];
-      setPosts(postsData);
+      const postsData = response?.data?.posts || response?.posts || [];
+      
+      if (Array.isArray(postsData)) {
+        setPosts(postsData);
+      } else {
+        console.error('Invalid posts data:', postsData);
+        setError('Failed to load posts: Invalid data format');
+      }
     } catch (error) {
-      setError("Failed to load posts");
+      console.error('Error loading posts:', error);
+      setError(error.message || "Failed to load posts");
     } finally {
       setLoading(false);
     }
@@ -78,9 +85,34 @@ export default function Home() {
 
   const handlePostUpdate = (action, post) => {
     if (action === 'deleted') {
-      // Remove the deleted post from the state
       setPosts(currentPosts => currentPosts.filter(p => p._id !== post._id));
+    } else if (action === 'refresh') {
+      loadPosts(userLocation);
     }
+  };
+
+  const handleFilterApply = (cleanFilters) => {
+    // Update filters state with clean values
+    setFilters(prev => ({
+      ...prev,
+      ...cleanFilters
+    }));
+    // Reset to first page when filters change
+    setCurrentPage(1);
+    // Load posts with current location
+    loadPosts(userLocation);
+  };
+
+  const handleFilterReset = () => {
+    const resetFilters = {
+      status: '',
+      post_type: '',
+      province: '',
+      radius: 50
+    };
+    setFilters(resetFilters);
+    setCurrentPage(1);
+    loadPosts(userLocation);
   };
 
   const totalPages = Math.ceil(posts.length / postsPerPage);
@@ -93,10 +125,6 @@ export default function Home() {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters, posts.length]);
 
   return (
     <div className="home home-bg">
@@ -111,8 +139,8 @@ export default function Home() {
       <FilterSection
         filters={filters}
         setFilters={setFilters}
-        onApply={() => loadPosts(userLocation)}
-        onReset={() => loadPosts(userLocation)}
+        onApply={handleFilterApply}
+        onReset={handleFilterReset}
         animated
       />
 
@@ -128,6 +156,16 @@ export default function Home() {
         </div>
       ) : error ? (
         <div className="home-posts-error">{error}</div>
+      ) : posts.length === 0 ? (
+        <div className="home-posts-empty">
+          <span className="material-symbols-outlined home-posts-empty-icon">
+            search_off
+          </span>
+          <p>No posts found matching your criteria</p>
+          <p className="home-posts-empty-subtitle">
+            Try adjusting your filters or search for something else
+          </p>
+        </div>
       ) : (
         <div className="home-posts-grid">
           <BreadListing posts={paginatedPosts} onUpdate={handlePostUpdate} />

@@ -20,56 +20,58 @@ import MyPosts from "./pages/MyPosts";
 import "./App.css";
 import MapLinkGenerator from "./pages/testLocation/MapLinkGenerator";
 
+
 function App() {
-  return (
+    return (
     <AppProvider>
       <AppContent />
     </AppProvider>
-  );
-}
+    );
+  }
 
 function AppContent() {
   return (
-    <Router>
-      <div id="webcrumbs" className="min-h-screen bg-gray-50">
-        <div className="w-full max-w-[1280px] mx-auto p-6">
-          <Navbar />
-          <main className="container mx-auto px-4 py-6">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/login" element={<LoginForm />} />
-              <Route path="/register" element={<RegisterForm />} />
-              <Route path="/" element={<Home />} />
-              <Route path="/search" element={<SearchResults />} />
-              <Route path="/bread/:id" element={<PostDetail />} />
+        <Router>
+          <div id="webcrumbs" className="min-h-screen bg-gray-50">
+            <div className="w-full max-w-[1280px] mx-auto p-6">
+            <Navbar />
+            <main className="container mx-auto px-4 py-6">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/login" element={<LoginForm />} />
+                <Route path="/register" element={<RegisterForm />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/search" element={<SearchResults />} />
+                <Route path="/bread/:id" element={<PostDetail />} />
               <Route path="/map" element={<MapLinkGenerator />} />
-              {/* Protected Routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route path="/posts/create" element={<CreatePost />} />
-                <Route path="/profile" element={<UserProfile />} />
-                <Route path="/user/:userId" element={<UserProfile />} />
-                <Route path="/messages" element={<MessagesPage />} />
+                {/* Protected Routes */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/posts/create" element={<CreatePost />} />
+                  <Route path="/profile" element={<UserProfile />} />
+                  <Route path="/user/:userId" element={<UserProfile />} />
+                  <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/messages/:userId" element={<MessagesPage />} />
                 <Route path="/posts/edit/:id" element={<EditPost />} />
                 <Route path="/posts/update/:id" element={<EditPost />} />
                 <Route path="/reserved-posts" element={<ReservedPosts />} />
                 <Route path="/my-posts" element={<MyPosts />} />
-                <Route
-                  path="/notifications"
-                  element={
-                    <div className="container mx-auto px-4 py-8">
-                      <NotificationsList />
-                    </div>
-                  }
-                />
-              </Route>
-              {/* 404 Handling */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
+                  <Route
+                    path="/notifications"
+                    element={
+                      <div className="container mx-auto px-4 py-8">
+                        <NotificationsList />
+                      </div>
+                    }
+                  />
+                </Route>
+                {/* 404 Handling */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+          </div>
+          
         </div>
-      </div>
-    </Router>
+      </Router>
   );
 }
 

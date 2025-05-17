@@ -9,14 +9,28 @@ const WILAYAS = [
   'Souk Ahras', 'Tipaza', 'Mila', 'Aïn Defla', 'Naâma', 'Aïn Témouchent', 'Ghardaïa', 'Relizane'
 ];
 
-const STATUS_OPTIONS = ['All Status', 'Fresh', 'Stale', 'Day Old'];
-const TYPE_OPTIONS = ['All Types', 'Baguette', 'Khobz', 'Msemen', 'Kesra', 'Other'];
+const STATUS_OPTIONS = [
+  { value: '', label: 'All Status' },
+  { value: 'fresh', label: 'Fresh' },
+  { value: 'day_old', label: 'Day Old' },
+  { value: 'stale', label: 'Stale' }
+];
+
+const TYPE_OPTIONS = [
+  { value: '', label: 'All Types' },
+  { value: 'sell', label: 'For Sale' },
+  { value: 'request', label: 'Request' }
+];
 
 export default function FilterSection({ filters, setFilters, onApply, onReset, animated }) {
   const [open, setOpen] = useState(true);
 
   const handleChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFilters(prev => ({ 
+      ...prev, 
+      [name]: value
+    }));
   };
 
   const handleReset = () => {
@@ -25,7 +39,11 @@ export default function FilterSection({ filters, setFilters, onApply, onReset, a
   };
 
   const handleApply = () => {
-    if (onApply) onApply();
+    // Clean up filters by removing empty values
+    const cleanFilters = Object.fromEntries(
+      Object.entries(filters).filter(([_, value]) => value !== '')
+    );
+    if (onApply) onApply(cleanFilters);
   };
 
   return (
@@ -53,27 +71,59 @@ export default function FilterSection({ filters, setFilters, onApply, onReset, a
             <div className="filter-controls-grid">
               <div>
                 <label>Status</label>
-                <select name="status" value={filters.status} onChange={handleChange}>
-                  {STATUS_OPTIONS.map(opt => <option key={opt} value={opt === 'All Status' ? '' : opt}>{opt}</option>)}
+                <select 
+                  name="status" 
+                  value={filters.status} 
+                  onChange={handleChange}
+                >
+                  {STATUS_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label>Type of Bread</label>
-                <select name="type" value={filters.type} onChange={handleChange}>
-                  {TYPE_OPTIONS.map(opt => <option key={opt} value={opt === 'All Types' ? '' : opt}>{opt}</option>)}
+                <label>Post Type</label>
+                <select 
+                  name="post_type" 
+                  value={filters.post_type} 
+                  onChange={handleChange}
+                >
+                  {TYPE_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
                 <label>Province</label>
-                <select name="province" value={filters.province} onChange={handleChange}>
+                <select 
+                  name="province" 
+                  value={filters.province} 
+                  onChange={handleChange}
+                >
                   <option value="">All Provinces</option>
-                  {WILAYAS.map(w => <option key={w} value={w}>{w}</option>)}
+                  {WILAYAS.map(w => (
+                    <option key={w} value={w}>{w}</option>
+                  ))}
                 </select>
               </div>
             </div>
             <div className="filter-card-actions">
-              <button className="filter-btn filter-btn-outline" onClick={handleReset}>Reset</button>
-              <button className="filter-btn filter-btn-primary" onClick={handleApply}>Apply Filters</button>
+              <button 
+                className="filter-btn filter-btn-outline" 
+                onClick={handleReset}
+              >
+                Reset
+              </button>
+              <button 
+                className="filter-btn filter-btn-primary" 
+                onClick={handleApply}
+              >
+                Apply Filters
+              </button>
             </div>
           </>
         )}

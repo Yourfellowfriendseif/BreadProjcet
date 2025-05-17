@@ -32,13 +32,24 @@ export default function PostDetail() {
   };
 
   const handleReserve = async () => {
+    if (post.is_reserved) {
+      setError('This post has already been reserved by someone else');
+      return;
+    }
+
     try {
       setIsReserving(true);
       setError(null);
       await breadAPI.reservePost(id);
-      loadPost();
+      await loadPost();
     } catch (err) {
-      setError(err.message || 'Failed to reserve bread');
+      if (err.response?.data?.message === 'Post already reserved') {
+        setError('This post has just been reserved by someone else');
+        // Reload to get the latest state
+        loadPost();
+      } else {
+        setError(err.message || 'Failed to reserve bread');
+      }
     } finally {
       setIsReserving(false);
     }
@@ -49,9 +60,11 @@ export default function PostDetail() {
       setIsReserving(true);
       setError(null);
       await breadAPI.cancelReservation(id);
-      loadPost();
+      await loadPost();
+      window.showToast('Reservation cancelled successfully', 'info');
     } catch (err) {
       setError(err.message || 'Failed to cancel reservation');
+      window.showToast(err.message || 'Failed to cancel reservation', 'error');
     } finally {
       setIsReserving(false);
     }
@@ -66,9 +79,11 @@ export default function PostDetail() {
       setLoading(true);
       setError(null);
       await breadAPI.deletePost(id);
+      window.showToast('Post deleted successfully', 'success');
       navigate('/');
     } catch (err) {
       setError(err.message || 'Failed to delete post');
+      window.showToast(err.message || 'Failed to delete post', 'error');
       setLoading(false);
     }
   };
@@ -85,6 +100,7 @@ export default function PostDetail() {
     return (
       <div className="post-detail-error-container">
         <div className="post-detail-error">
+          <span className="material-symbols-outlined">error</span>
           <p className="post-detail-error-text">{error}</p>
         </div>
       </div>
@@ -183,6 +199,7 @@ export default function PostDetail() {
 
           {error && (
             <div className="post-detail-error">
+              <span className="material-symbols-outlined">error</span>
               <p className="post-detail-error-text">{error}</p>
             </div>
           )}
@@ -190,7 +207,7 @@ export default function PostDetail() {
           {user && user._id !== post.user._id && !post.is_completed && (
             <div className="post-detail-reserve">
               {post.is_reserved ? (
-                post.reserved_by?._id === user._id && (
+                post.reserved_by?._id === user._id ? (
                   <button
                     onClick={handleCancelReservation}
                     disabled={isReserving}
@@ -198,12 +215,22 @@ export default function PostDetail() {
                   >
                     {isReserving ? 'Canceling...' : 'Cancel Reservation'}
                   </button>
+                ) : (
+                  <div className="post-detail-reserved-status">
+                    <div className="post-detail-reserved-badge">
+                      <span className="material-symbols-outlined">lock</span>
+                      <span>Reserved by {post.reserved_by?.username}</span>
+                    </div>
+                    <p className="post-detail-reserved-message">
+                      This post is no longer available for reservation
+                    </p>
+                  </div>
                 )
               ) : (
                 <button
                   onClick={handleReserve}
-                  disabled={isReserving}
-                  className="post-detail-reserve-button post-detail-reserve-button-primary"
+                  disabled={isReserving || post.is_reserved}
+                  className="post-detail-reserve-button"
                 >
                   {isReserving ? 'Reserving...' : 'Reserve'}
                 </button>

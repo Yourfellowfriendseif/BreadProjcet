@@ -19,12 +19,25 @@
 
 .post-detail-error {
   background-color: #fef2f2;
-  border-left: 4px solid #f87171;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
   padding: 1rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.post-detail-error .material-symbols-outlined {
+  color: #dc2626;
+  font-size: 1.25rem;
 }
 
 .post-detail-error-text {
-  color: #b91c1c;
+  color: #991b1b;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
 .post-detail-not-found {
@@ -183,35 +196,77 @@
   color: #6b7280;
 }
 
-.post-detail-reserve {
+.post-detail-reserved-status {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 24rem;
+}
+
+.post-detail-reserved-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  color: #4b5563;
+  font-size: 0.875rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.post-detail-reserved-badge .material-symbols-outlined {
+  font-size: 1.25rem;
+  color: #9ca3af;
+}
+
+.post-detail-reserved-message {
+  color: #6b7280;
+  font-size: 0.875rem;
+  text-align: center;
+  margin: 0;
+}
+
+.post-detail-reserve {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
 }
 
 .post-detail-reserve-button {
-  padding: 0.5rem 1.5rem;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 500;
   border-radius: 0.5rem;
-  color: white;
+  border: none;
   cursor: pointer;
-}
-
-.post-detail-reserve-button-primary {
+  transition: all 0.2s;
   background-color: #3b82f6;
+  color: white;
+  width: 100%;
+  max-width: 20rem;
 }
 
-.post-detail-reserve-button-primary:hover {
+.post-detail-reserve-button:hover:not(:disabled) {
   background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.post-detail-reserve-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: #9ca3af;
 }
 
 .post-detail-reserve-button-danger {
   background-color: #ef4444;
 }
 
-.post-detail-reserve-button-danger:hover {
+.post-detail-reserve-button-danger:hover:not(:disabled) {
   background-color: #dc2626;
-}
-
-.post-detail-reserve-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }

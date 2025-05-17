@@ -170,6 +170,32 @@ export default function CreatePost() {
     }
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.add('dragging');
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('dragging');
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('dragging');
+    
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type.startsWith('image/')
+    );
+    
+    if (files.length > 0) {
+      handleImageChange({ target: { files } });
+    }
+  };
+
   const validateForm = () => {
     if (!formData.post_type) return "Post type is required";
     if (!formData.status) return "Status is required";
@@ -348,53 +374,90 @@ export default function CreatePost() {
         </div>
         <div className="create-post-form-group">
           <label className="create-post-label">Images (Optional)</label>
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleImageChange}
-            className="create-post-input"
-            disabled={imageUploadLoading}
-          />
+          <div 
+            className="create-post-image-dropzone"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => document.getElementById('image-upload').click()}
+          >
+            <span className="material-symbols-outlined create-post-image-icon">
+              add_photo_alternate
+            </span>
+            <p className="create-post-image-text">
+              Drag and drop your images here, or click to select files
+            </p>
+            <p className="create-post-image-subtext">
+              Supports: JPG, PNG • Max size: 5MB per image
+            </p>
+            <input
+              id="image-upload"
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageChange}
+              className="create-post-input"
+              style={{ display: 'none' }}
+              disabled={imageUploadLoading}
+            />
+          </div>
+
           {imageUploadLoading && (
-            <div style={{ width: "100%", margin: "8px 0" }}>
-              <progress
-                value={imageUploadProgress}
-                max="100"
-                style={{ width: "100%" }}
-              />
-              <span>{imageUploadProgress}%</span>
+            <div className="create-post-image-progress">
+              <div className="create-post-progress-bar">
+                <div 
+                  className="create-post-progress-fill" 
+                  style={{ width: `${imageUploadProgress}%` }}
+                />
+              </div>
+              <p className="create-post-progress-text">
+                Uploading... {imageUploadProgress}%
+              </p>
             </div>
-          )}{" "}
+          )}
+
           {imageUploadError && (
             <p className="create-post-error-text">{imageUploadError}</p>
           )}
-          <p className="create-post-help-text">
-            You can upload multiple images
-          </p>
-          {/* Display uploaded images preview */}
+
           {imageUrls.length > 0 && (
             <div className="create-post-image-previews">
-              <p>Uploaded images:</p>
-              <div className="create-post-image-grid">
-                {imageUrls.map((url, index) => (
-                  <div key={index} className="create-post-image-preview">
-                    <img
-                      src={url}
-                      alt={`Upload preview ${index + 1}`}
-                      className="create-post-preview-img"
-                      onError={(e) => {
-                        // If the URL fails, use a fallback
-                        e.target.onerror = null;
-                        e.target.src = "/no-image.png";
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
+              {imageUrls.map((url, index) => (
+                <div key={index} className="create-post-image-preview">
+                  <img
+                    src={url}
+                    alt={`Upload preview ${index + 1}`}
+                    className="create-post-preview-img"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/no-image.png";
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="create-post-image-remove"
+                    onClick={() => {
+                      const newUrls = [...imageUrls];
+                      const newIds = [...imageIds];
+                      const newFilenames = [...imageFilenames];
+                      
+                      // Remove the image from all arrays
+                      newUrls.splice(index, 1);
+                      newIds.splice(index, 1);
+                      newFilenames.splice(index, 1);
+                      
+                      setImageUrls(newUrls);
+                      setImageIds(newIds);
+                      setImageFilenames(newFilenames);
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
           )}
-        </div>{" "}
+        </div>
         <div className="create-post-actions">
           {" "}
           <button
