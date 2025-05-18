@@ -34,7 +34,6 @@ export const breadAPI = {
   getAll: async (filters = {}) => {
     try {
       const response = await apiClient.get("/posts/all", { params: filters });
-      console.log("Raw API response:", response); // Debug log
       return response;
     } catch (error) {
       console.error("Error in getAll:", error);

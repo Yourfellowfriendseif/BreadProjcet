@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useApp } from '../context/AppContext';
-import { userAPI } from '../api/userAPI';
-import { breadAPI } from '../api/breadAPI';
-import { uploadAPI } from '../api/uploadAPI';
-import BreadItem from './bread/BreadItem';
-import LoadingSpinner from './LoadingSpinner';
-import './UserProfile.css';
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import { useApp } from "../context/AppContext";
+import { userAPI } from "../api/userAPI";
+import { breadAPI } from "../api/breadAPI";
+import { uploadAPI } from "../api/uploadAPI";
+import BreadItem from "./bread/BreadItem";
+import LoadingSpinner from "./LoadingSpinner";
+import "./UserProfile.css";
 
 export default function UserProfile() {
   const { userId } = useParams();
@@ -15,22 +15,22 @@ export default function UserProfile() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('active');
+  const [activeTab, setActiveTab] = useState("active");
   const [avatar, setAvatar] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
-    username: '',
-    email: '',
-    phone: ''
+    username: "",
+    email: "",
+    phone: "",
   });
   const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
-  const [updateSuccess, setUpdateSuccess] = useState('');
-  const [updateError, setUpdateError] = useState('');
+  const [updateSuccess, setUpdateSuccess] = useState("");
+  const [updateError, setUpdateError] = useState("");
 
   const isOwnProfile = !userId || (currentUser && userId === currentUser._id);
 
@@ -41,9 +41,9 @@ export default function UserProfile() {
   useEffect(() => {
     if (profileUser) {
       setEditForm({
-        username: profileUser.username || '',
-        email: profileUser.email || '',
-        phone: profileUser.phone || ''
+        username: profileUser.username || "",
+        email: profileUser.email || "",
+        phone: profileUser.phone || "",
       });
     }
   }, [profileUser]);
@@ -58,26 +58,26 @@ export default function UserProfile() {
     try {
       setLoading(true);
       setError(null);
-      
+
       if (isOwnProfile) {
-        console.log('Loading own profile with current user data:', currentUser);
         setProfileUser({
           ...currentUser,
-          avatar: uploadAPI.getAvatarUrl(currentUser)
+          avatar: uploadAPI.getAvatarUrl(currentUser),
         });
       } else {
         const userData = await userAPI.getUserById(userId);
-        console.log('Fetched user profile data:', userData);
         const user = userData.data || userData;
-        
+
         setProfileUser({
           ...user,
-          avatar: uploadAPI.getAvatarUrl(user)
+          avatar: uploadAPI.getAvatarUrl(user),
         });
       }
     } catch (err) {
-      console.error('Profile load error:', err);
-      setError(err.message || 'Failed to load profile. Please try again later.');
+      console.error("Profile load error:", err);
+      setError(
+        err.message || "Failed to load profile. Please try again later."
+      );
     } finally {
       setLoading(false);
     }
@@ -87,10 +87,11 @@ export default function UserProfile() {
     try {
       setLoading(true);
       const response = await breadAPI.getUserPosts(profileUser._id, { status });
-      const postsData = response?.data?.data?.posts || response?.data?.posts || [];
+      const postsData =
+        response?.data?.data?.posts || response?.data?.posts || [];
       setPosts(postsData);
     } catch (err) {
-      setError(err.message || 'Failed to load posts');
+      setError(err.message || "Failed to load posts");
     } finally {
       setLoading(false);
     }
@@ -102,125 +103,131 @@ export default function UserProfile() {
 
     try {
       setUploadProgress(0);
-      
+
       // If there's an existing photo, delete it first
       if (profileUser.photo_url) {
-        console.log('Existing photo_url:', profileUser.photo_url);
-        const filename = profileUser.photo_url.split('/').pop();
-        console.log('Deleting old photo:', filename);
+        const filename = profileUser.photo_url.split("/").pop();
         await uploadAPI.deleteImage(filename);
       }
 
       // Upload the new image
-      console.log('Uploading new photo:', file);
       const response = await uploadAPI.uploadSingleImage(file);
-      console.log('Upload response:', response);
       const uploadedPhotoUrl = response.data.url;
-      
+
       // Update user profile with new photo URL
       const updatedUser = await userAPI.updateProfile({
-        photo_url: uploadedPhotoUrl
+        photo_url: uploadedPhotoUrl,
       });
-
-      console.log('Profile update response:', updatedUser);
 
       // Process the updated user data
       const processedUser = {
         ...updatedUser,
         photo_url: uploadedPhotoUrl,
-        avatar: uploadAPI.getAvatarUrl({ ...updatedUser, photo_url: uploadedPhotoUrl })
+        avatar: uploadAPI.getAvatarUrl({
+          ...updatedUser,
+          photo_url: uploadedPhotoUrl,
+        }),
       };
-      
-      console.log('Processed user with new photo:', processedUser);
+
       setProfileUser(processedUser);
-      
+
       // Update global user state if it's own profile
       if (isOwnProfile) {
         updateUser({
           ...currentUser,
           ...processedUser,
           photo_url: uploadedPhotoUrl,
-          avatar: uploadAPI.getAvatarUrl({ ...processedUser, photo_url: uploadedPhotoUrl })
+          avatar: uploadAPI.getAvatarUrl({
+            ...processedUser,
+            photo_url: uploadedPhotoUrl,
+          }),
         });
       }
-      
+
       setUploadProgress(100);
 
       // Show success message
-      setUpdateSuccess('Profile picture updated successfully!');
-      setTimeout(() => setUpdateSuccess(''), 3000);
-
+      setUpdateSuccess("Profile picture updated successfully!");
+      setTimeout(() => setUpdateSuccess(""), 3000);
     } catch (err) {
-      console.error('Photo update error:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to update profile picture. Please try again.');
+      console.error("Photo update error:", err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to update profile picture. Please try again."
+      );
       setUploadProgress(0);
     }
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    setUpdateError('');
-    setUpdateSuccess('');
+    setUpdateError("");
+    setUpdateSuccess("");
 
     try {
       const updates = {
         username: editForm.username.trim(),
         email: editForm.email.trim(),
-        phone: editForm.phone ? editForm.phone.trim() : ''
+        phone: editForm.phone ? editForm.phone.trim() : "",
       };
 
       const updatedUser = await userAPI.updateProfile(updates);
-      
+
       // Update local state
-      setProfileUser(prev => ({
+      setProfileUser((prev) => ({
         ...prev,
         ...updatedUser,
         username: updatedUser.username || updatedUser.name,
         email: updatedUser.email,
-        phone: updatedUser.phone
+        phone: updatedUser.phone,
       }));
 
       // Update global user state if it's own profile
       if (isOwnProfile) {
         updateUser({
           ...currentUser,
-          ...updatedUser
+          ...updatedUser,
         });
       }
 
-      setUpdateSuccess('Profile updated successfully!');
+      setUpdateSuccess("Profile updated successfully!");
       setIsEditing(false);
-
     } catch (err) {
-      console.error('Profile update error:', err);
-      setUpdateError(err.response?.data?.message || 'Failed to update profile. Please try again.');
+      console.error("Profile update error:", err);
+      setUpdateError(
+        err.response?.data?.message ||
+          "Failed to update profile. Please try again."
+      );
     }
   };
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    setUpdateError('');
-    setUpdateSuccess('');
+    setUpdateError("");
+    setUpdateSuccess("");
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setUpdateError('New passwords do not match');
+      setUpdateError("New passwords do not match");
       return;
     }
 
     try {
       await userAPI.updatePassword({
         currentPassword: passwordForm.currentPassword,
-        newPassword: passwordForm.newPassword
+        newPassword: passwordForm.newPassword,
       });
       setPasswordForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
       });
-      setUpdateSuccess('Password updated successfully!');
-      setTimeout(() => setUpdateSuccess(''), 3000);
+      setUpdateSuccess("Password updated successfully!");
+      setTimeout(() => setUpdateSuccess(""), 3000);
     } catch (err) {
-      setUpdateError(err.response?.data?.message || 'Failed to update password');
+      setUpdateError(
+        err.response?.data?.message || "Failed to update password"
+      );
     }
   };
 
@@ -230,8 +237,8 @@ export default function UserProfile() {
       // Refresh the posts list after deletion
       loadUserPosts(activeTab);
     } catch (err) {
-      console.error('Failed to delete post:', err);
-      setError('Failed to delete post. Please try again.');
+      console.error("Failed to delete post:", err);
+      setError("Failed to delete post. Please try again.");
     }
   };
 
@@ -260,7 +267,6 @@ export default function UserProfile() {
       </div>
     );
   }
-  console.log('profileUser',currentUser);
   return (
     <div className="user-profile">
       <div className="user-profile-container">
@@ -273,7 +279,7 @@ export default function UserProfile() {
                 className="user-profile-avatar"
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = '/no-image.png';
+                  e.target.src = "/no-image.png";
                 }}
               />
               {isOwnProfile && (
@@ -296,7 +302,7 @@ export default function UserProfile() {
               )}
               {uploadProgress > 0 && uploadProgress < 100 && (
                 <div className="user-profile-upload-progress">
-                  <div 
+                  <div
                     className="user-profile-upload-progress-bar"
                     style={{ width: `${uploadProgress}%` }}
                   />
@@ -305,7 +311,9 @@ export default function UserProfile() {
             </div>
             <div className="user-profile-details">
               <h1>
-                <span className="material-symbols-outlined">account_circle</span>
+                <span className="material-symbols-outlined">
+                  account_circle
+                </span>
                 {profileUser.username}
               </h1>
               <div className="user-profile-email">
@@ -313,8 +321,11 @@ export default function UserProfile() {
                 {profileUser.email}
               </div>
               <p className="user-profile-date">
-                <span className="material-symbols-outlined">calendar_today</span>
-                Member since {new Date(profileUser.createdAt).toLocaleDateString()}
+                <span className="material-symbols-outlined">
+                  calendar_today
+                </span>
+                Member since{" "}
+                {new Date(profileUser.createdAt).toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -325,9 +336,9 @@ export default function UserProfile() {
                 onClick={() => setIsEditing(!isEditing)}
               >
                 <span className="material-symbols-outlined">
-                  {isEditing ? 'close' : 'edit'}
+                  {isEditing ? "close" : "edit"}
                 </span>
-                {isEditing ? 'Cancel Editing' : 'Edit Profile'}
+                {isEditing ? "Cancel Editing" : "Edit Profile"}
               </button>
             </div>
           )}
@@ -347,7 +358,7 @@ export default function UserProfile() {
                 {updateError}
               </div>
             )}
-            
+
             <form onSubmit={handleEditSubmit} className="user-profile-form">
               <h2>
                 <span className="material-symbols-outlined">person</span>
@@ -359,10 +370,12 @@ export default function UserProfile() {
                   type="text"
                   id="username"
                   value={editForm.username}
-                  onChange={(e) => setEditForm(prev => ({
-                    ...prev,
-                    username: e.target.value
-                  }))}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      username: e.target.value,
+                    }))
+                  }
                   required
                 />
               </div>
@@ -372,10 +385,12 @@ export default function UserProfile() {
                   type="email"
                   id="email"
                   value={editForm.email}
-                  onChange={(e) => setEditForm(prev => ({
-                    ...prev,
-                    email: e.target.value
-                  }))}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      email: e.target.value,
+                    }))
+                  }
                   required
                 />
               </div>
@@ -385,10 +400,12 @@ export default function UserProfile() {
                   type="tel"
                   id="phone"
                   value={editForm.phone}
-                  onChange={(e) => setEditForm(prev => ({
-                    ...prev,
-                    phone: e.target.value
-                  }))}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      phone: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <button type="submit" className="user-profile-submit-button">
@@ -404,10 +421,12 @@ export default function UserProfile() {
                   type="password"
                   id="currentPassword"
                   value={passwordForm.currentPassword}
-                  onChange={(e) => setPasswordForm(prev => ({
-                    ...prev,
-                    currentPassword: e.target.value
-                  }))}
+                  onChange={(e) =>
+                    setPasswordForm((prev) => ({
+                      ...prev,
+                      currentPassword: e.target.value,
+                    }))
+                  }
                   required
                 />
               </div>
@@ -417,10 +436,12 @@ export default function UserProfile() {
                   type="password"
                   id="newPassword"
                   value={passwordForm.newPassword}
-                  onChange={(e) => setPasswordForm(prev => ({
-                    ...prev,
-                    newPassword: e.target.value
-                  }))}
+                  onChange={(e) =>
+                    setPasswordForm((prev) => ({
+                      ...prev,
+                      newPassword: e.target.value,
+                    }))
+                  }
                   required
                 />
               </div>
@@ -430,10 +451,12 @@ export default function UserProfile() {
                   type="password"
                   id="confirmPassword"
                   value={passwordForm.confirmPassword}
-                  onChange={(e) => setPasswordForm(prev => ({
-                    ...prev,
-                    confirmPassword: e.target.value
-                  }))}
+                  onChange={(e) =>
+                    setPasswordForm((prev) => ({
+                      ...prev,
+                      confirmPassword: e.target.value,
+                    }))
+                  }
                   required
                 />
               </div>
@@ -448,9 +471,9 @@ export default function UserProfile() {
           <div className="user-profile-tab-container">
             <button
               className={`user-profile-tab ${
-                activeTab === 'active' ? 'user-profile-tab-active' : ''
+                activeTab === "active" ? "user-profile-tab-active" : ""
               }`}
-              onClick={() => setActiveTab('active')}
+              onClick={() => setActiveTab("active")}
             >
               Active Posts
             </button>
@@ -477,7 +500,10 @@ export default function UserProfile() {
               <span className="material-symbols-outlined">inventory_2</span>
               <p>No posts found</p>
               {isOwnProfile && (
-                <Link to="/posts/create" className="filter-btn filter-btn-primary">
+                <Link
+                  to="/posts/create"
+                  className="filter-btn filter-btn-primary"
+                >
                   <span className="material-symbols-outlined">add_circle</span>
                   Create Your First Post
                 </Link>
@@ -485,7 +511,7 @@ export default function UserProfile() {
             </div>
           ) : (
             <div className="user-profile-posts-grid">
-              {posts.map(post => (
+              {posts.map((post) => (
                 <div key={post._id} className="user-profile-post-card">
                   <BreadItem
                     post={post}

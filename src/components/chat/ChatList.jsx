@@ -35,11 +35,9 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
       setLoading(true);
       setError(null);
       const response = await chatAPI.getConversations();
-      console.log("Raw chat response:", response);
 
       // Get conversations directly from the response
       const conversationList = response?.data?.conversations || [];
-      console.log("Conversations from response:", conversationList);
 
       setConversations(sortConversationsByDate(conversationList));
     } catch (error) {
@@ -56,10 +54,13 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
     setConversations((prev) => {
       // Find if conversation exists
       const conversationIndex = prev.findIndex((conv) => {
-        const otherParticipant = conv.participants.find(p => p._id !== user?._id);
-        return otherParticipant && (
-          message.sender._id === otherParticipant._id ||
-          message.recipient._id === otherParticipant._id
+        const otherParticipant = conv.participants.find(
+          (p) => p._id !== user?._id
+        );
+        return (
+          otherParticipant &&
+          (message.sender._id === otherParticipant._id ||
+            message.recipient._id === otherParticipant._id)
         );
       });
 
@@ -70,15 +71,16 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
         const conversation = { ...updatedConversations[conversationIndex] };
         conversation.lastMessage = message;
         conversation.updatedAt = message.createdAt;
-        
+
         if (message.sender._id !== user?._id) {
           conversation.unreadCount = (conversation.unreadCount || 0) + 1;
         }
-        
+
         updatedConversations[conversationIndex] = conversation;
       } else {
         // Create new conversation
-        const otherUser = message.sender._id === user?._id ? message.recipient : message.sender;
+        const otherUser =
+          message.sender._id === user?._id ? message.recipient : message.sender;
         const newConversation = {
           _id: `chat_${otherUser._id}`,
           participants: [user, otherUser],
@@ -120,7 +122,9 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
   const handleChatSelect = (conversation) => {
     if (!conversation || !user) return;
 
-    const otherUser = conversation.participants?.find(p => p._id !== user._id);
+    const otherUser = conversation.participants?.find(
+      (p) => p._id !== user._id
+    );
     if (!otherUser) return;
 
     if (onSelectChat) {
@@ -178,8 +182,10 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
         if (!otherUser) return null;
 
         const lastMessage = conversation.lastMessage;
-        const lastMessageTime = lastMessage?.createdAt 
-          ? formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: true })
+        const lastMessageTime = lastMessage?.createdAt
+          ? formatDistanceToNow(new Date(lastMessage.createdAt), {
+              addSuffix: true,
+            })
           : "";
 
         const avatarUrl = getAvatarUrl(otherUser);
@@ -188,7 +194,9 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
           <div
             key={conversation._id}
             className={`chat-list-item ${
-              selectedChat?._id === conversation._id ? "chat-list-item-selected" : ""
+              selectedChat?._id === conversation._id
+                ? "chat-list-item-selected"
+                : ""
             }`}
             onClick={() => handleChatSelect(conversation)}
           >
@@ -199,12 +207,17 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
                   alt={otherUser.username || "User"}
                   className="chat-list-avatar-image"
                   onError={(e) => {
-                    e.target.style.display = 'none';
-                    const defaultAvatar = document.createElement('div');
-                    defaultAvatar.className = 'default-avatar-wrapper';
+                    e.target.style.display = "none";
+                    const defaultAvatar = document.createElement("div");
+                    defaultAvatar.className = "default-avatar-wrapper";
                     e.target.parentElement.appendChild(defaultAvatar);
                     const root = ReactDOM.createRoot(defaultAvatar);
-                    root.render(<DefaultAvatar size={56} className="chat-list-avatar-image" />);
+                    root.render(
+                      <DefaultAvatar
+                        size={56}
+                        className="chat-list-avatar-image"
+                      />
+                    );
                   }}
                 />
               ) : (
@@ -219,9 +232,7 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
                 <span className="chat-list-username">
                   {otherUser.username || "Unknown user"}
                 </span>
-                <span className="chat-list-date">
-                  {lastMessageTime}
-                </span>
+                <span className="chat-list-date">{lastMessageTime}</span>
               </div>
               <div className="chat-list-message">
                 <span className="chat-list-message-text">

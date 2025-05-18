@@ -12,7 +12,6 @@ class SocketService {
 
   initialize(token) {
     if (this.socket && this.socket.connected) {
-      console.log("Socket already connected, not reinitializing");
       return;
     }
 
@@ -48,12 +47,10 @@ class SocketService {
     if (!this.socket) return;
 
     this.socket.on("connect", () => {
-      console.log("Socket connected successfully");
       this.reconnectAttempts = 0;
     });
 
     this.socket.on("disconnect", (reason) => {
-      console.log("Socket disconnected:", reason);
       if (reason === "io server disconnect") {
         // Server initiated disconnect, try to reconnect
         this.connect();
@@ -100,7 +97,6 @@ class SocketService {
       this.socket.disconnect();
       this.socket = null;
       this.isInitialized = false;
-      console.log("Socket disconnected and reset");
     }
     this.reconnectAttempts = 0;
   }
@@ -110,7 +106,6 @@ class SocketService {
       console.warn(`Cannot emit ${event}: Socket not connected`);
       return;
     }
-    console.log(`Emitting ${event}:`, data);
     this.socket.emit(event, data);
   }
 

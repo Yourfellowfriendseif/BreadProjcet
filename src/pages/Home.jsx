@@ -4,7 +4,7 @@ import { useApp } from "../context/AppContext";
 import { breadAPI } from "../api/breadAPI";
 import BreadListing from "../components/bread/BreadListing";
 import LoadingSpinner from "../components/LoadingSpinner";
-import FilterSection from '../components/FilterSection';
+import FilterSection from "../components/FilterSection";
 import "./Home.css";
 
 export default function Home() {
@@ -14,10 +14,10 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [filters, setFilters] = useState({
-    status: '',
-    post_type: '',
-    province: '',
-    radius: 50 // Default radius in kilometers
+    status: "",
+    post_type: "",
+    province: "",
+    radius: 50, // Default radius in kilometers
   });
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 6;
@@ -47,36 +47,34 @@ export default function Home() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Create a clean copy of filters without empty values
       const searchFilters = Object.fromEntries(
-        Object.entries(filters).filter(([_, value]) => value !== '')
+        Object.entries(filters).filter(([_, value]) => value !== "")
       );
 
       // Add location if available
       if (location) {
         searchFilters.location = {
           type: "Point",
-          coordinates: [location.lng, location.lat]
+          coordinates: [location.lng, location.lat],
         };
         if (filters.radius) {
           searchFilters.maxDistance = filters.radius * 1000; // Convert km to meters
         }
       }
 
-      console.log('Searching with filters:', searchFilters); // Debug log
-
       const response = await breadAPI.searchPosts(searchFilters);
       const postsData = response?.data?.posts || response?.posts || [];
-      
+
       if (Array.isArray(postsData)) {
-      setPosts(postsData);
+        setPosts(postsData);
       } else {
-        console.error('Invalid posts data:', postsData);
-        setError('Failed to load posts: Invalid data format');
+        console.error("Invalid posts data:", postsData);
+        setError("Failed to load posts: Invalid data format");
       }
     } catch (error) {
-      console.error('Error loading posts:', error);
+      console.error("Error loading posts:", error);
       setError(error.message || "Failed to load posts");
     } finally {
       setLoading(false);
@@ -84,9 +82,11 @@ export default function Home() {
   };
 
   const handlePostUpdate = (action, post) => {
-    if (action === 'deleted') {
-      setPosts(currentPosts => currentPosts.filter(p => p._id !== post._id));
-    } else if (action === 'refresh') {
+    if (action === "deleted") {
+      setPosts((currentPosts) =>
+        currentPosts.filter((p) => p._id !== post._id)
+      );
+    } else if (action === "refresh") {
       loadPosts(userLocation);
     } else if (action === 'reserved' || action === 'unreserved') {
       // Update the post in the current posts list
@@ -100,9 +100,9 @@ export default function Home() {
 
   const handleFilterApply = (cleanFilters) => {
     // Update filters state with clean values
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      ...cleanFilters
+      ...cleanFilters,
     }));
     // Reset to first page when filters change
     setCurrentPage(1);
@@ -112,10 +112,10 @@ export default function Home() {
 
   const handleFilterReset = () => {
     const resetFilters = {
-      status: '',
-      post_type: '',
-      province: '',
-      radius: 50
+      status: "",
+      post_type: "",
+      province: "",
+      radius: 50,
     };
     setFilters(resetFilters);
     setCurrentPage(1);
