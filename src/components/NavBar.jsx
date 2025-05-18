@@ -4,14 +4,13 @@ import { useApp } from '../context/AppContext';
 import './NavBar.css';
 
 export default function NavBar() {
-  const { user, logout, notifications, unreadMessages, setGlobalSearchTerm, globalSearchTerm } = useApp();
+  const { user, logout, notifications, unreadMessages } = useApp();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showHamburger, setShowHamburger] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
   const [hamburgerDropdown, setHamburgerDropdown] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const searchInputRef = useRef();
 
   const handleLogout = async () => {
     await logout();
@@ -22,11 +21,6 @@ export default function NavBar() {
 
   // Navigation button active state
   const isActive = (path) => location.pathname === path;
-
-  // Search logic: update global search term in context
-  const handleSearchChange = (e) => {
-    setGlobalSearchTerm(e.target.value);
-  };
 
   // User menu dropdown toggle
   const handleUserClick = () => {
@@ -99,16 +93,6 @@ export default function NavBar() {
                 <span className="material-symbols-outlined navbar-button-icon">bookmark</span>
                 Reserved Posts
               </button>
-              <div className="navbar-search">
-                <span className="material-symbols-outlined navbar-search-icon">search</span>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search marketplace..."
-                  value={globalSearchTerm || ''}
-                  onChange={handleSearchChange}
-                />
-              </div>
               {user && (
                 <>
                   <Link 
@@ -177,16 +161,6 @@ export default function NavBar() {
             </button>
           </div>
           <div className="navbar-actions-right">
-            <div className="navbar-search">
-              <span className="material-symbols-outlined navbar-search-icon">search</span>
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search marketplace..."
-                value={globalSearchTerm || ''}
-                onChange={handleSearchChange}
-              />
-            </div>
             {user && (
               <>
                 <Link 

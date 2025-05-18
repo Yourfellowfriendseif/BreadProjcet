@@ -70,14 +70,25 @@ export const chatAPI = {
   getUnreadCount: async () => {
     try {
       const response = await apiClient.get("/chat/unread");
+      // Handle different response formats
+      const count =
+        response?.data?.count ||
+        response?.count ||
+        (response?.data?.data && response.data.data.count) ||
+        0;
+
       return {
         data: {
-          count: response?.data?.data?.count || 0,
+          count: count,
         },
       };
     } catch (error) {
       console.error("Error getting unread count:", error);
-      throw error;
+      return {
+        data: {
+          count: 0,
+        },
+      };
     }
   },
 
