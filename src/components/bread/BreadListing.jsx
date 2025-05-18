@@ -10,6 +10,11 @@ export default function BreadListingPage({ posts = [], onUpdate }) {
   const handleUpdate = (action, post) => {
     if (action === 'viewDetails') {
       setModalPost(post);
+    } else if (action === 'reserved' || action === 'unreserved') {
+      // Update the local state of the post
+      if (onUpdate) {
+        onUpdate(action, post);
+      }
     }
     if (onUpdate) onUpdate(action, post);
   };

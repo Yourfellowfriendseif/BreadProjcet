@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import './BreadItem.css';
 import { AppContext } from '../../context/AppContext';
 import breadAPI from '../../api/breadAPI';
+import DefaultAvatar from '../common/DefaultAvatar';
+import ReactDOM from 'react-dom/client';
 
 const fallbackImg = '/no-image.png'; // Use a default image in your public folder
 
@@ -50,15 +52,21 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
     
     try {
       await breadAPI.reservePost(post._id);
+      // Update both local state and parent component
+      const updatedPost = { ...post, is_reserved: true, reserved_by: user };
+      if (onUpdate) {
+        onUpdate('reserved', updatedPost);
+      }
       if (onReserve) {
-        onReserve({ ...post, is_reserved: true, reserved_by: user });
+        onReserve(updatedPost);
       }
     } catch (err) {
       if (err.response?.data?.message === 'Post already reserved') {
-        setError('This post has just been reserved by someone else');
-        // Refresh the post data
+        setError('Post already reserved');
+        // Update the post to show it's reserved
+        const updatedPost = { ...post, is_reserved: true };
         if (onUpdate) {
-          onUpdate('refresh', post);
+          onUpdate('refresh', updatedPost);
         }
       } else {
         setError(err.message || 'Failed to reserve post');
@@ -74,6 +82,10 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
     
     try {
       await breadAPI.cancelReservation(post._id);
+      // Update both local state and parent component
+      if (onUpdate) {
+        onUpdate('unreserved', { ...post, is_reserved: false, reserved_by: null });
+      }
       if (onReserve) {
         onReserve({ ...post, is_reserved: false, reserved_by: null });
       }
@@ -177,11 +189,25 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
         </div>
         <div className="bread-card-footer">
           <div className="bread-card-user">
-            <img
-              src={post.user?.photo_url || '/default-avatar.png'}
-              alt={post.user?.username || 'User'}
-              className="bread-card-avatar"
-            />
+            <div className="bread-card-avatar-container">
+              {post.user?.photo_url ? (
+                <img
+                  src={post.user.photo_url}
+                  alt={post.user?.username || 'User'}
+                  className="bread-card-avatar"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    const defaultAvatar = document.createElement('div');
+                    defaultAvatar.className = 'default-avatar-wrapper';
+                    e.target.parentElement.appendChild(defaultAvatar);
+                    const root = ReactDOM.createRoot(defaultAvatar);
+                    root.render(<DefaultAvatar size={40} className="bread-card-avatar" />);
+                  }}
+                />
+              ) : (
+                <DefaultAvatar size={40} className="bread-card-avatar" />
+              )}
+            </div>
             <span className="bread-card-username">{post.user?.username || 'Anonymous'}</span>
           </div>
           <span className="bread-card-date">
@@ -197,13 +223,25 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
         <div className="bread-card-actions">
           {isOwner ? (
             <>
-              <button className="bread-card-btn bread-card-btn-outline" onClick={handleEdit}>Edit</button>
-              <button className="bread-card-btn bread-card-btn-danger" onClick={handleDelete}>Delete</button>
+              <button className="bread-card-btn bread-card-btn-outline" onClick={handleEdit}>
+                <span className="material-symbols-outlined">edit</span>
+                Edit
+              </button>
+              <button className="bread-card-btn bread-card-btn-danger" onClick={handleDelete}>
+                <span className="material-symbols-outlined">delete</span>
+                Delete
+              </button>
             </>
           ) : (
             <>
-          <button className="bread-card-btn bread-card-btn-outline" onClick={handleMessageClick}>Message</button>
-          <button className="bread-card-btn bread-card-btn-primary" onClick={() => onUpdate && onUpdate('viewDetails', post)}>View Details</button>
+              <button className="bread-card-btn bread-card-btn-outline" onClick={handleMessageClick}>
+                <span className="material-symbols-outlined">chat</span>
+                Message
+              </button>
+              <button className="bread-card-btn bread-card-btn-primary" onClick={() => onUpdate && onUpdate('viewDetails', post)}>
+                <span className="material-symbols-outlined">visibility</span>
+                View Details
+              </button>
               {!hideReserveButton && (
                 post.is_reserved ? (
                   post.reserved_by?._id === user?._id ? (
@@ -212,20 +250,27 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
                       onClick={handleCancelReservation}
                       disabled={reserveLoading}
                     >
+                      <span className="material-symbols-outlined">lock_open</span>
                       {reserveLoading ? 'Canceling...' : 'Cancel Reservation'}
                     </button>
                   ) : (
                     <div className="bread-card-reserved">
                       <span className="material-symbols-outlined">lock</span>
-                      Reserved
+                      Reserved by {post.reserved_by?.username || 'another user'}
                     </div>
                   )
+                ) : error && error.includes('already reserved') ? (
+                  <div className="bread-card-reserved">
+                    <span className="material-symbols-outlined">lock</span>
+                    Reserved by another user
+                  </div>
                 ) : (
                   <button
                     className="bread-card-btn bread-card-btn-reserve"
                     onClick={handleReserve}
                     disabled={reserveLoading || post.is_reserved}
                   >
+                    <span className="material-symbols-outlined">bookmark</span>
                     {reserveLoading ? 'Reserving...' : 'Reserve'}
                   </button>
                 )

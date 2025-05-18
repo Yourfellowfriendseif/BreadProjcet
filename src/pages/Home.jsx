@@ -88,6 +88,13 @@ export default function Home() {
       setPosts(currentPosts => currentPosts.filter(p => p._id !== post._id));
     } else if (action === 'refresh') {
       loadPosts(userLocation);
+    } else if (action === 'reserved' || action === 'unreserved') {
+      // Update the post in the current posts list
+      setPosts(currentPosts => 
+        currentPosts.map(p => 
+          p._id === post._id ? post : p
+        )
+      );
     }
   };
 

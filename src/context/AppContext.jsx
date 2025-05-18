@@ -57,17 +57,24 @@ export function AppProvider({ children }) {
             console.log("Successfully loaded user profile");
             setUser(processUserData(userData));
           
-            // Load initial notifications
+            // Load initial notifications and unread messages count
             try {
-              const notificationsData = await notificationAPI
-                .getNotifications()
-                .then(processApiResponse);
+              const [notificationsData, unreadMessagesData] = await Promise.all([
+                notificationAPI.getNotifications().then(processApiResponse),
+                userAPI.getUnreadMessagesCount()
+              ]);
+              
+              console.log("Loaded initial unread messages count:", unreadMessagesData);
+              
               const fetchedNotifications = Array.isArray(notificationsData) 
                 ? notificationsData 
                 : notificationsData?.notifications || [];
               setNotifications(fetchedNotifications);
-            } catch (notifError) {
-              console.error("Error loading notifications:", notifError);
+              
+              setUnreadMessages(unreadMessagesData?.count || 0);
+              console.log("Set unread messages count to:", unreadMessagesData?.count || 0);
+            } catch (error) {
+              console.error("Error loading initial data:", error);
             }
           } else {
             console.warn("No user data returned despite valid token");
