@@ -11,7 +11,7 @@ export function AppProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [globalSearchTerm, setGlobalSearchTerm] = useState('');
+  const [globalSearchTerm, setGlobalSearchTerm] = useState("");
 
   const processApiResponse = (response) => {
     if (response?.data?.data) {
@@ -34,13 +34,13 @@ export function AppProvider({ children }) {
 
   const processUserData = (userData) => {
     if (!userData) return null;
-    
+
     const user = userData.user || userData;
-    
-    if (user.avatar && !user.avatar.startsWith('http')) {
+
+    if (user.avatar && !user.avatar.startsWith("http")) {
       user.avatar = `${import.meta.env.VITE_API_URL}/${user.avatar}`;
     }
-    
+
     return user;
   };
 
@@ -50,20 +50,18 @@ export function AppProvider({ children }) {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          console.log("Found token in localStorage, initializing session...");
           const userData = await userAPI.getProfile();
 
           if (userData) {
-            console.log("Successfully loaded user profile");
             setUser(processUserData(userData));
-          
+
             // Load initial notifications
             try {
               const notificationsData = await notificationAPI
                 .getNotifications()
                 .then(processApiResponse);
-              const fetchedNotifications = Array.isArray(notificationsData) 
-                ? notificationsData 
+              const fetchedNotifications = Array.isArray(notificationsData)
+                ? notificationsData
                 : notificationsData?.notifications || [];
               setNotifications(fetchedNotifications);
             } catch (notifError) {
@@ -76,7 +74,9 @@ export function AppProvider({ children }) {
         } catch (error) {
           console.error("Error initializing session:", error);
           if (error.response?.status === 401) {
-            console.warn("Token expired or invalid, removing from localStorage");
+            console.warn(
+              "Token expired or invalid, removing from localStorage"
+            );
             localStorage.removeItem("token");
           }
         }
@@ -100,19 +100,16 @@ export function AppProvider({ children }) {
       return;
     }
 
-    console.log("Setting up socket connection");
     socketService.connect(token);
 
     // Chat events
     const messageHandler = (message) => {
-      console.log("Socket received new message:", message);
       if (message.sender._id !== user._id) {
         setUnreadMessages((prev) => prev + 1);
       }
     };
 
     const messageReadHandler = ({ messageId, readBy }) => {
-      console.log("Socket received message read:", { messageId, readBy });
       if (readBy === user._id) {
         setUnreadMessages((prev) => Math.max(0, prev - 1));
       }
@@ -120,25 +117,18 @@ export function AppProvider({ children }) {
 
     // Notification events
     const newNotificationHandler = (notification) => {
-      console.log("Socket received new notification:", notification);
       setNotifications((prev) => [notification, ...prev]);
     };
 
     const notificationReadHandler = (data) => {
-      console.log("Socket received notification read:", data);
       const notificationId = data.notificationId;
       setNotifications((prev) =>
-        prev.map((n) =>
-          n._id === notificationId ? { ...n, read: true } : n
-        )
+        prev.map((n) => (n._id === notificationId ? { ...n, read: true } : n))
       );
     };
 
     const allNotificationsReadHandler = () => {
-      console.log("Socket received all notifications read");
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, read: true }))
-      );
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     };
 
     // Add event listeners
@@ -173,7 +163,7 @@ export function AppProvider({ children }) {
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
-      
+
       const userData = processUserData(data);
       setUser(userData);
       return data;
@@ -222,7 +212,7 @@ export function AppProvider({ children }) {
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
-      
+
       const processedUserData = processUserData(data);
       setUser(processedUserData);
       return data;
@@ -235,12 +225,12 @@ export function AppProvider({ children }) {
     user,
     setUser,
     updateUser: (updates) => {
-      if (typeof updates === 'function') {
+      if (typeof updates === "function") {
         setUser(updates);
       } else {
-        setUser(prev => ({
+        setUser((prev) => ({
           ...prev,
-          ...updates
+          ...updates,
         }));
       }
     },

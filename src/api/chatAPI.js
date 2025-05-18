@@ -21,13 +21,6 @@ export const chatAPI = {
       const messages =
         response?.data?.messages || response?.data?.data?.messages || [];
 
-      console.log("Messages from API:", {
-        userId,
-        params: defaultParams,
-        messageCount: messages.length,
-        messages,
-      });
-
       return {
         data: {
           messages,
@@ -104,19 +97,14 @@ export const chatAPI = {
 
   getConversations: async () => {
     try {
-      console.log("Fetching conversations...");
-
       // Get current user first
       const currentUser = await userAPI.getProfile();
-      console.log("Current user:", currentUser);
 
       // Get chat users with their last messages and unread counts
       const response = await apiClient.get("/chat/users");
-      console.log("Raw chat response:", response);
 
       // Extract users directly from the response data
       const users = response?.data?.users || [];
-      console.log("Users from response:", users);
 
       // Transform the users data into conversations format
       const conversations = users.map((user) => ({
@@ -135,7 +123,6 @@ export const chatAPI = {
         unreadCount: user.unreadCount || 0,
       }));
 
-      console.log("Final conversations:", conversations);
       return { data: { conversations } };
     } catch (error) {
       console.error("Error fetching conversations:", error);

@@ -1,43 +1,41 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
-import { uploadAPI } from '../../api/uploadAPI';
-import './RegisterForm.css';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useApp } from "../../context/AppContext";
+import { uploadAPI } from "../../api/uploadAPI";
+import "./RegisterForm.css";
 
 const RegisterForm = () => {
   const navigate = useNavigate();
   const { register } = useApp();
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    phone_number: '',
-    address: ''
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone_number: "",
+    address: "",
   });
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     try {
       if (photoUrl) {
-        console.log('photoUrl', photoUrl);
-        const filename = photoUrl.split('/').pop();
-        console.log('filename', filename);
+        const filename = photoUrl.split("/").pop();
         await uploadAPI.deleteImage(filename);
       }
 
@@ -46,38 +44,38 @@ const RegisterForm = () => {
 
       setPhoto(file);
       setPhotoUrl(uploadedPhotoUrl);
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setPhotoPreview(reader.result);
       };
       reader.readAsDataURL(file);
     } catch (err) {
-      console.error('Error handling photo upload:', err);
-      setError('Failed to upload photo. Please try again.');
+      console.error("Error handling photo upload:", err);
+      setError("Failed to upload photo. Please try again.");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     if (!formData.username || !formData.email || !formData.password) {
-      setError('Username, email and password are required');
+      setError("Username, email and password are required");
       setLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       setLoading(false);
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address');
+      setError("Please enter a valid email address");
       setLoading(false);
       return;
     }
@@ -89,30 +87,34 @@ const RegisterForm = () => {
         password: formData.password,
         phone_number: formData.phone_number || undefined,
         address: formData.address || undefined,
-        photo_url: photoUrl || undefined
+        photo_url: photoUrl || undefined,
       };
 
       const response = await register(registrationData);
       if (response?.token) {
-        navigate('/');
+        navigate("/add-photo");
       }
     } catch (err) {
-      console.error('Registration error:', err);
-      const errorMessage = err.response?.data?.message 
-        || err.response?.data?.error 
-        || err.message 
-        || 'Failed to register';
+      console.error("Registration error:", err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to register";
       setError(errorMessage);
 
       if (photoUrl) {
         try {
-          const filename = photoUrl.split('/').pop();
+          const filename = photoUrl.split("/").pop();
           await uploadAPI.deleteImage(filename);
           setPhoto(null);
           setPhotoUrl(null);
           setPhotoPreview(null);
         } catch (deleteErr) {
-          console.error('Error cleaning up photo after failed registration:', deleteErr);
+          console.error(
+            "Error cleaning up photo after failed registration:",
+            deleteErr
+          );
         }
       }
     } finally {
@@ -126,7 +128,7 @@ const RegisterForm = () => {
         <div className="register-header">
           <h1 className="register-title">Create your account</h1>
           <p className="register-subtitle">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <a href="/login" className="register-link">
               Sign in
             </a>
@@ -143,7 +145,7 @@ const RegisterForm = () => {
           <div className="register-photo-section">
             <div className="register-photo-container">
               <img
-                src={photoPreview || '/default-avatar.png'}
+                src={photoPreview || "/default-avatar.png"}
                 alt="Profile preview"
                 className="register-photo-preview"
               />
@@ -155,7 +157,7 @@ const RegisterForm = () => {
                   className="register-photo-input"
                 />
                 <span className="register-photo-upload-text">
-                  {photo ? 'Change Photo' : 'Add Photo'}
+                  {photo ? "Change Photo" : "Add Photo"}
                 </span>
               </label>
             </div>
@@ -216,12 +218,8 @@ const RegisterForm = () => {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="register-submit"
-          >
-            {loading ? 'Creating account...' : 'Create account'}
+          <button type="submit" disabled={loading} className="register-submit">
+            {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
       </div>

@@ -98,7 +98,6 @@ export default function CreatePost() {
       setError("Geolocation is not supported by your browser");
     }
   }, []);
-  
 
   const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
@@ -123,25 +122,17 @@ export default function CreatePost() {
         setImageUploadProgress
       );
 
-      console.log("Upload response:", res);
-
       // Extract images from the response based on the actual structure
       // {status, message, data: {images: [{_id, filename, url, ...}]}};
       const uploadedImages = res?.data?.images;
-
-      console.log("Uploaded images data:", uploadedImages);
 
       if (!uploadedImages || !Array.isArray(uploadedImages)) {
         console.error("Unexpected response structure:", res);
         throw new Error("Invalid response from server");
       }
-      console.log("Uploaded images:", uploadedImages); // Extract IDs, URLs, and filenames from the response
       const ids = uploadedImages.map((img) => img._id);
       const urls = uploadedImages.map((img) => img.url);
       const filenames = uploadedImages.map((img) => img.filename);
-      console.log("Image IDs:", ids);
-      console.log("Image URLs for display:", urls);
-      console.log("Image filenames for deletion:", filenames);
 
       if (ids.length === files.length) {
         setImageIds(ids);
@@ -173,24 +164,24 @@ export default function CreatePost() {
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.add('dragging');
+    e.currentTarget.classList.add("dragging");
   };
 
   const handleDragLeave = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.remove('dragging');
+    e.currentTarget.classList.remove("dragging");
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    e.currentTarget.classList.remove('dragging');
-    
-    const files = Array.from(e.dataTransfer.files).filter(file => 
-      file.type.startsWith('image/')
+    e.currentTarget.classList.remove("dragging");
+
+    const files = Array.from(e.dataTransfer.files).filter((file) =>
+      file.type.startsWith("image/")
     );
-    
+
     if (files.length > 0) {
       handleImageChange({ target: { files } });
     }
@@ -240,7 +231,6 @@ export default function CreatePost() {
         images: imageUrls,
       };
 
-      console.log("Submitting post with image data:", { imageIds, imageUrls });
       await breadAPI.create(postData);
       navigate("/");
     } catch (err) {
@@ -374,12 +364,12 @@ export default function CreatePost() {
         </div>
         <div className="create-post-form-group">
           <label className="create-post-label">Images (Optional)</label>
-          <div 
+          <div
             className="create-post-image-dropzone"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            onClick={() => document.getElementById('image-upload').click()}
+            onClick={() => document.getElementById("image-upload").click()}
           >
             <span className="material-symbols-outlined create-post-image-icon">
               add_photo_alternate
@@ -390,25 +380,25 @@ export default function CreatePost() {
             <p className="create-post-image-subtext">
               Supports: JPG, PNG • Max size: 5MB per image
             </p>
-          <input
+            <input
               id="image-upload"
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleImageChange}
-            className="create-post-input"
-              style={{ display: 'none' }}
-            disabled={imageUploadLoading}
-          />
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageChange}
+              className="create-post-input"
+              style={{ display: "none" }}
+              disabled={imageUploadLoading}
+            />
           </div>
 
           {imageUploadLoading && (
             <div className="create-post-image-progress">
               <div className="create-post-progress-bar">
-                <div 
-                  className="create-post-progress-fill" 
+                <div
+                  className="create-post-progress-fill"
                   style={{ width: `${imageUploadProgress}%` }}
-              />
+                />
               </div>
               <p className="create-post-progress-text">
                 Uploading... {imageUploadProgress}%
@@ -422,17 +412,17 @@ export default function CreatePost() {
 
           {imageUrls.length > 0 && (
             <div className="create-post-image-previews">
-                {imageUrls.map((url, index) => (
-                  <div key={index} className="create-post-image-preview">
-                    <img
-                      src={url}
-                      alt={`Upload preview ${index + 1}`}
-                      className="create-post-preview-img"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "/no-image.png";
-                      }}
-                    />
+              {imageUrls.map((url, index) => (
+                <div key={index} className="create-post-image-preview">
+                  <img
+                    src={url}
+                    alt={`Upload preview ${index + 1}`}
+                    className="create-post-preview-img"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/no-image.png";
+                    }}
+                  />
                   <button
                     type="button"
                     className="create-post-image-remove"
@@ -440,12 +430,12 @@ export default function CreatePost() {
                       const newUrls = [...imageUrls];
                       const newIds = [...imageIds];
                       const newFilenames = [...imageFilenames];
-                      
+
                       // Remove the image from all arrays
                       newUrls.splice(index, 1);
                       newIds.splice(index, 1);
                       newFilenames.splice(index, 1);
-                      
+
                       setImageUrls(newUrls);
                       setImageIds(newIds);
                       setImageFilenames(newFilenames);
@@ -453,8 +443,8 @@ export default function CreatePost() {
                   >
                     ×
                   </button>
-                  </div>
-                ))}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -473,7 +463,6 @@ export default function CreatePost() {
                   try {
                     setLoading(true);
                     await breadAPI.deleteImages(imageFilenames);
-                    console.log("Uploaded images cleaned up successfully");
                   } catch (err) {
                     console.error("Failed to clean up images:", err);
                   } finally {

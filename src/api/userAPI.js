@@ -6,29 +6,23 @@ export const userAPI = {
 
     try {
       if (userData instanceof FormData) {
-        // Log FormData contents for debugging
-        for (let pair of userData.entries()) {
-          console.log("FormData entry:", pair[0], pair[1]);
-        }
-
         response = await apiClient.post("/auth/register", userData);
       } else {
         const data = {
-      username: userData.username,
-      email: userData.email,
-      password: userData.password,
+          username: userData.username,
+          email: userData.email,
+          password: userData.password,
           phone_number: userData.phone_number,
-      address: userData.address,
+          address: userData.address,
         };
-        console.log("Regular data being sent:", data);
         response = await apiClient.post("/auth/register", data);
       }
 
-    if (response?.token) {
-      localStorage.setItem("token", response.token);
-    }
+      if (response?.token) {
+        localStorage.setItem("token", response.token);
+      }
 
-    return response;
+      return response;
     } catch (error) {
       console.error("Registration API error:", error.response?.data || error);
       throw error;
@@ -100,7 +94,7 @@ export const userAPI = {
 
         const userFromAll = allUsers.find((u) => u._id === userId);
         if (!userFromAll) {
-    throw new Error("User not found");
+          throw new Error("User not found");
         }
         return userFromAll;
       }
@@ -114,15 +108,13 @@ export const userAPI = {
 
   updateProfile: async (updateData) => {
     try {
-      console.log("Update Profile - Request Data:", updateData);
-
       // Map frontend field names to match exactly what backend expects
       const requestBody = {};
 
       // Backend expects 'name' instead of 'username'
       if (updateData.username !== undefined) {
         requestBody.name = updateData.username;
-    }
+      }
 
       // Email field name matches
       if (updateData.email !== undefined) {
@@ -135,14 +127,11 @@ export const userAPI = {
       }
 
       // Backend expects 'photo_url' for photos
-      if (updateData.photo !== undefined) {
-        requestBody.photo_url = updateData.photo;
+      if (updateData.photo_url !== undefined) {
+        requestBody.photo_url = updateData.photo_url;
       }
 
-      console.log("Sending request body:", requestBody);
-
       const response = await apiClient.put("/user/profile", requestBody);
-      console.log("Raw server response:", response);
 
       // Extract user data from response
       const serverUserData =
@@ -165,14 +154,25 @@ export const userAPI = {
         location: serverUserData.location,
       };
 
-      console.log("Processed user data to be returned:", mappedUserData);
       return mappedUserData;
     } catch (error) {
       console.error("Profile update error:", {
         error: error,
         response: error.response?.data,
         status: error.response?.status,
-    });
+      });
+      throw error;
+    }
+  },
+
+  updateProfilePhoto: async (photoUrl) => {
+    try {
+      const response = await apiClient.put("/user/profile", {
+        photo_url: photoUrl,
+      });
+      return response?.data?.user || response?.data || response;
+    } catch (error) {
+      console.error("Error updating profile photo:", error);
       throw error;
     }
   },

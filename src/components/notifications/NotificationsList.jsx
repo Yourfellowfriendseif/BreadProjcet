@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from "date-fns";
 import { useApp } from "../../context/AppContext";
 import { notificationAPI } from "../../api/notificationAPI";
 import { socketService } from "../../api/socketService";
@@ -17,56 +17,51 @@ export default function NotificationsList() {
 
     // Setup socket listeners for real-time notifications
     socketService.onNewNotification((notification) => {
-      console.log('New notification received:', notification);
-      setNotifications(prev => [notification, ...prev]);
+      setNotifications((prev) => [notification, ...prev]);
     });
 
     socketService.onNotificationRead((notificationId) => {
-      console.log('Notification marked as read:', notificationId);
-      setNotifications(prev =>
-        prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === notificationId ? { ...n, read: true } : n))
       );
     });
   }, []);
 
-    const loadNotifications = async () => {
-      try {
-        setLoading(true);
-        const response = await notificationAPI.getNotifications();
-      console.log('Fetched notifications response:', response);
-      
-        const data = response?.data?.data || response?.data || response;
-      console.log('Processed notification data:', data);
-      
-      const fetchedNotifications = Array.isArray(data) ? data : data?.notifications || [];
-      console.log('Final notifications array:', fetchedNotifications);
+  const loadNotifications = async () => {
+    try {
+      setLoading(true);
+      const response = await notificationAPI.getNotifications();
 
-        setNotifications(fetchedNotifications);
+      const data = response?.data?.data || response?.data || response;
+
+      const fetchedNotifications = Array.isArray(data)
+        ? data
+        : data?.notifications || [];
+
+      setNotifications(fetchedNotifications);
       setError(null);
     } catch (error) {
-      console.error('Error loading notifications:', error);
-      setError(error.message || 'Failed to load notifications');
-      } finally {
-        setLoading(false);
-      }
-    };
+      console.error("Error loading notifications:", error);
+      setError(error.message || "Failed to load notifications");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      console.log('Marking notification as read:', notificationId);
       await notificationAPI.markAsRead(notificationId);
       socketService.markNotificationRead(notificationId);
-      setNotifications(prev =>
-        prev.map(n => {
+      setNotifications((prev) =>
+        prev.map((n) => {
           if (n._id === notificationId) {
-            console.log('Updated notification:', { ...n, read: true });
             return { ...n, read: true };
           }
           return n;
         })
       );
     } catch (error) {
-      console.error('Error marking notification as read:', error);
+      console.error("Error marking notification as read:", error);
     }
   };
 
@@ -80,53 +75,51 @@ export default function NotificationsList() {
   };
 
   const getNotificationContent = (notification) => {
-    console.log('Processing notification:', notification);
-    console.log('Notification sender:', notification.sender);
-    console.log('Notification user:', notification.user);
-    
-    const username = notification.sender?.username || notification.user?.username || 'Anonymous';
-    console.log('Resolved username:', username);
+    const username =
+      notification.sender?.username ||
+      notification.user?.username ||
+      "Anonymous";
 
     switch (notification.type) {
-      case 'post_reserved':
+      case "post_reserved":
         return {
-          icon: '🔒',
+          icon: "🔒",
           link: `/bread/${notification.post?._id}`,
           action: `${username} reserved your post`,
-          title: 'Post Reserved'
+          title: "Post Reserved",
         };
-      case 'reservation_cancelled':
+      case "reservation_cancelled":
         return {
-          icon: '🔓',
+          icon: "🔓",
           link: `/bread/${notification.post?._id}`,
           action: `${username} cancelled their reservation`,
-          title: 'Reservation Cancelled'
+          title: "Reservation Cancelled",
         };
-      case 'new_message':
+      case "new_message":
         return {
-          icon: '💬',
-          link: '/messages',
+          icon: "💬",
+          link: "/messages",
           action: `${username} sent you a message`,
-          title: 'New Message'
+          title: "New Message",
         };
-      case 'post_completed':
+      case "post_completed":
         return {
-          icon: '✅',
+          icon: "✅",
           link: `/bread/${notification.post?._id}`,
           action: `${username} marked the exchange as completed`,
-          title: 'Exchange Completed'
+          title: "Exchange Completed",
         };
       default:
         return {
-          icon: '📢',
-          link: '#',
+          icon: "📢",
+          link: "#",
           action: `${username} interacted with your post`,
-          title: 'New Activity'
+          title: "New Activity",
         };
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   if (loading) {
     return (
@@ -134,8 +127,8 @@ export default function NotificationsList() {
         <div className="notifications-list-header">
           <h1 className="notifications-list-title">Notifications</h1>
         </div>
-      <div className="notifications-list-loading">
-        <LoadingSpinner />
+        <div className="notifications-list-loading">
+          <LoadingSpinner />
         </div>
       </div>
     );
@@ -171,44 +164,63 @@ export default function NotificationsList() {
       {notifications.length === 0 ? (
         <div className="notifications-list-empty">
           <div className="notifications-list-empty-icon">
-            <span className="material-symbols-outlined" style={{ fontSize: 'inherit' }}>
+            <span
+              className="material-symbols-outlined"
+              style={{ fontSize: "inherit" }}
+            >
               notifications
             </span>
           </div>
-          <h2 className="notifications-list-empty-text">No notifications yet</h2>
+          <h2 className="notifications-list-empty-text">
+            No notifications yet
+          </h2>
           <p className="notifications-list-empty-subtext">
-            We'll notify you when something important happens in your bread-sharing journey!
+            We'll notify you when something important happens in your
+            bread-sharing journey!
           </p>
         </div>
       ) : (
         <div className="notifications-list-items">
           {notifications.map((notification) => {
-            const { icon, link, action, title } = getNotificationContent(notification);
-            const timeAgo = formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true });
-            const username = notification.sender?.username || notification.user?.username || 'Anonymous';
+            const { icon, link, action, title } =
+              getNotificationContent(notification);
+            const timeAgo = formatDistanceToNow(
+              new Date(notification.createdAt),
+              { addSuffix: true }
+            );
+            const username =
+              notification.sender?.username ||
+              notification.user?.username ||
+              "Anonymous";
 
             return (
               <div
                 key={notification._id}
-                className={`notification-item ${!notification.read ? 'notification-item-unread' : ''} type-${notification.type}`}
-                onClick={() => !notification.read && handleMarkAsRead(notification._id)}
+                className={`notification-item ${
+                  !notification.read ? "notification-item-unread" : ""
+                } type-${notification.type}`}
+                onClick={() =>
+                  !notification.read && handleMarkAsRead(notification._id)
+                }
               >
                 <div className="notification-item-content">
                   <div className="notification-item-icon">{icon}</div>
                   <div className="notification-item-details">
                     <div className="notification-item-title">{title}</div>
-                      <Link
-                        to={link}
-                        className="notification-item-link"
+                    <Link
+                      to={link}
+                      className="notification-item-link"
                       onClick={(e) => e.stopPropagation()}
-                      >
-                        <span className="notification-item-username">
+                    >
+                      <span className="notification-item-username">
                         {username}
-                      </span>
-                      {' '}{action.replace(username, '')}
+                      </span>{" "}
+                      {action.replace(username, "")}
                     </Link>
                     {notification.message && (
-                      <p className="notification-item-message">{notification.message}</p>
+                      <p className="notification-item-message">
+                        {notification.message}
+                      </p>
                     )}
                     <div className="notification-item-time">{timeAgo}</div>
                   </div>
