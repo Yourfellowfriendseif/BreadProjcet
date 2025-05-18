@@ -10,16 +10,16 @@ const WILAYAS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'All Status' },
-  { value: 'fresh', label: 'Fresh' },
-  { value: 'day_old', label: 'Day Old' },
-  { value: 'stale', label: 'Stale' }
+  { value: '', label: 'All Status', icon: 'filter_list' },
+  { value: 'fresh', label: 'Fresh', icon: 'eco' },
+  { value: 'day_old', label: 'Day Old', icon: 'schedule' },
+  { value: 'stale', label: 'Stale', icon: 'warning' }
 ];
 
 const TYPE_OPTIONS = [
-  { value: '', label: 'All Types' },
-  { value: 'sell', label: 'For Sale' },
-  { value: 'request', label: 'Request' }
+  { value: '', label: 'All Types', icon: 'category' },
+  { value: 'sell', label: 'For Sale', icon: 'sell' },
+  { value: 'request', label: 'Request', icon: 'shopping_cart' }
 ];
 
 export default function FilterSection({ filters, setFilters, onApply, onReset, animated }) {
@@ -39,7 +39,6 @@ export default function FilterSection({ filters, setFilters, onApply, onReset, a
   };
 
   const handleApply = () => {
-    // Clean up filters by removing empty values
     const cleanFilters = Object.fromEntries(
       Object.entries(filters).filter(([_, value]) => value !== '')
     );
@@ -49,9 +48,12 @@ export default function FilterSection({ filters, setFilters, onApply, onReset, a
   return (
     <div className="filter-card">
       <div className="filter-card-header">
-        <span>Filter Products</span>
+        <div className="filter-header-title">
+          <span className="material-symbols-outlined">tune</span>
+          Filter Products
+        </div>
         <button
-          className={`filter-toggle-btn${open ? ' open' : ''}`}
+          className={`filter-toggle-btn ${open ? 'open' : ''}`}
           onClick={() => setOpen((o) => !o)}
           aria-label={open ? 'Collapse filters' : 'Expand filters'}
         >
@@ -70,7 +72,10 @@ export default function FilterSection({ filters, setFilters, onApply, onReset, a
           <>
             <div className="filter-controls-grid">
               <div>
-                <label>Status</label>
+                <label>
+                  <span className="material-symbols-outlined">inventory_2</span>
+                  Status
+                </label>
                 <select 
                   name="status" 
                   value={filters.status} 
@@ -84,7 +89,10 @@ export default function FilterSection({ filters, setFilters, onApply, onReset, a
                 </select>
               </div>
               <div>
-                <label>Post Type</label>
+                <label>
+                  <span className="material-symbols-outlined">sell</span>
+                  Post Type
+                </label>
                 <select 
                   name="post_type" 
                   value={filters.post_type} 
@@ -98,7 +106,10 @@ export default function FilterSection({ filters, setFilters, onApply, onReset, a
                 </select>
               </div>
               <div>
-                <label>Province</label>
+                <label>
+                  <span className="material-symbols-outlined">location_on</span>
+                  Province
+                </label>
                 <select 
                   name="province" 
                   value={filters.province} 
@@ -116,12 +127,14 @@ export default function FilterSection({ filters, setFilters, onApply, onReset, a
                 className="filter-btn filter-btn-outline" 
                 onClick={handleReset}
               >
+                <span className="material-symbols-outlined">restart_alt</span>
                 Reset
               </button>
               <button 
                 className="filter-btn filter-btn-primary" 
                 onClick={handleApply}
               >
+                <span className="material-symbols-outlined">check</span>
                 Apply Filters
               </button>
             </div>

@@ -39,15 +39,15 @@ export default function NotificationsDropdown() {
   };
 
   return (
-    <button
+      <button
       onClick={handleClick}
       className="notifications-button"
       aria-label="Notifications"
-    >
+      >
       <span className="material-symbols-outlined">notifications</span>
-      {unreadCount > 0 && (
+        {unreadCount > 0 && (
         <span className="notifications-badge">{unreadCount}</span>
-      )}
-    </button>
+        )}
+      </button>
   );
 }

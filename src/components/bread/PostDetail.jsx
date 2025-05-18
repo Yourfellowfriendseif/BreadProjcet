@@ -48,7 +48,7 @@ export default function PostDetail() {
         // Reload to get the latest state
         loadPost();
       } else {
-        setError(err.message || 'Failed to reserve bread');
+      setError(err.message || 'Failed to reserve bread');
       }
     } finally {
       setIsReserving(false);

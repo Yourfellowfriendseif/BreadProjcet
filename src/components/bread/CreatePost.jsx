@@ -390,16 +390,16 @@ export default function CreatePost() {
             <p className="create-post-image-subtext">
               Supports: JPG, PNG • Max size: 5MB per image
             </p>
-            <input
+          <input
               id="image-upload"
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleImageChange}
-              className="create-post-input"
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleImageChange}
+            className="create-post-input"
               style={{ display: 'none' }}
-              disabled={imageUploadLoading}
-            />
+            disabled={imageUploadLoading}
+          />
           </div>
 
           {imageUploadLoading && (
@@ -408,7 +408,7 @@ export default function CreatePost() {
                 <div 
                   className="create-post-progress-fill" 
                   style={{ width: `${imageUploadProgress}%` }}
-                />
+              />
               </div>
               <p className="create-post-progress-text">
                 Uploading... {imageUploadProgress}%
@@ -422,17 +422,17 @@ export default function CreatePost() {
 
           {imageUrls.length > 0 && (
             <div className="create-post-image-previews">
-              {imageUrls.map((url, index) => (
-                <div key={index} className="create-post-image-preview">
-                  <img
-                    src={url}
-                    alt={`Upload preview ${index + 1}`}
-                    className="create-post-preview-img"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "/no-image.png";
-                    }}
-                  />
+                {imageUrls.map((url, index) => (
+                  <div key={index} className="create-post-image-preview">
+                    <img
+                      src={url}
+                      alt={`Upload preview ${index + 1}`}
+                      className="create-post-preview-img"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/no-image.png";
+                      }}
+                    />
                   <button
                     type="button"
                     className="create-post-image-remove"
@@ -453,8 +453,8 @@ export default function CreatePost() {
                   >
                     ×
                   </button>
-                </div>
-              ))}
+                  </div>
+                ))}
             </div>
           )}
         </div>

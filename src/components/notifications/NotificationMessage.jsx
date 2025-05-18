@@ -49,7 +49,7 @@ export default function NotificationMessage({ notification, onMarkAsRead }) {
   const timeAgo = formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true });
 
   return (
-    <div 
+    <div
       className={`notification-message ${!notification.read ? 'unread' : ''}`}
       onClick={() => onMarkAsRead && onMarkAsRead(notification._id)}
     >
@@ -58,10 +58,10 @@ export default function NotificationMessage({ notification, onMarkAsRead }) {
         <div className="notification-title">{title}</div>
         <Link to={link} className="notification-action" onClick={(e) => e.stopPropagation()}>
           {action}
-        </Link>
-        {notification.message && (
-          <p className="notification-message-text">{notification.message}</p>
-        )}
+            </Link>
+          {notification.message && (
+            <p className="notification-message-text">{notification.message}</p>
+          )}
         <div className="notification-time">{timeAgo}</div>
       </div>
     </div>

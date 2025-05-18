@@ -29,27 +29,27 @@ export default function NotificationsList() {
     });
   }, []);
 
-  const loadNotifications = async () => {
-    try {
-      setLoading(true);
-      const response = await notificationAPI.getNotifications();
+    const loadNotifications = async () => {
+      try {
+        setLoading(true);
+        const response = await notificationAPI.getNotifications();
       console.log('Fetched notifications response:', response);
       
-      const data = response?.data?.data || response?.data || response;
+        const data = response?.data?.data || response?.data || response;
       console.log('Processed notification data:', data);
       
       const fetchedNotifications = Array.isArray(data) ? data : data?.notifications || [];
       console.log('Final notifications array:', fetchedNotifications);
-      
-      setNotifications(fetchedNotifications);
+
+        setNotifications(fetchedNotifications);
       setError(null);
     } catch (error) {
       console.error('Error loading notifications:', error);
       setError(error.message || 'Failed to load notifications');
-    } finally {
-      setLoading(false);
-    }
-  };
+      } finally {
+        setLoading(false);
+      }
+    };
 
   const handleMarkAsRead = async (notificationId) => {
     try {
@@ -134,8 +134,8 @@ export default function NotificationsList() {
         <div className="notifications-list-header">
           <h1 className="notifications-list-title">Notifications</h1>
         </div>
-        <div className="notifications-list-loading">
-          <LoadingSpinner />
+      <div className="notifications-list-loading">
+        <LoadingSpinner />
         </div>
       </div>
     );
@@ -197,12 +197,12 @@ export default function NotificationsList() {
                   <div className="notification-item-icon">{icon}</div>
                   <div className="notification-item-details">
                     <div className="notification-item-title">{title}</div>
-                    <Link
-                      to={link}
-                      className="notification-item-link"
+                      <Link
+                        to={link}
+                        className="notification-item-link"
                       onClick={(e) => e.stopPropagation()}
-                    >
-                      <span className="notification-item-username">
+                      >
+                        <span className="notification-item-username">
                         {username}
                       </span>
                       {' '}{action.replace(username, '')}

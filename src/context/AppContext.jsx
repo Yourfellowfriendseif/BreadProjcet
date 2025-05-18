@@ -233,6 +233,17 @@ export function AppProvider({ children }) {
 
   const value = {
     user,
+    setUser,
+    updateUser: (updates) => {
+      if (typeof updates === 'function') {
+        setUser(updates);
+      } else {
+        setUser(prev => ({
+          ...prev,
+          ...updates
+        }));
+      }
+    },
     loading,
     notifications,
     unreadMessages,

@@ -219,28 +219,28 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  background-color: #f3f4f6;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 0.5rem;
-  color: #6b7280;
-  font-size: 0.875rem;
+  padding: 0.7rem 1.2rem;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  color: #64748b;
+  font-size: 0.9rem;
   font-weight: 500;
   width: fit-content;
 }
 
 .bread-card-reserved .material-symbols-outlined {
-  font-size: 1.25rem;
-  color: #9ca3af;
+  font-size: 1.2rem;
+  color: #64748b;
 }
 
 .bread-card-btn {
-  padding: 0.625rem 1.25rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+  padding: 0.7rem 1.2rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   border: 1.5px solid transparent;
   flex: 1;
   min-width: fit-content;
@@ -249,84 +249,90 @@
   justify-content: center;
   gap: 0.5rem;
   position: relative;
-  overflow: hidden;
+  background: white;
+}
+
+.bread-card-btn .material-symbols-outlined {
+  font-size: 1.2rem;
+  transition: transform 0.2s ease;
+}
+
+.bread-card-btn:hover .material-symbols-outlined {
+  transform: translateX(2px);
 }
 
 .bread-card-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  background-color: #e5e7eb;
+  background: #f3f4f6;
   border-color: #e5e7eb;
   color: #9ca3af;
+}
+
+.bread-card-btn:disabled .material-symbols-outlined {
   transform: none;
 }
 
-.bread-card-btn:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
 .bread-card-btn-outline {
-  background-color: transparent;
-  border-color: #e5e7eb;
-  color: #4b5563;
+  background: white;
+  border-color: #e2e8f0;
+  color: #64748b;
 }
 
 .bread-card-btn-outline:hover:not(:disabled) {
-  border-color: #d1d5db;
-  color: #111827;
-  background-color: #f9fafb;
+  border-color: #ff6a2b;
+  color: #ff6a2b;
+  background: #fff5f0;
+  transform: translateY(-1px);
 }
 
 .bread-card-btn-primary {
-  background-color: #2563eb;
+  background: #ff6a2b;
   color: white;
-  box-shadow: 0 1px 2px 0 rgba(37, 99, 235, 0.05);
+  border: none;
 }
 
 .bread-card-btn-primary:hover:not(:disabled) {
-  background-color: #1d4ed8;
+  background: #ff8f5e;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.1),
-    0 2px 4px -1px rgba(37, 99, 235, 0.06);
+  box-shadow: 0 4px 12px rgba(255, 106, 43, 0.2);
 }
 
 .bread-card-btn-danger {
-  background-color: #ef4444;
-  color: white;
-  box-shadow: 0 1px 2px 0 rgba(239, 68, 68, 0.05);
+  background: white;
+  border-color: #fecaca;
+  color: #ef4444;
 }
 
 .bread-card-btn-danger:hover:not(:disabled) {
-  background-color: #dc2626;
+  background: #fef2f2;
+  border-color: #ef4444;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1),
-    0 2px 4px -1px rgba(239, 68, 68, 0.06);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
 }
 
 .bread-card-btn-reserve {
-  background-color: #10b981;
+  background: #22c55e;
   color: white;
-  box-shadow: 0 1px 2px 0 rgba(16, 185, 129, 0.05);
+  border: none;
 }
 
 .bread-card-btn-reserve:hover:not(:disabled) {
-  background-color: #059669;
+  background: #16a34a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.1),
-    0 2px 4px -1px rgba(16, 185, 129, 0.06);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
 }
 
 .bread-card-btn-cancel {
-  background-color: #ef4444;
+  background: #ef4444;
   color: white;
-  box-shadow: 0 1px 2px 0 rgba(239, 68, 68, 0.05);
+  border: none;
 }
 
 .bread-card-btn-cancel:hover:not(:disabled) {
-  background-color: #dc2626;
+  background: #dc2626;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1),
-    0 2px 4px -1px rgba(239, 68, 68, 0.06);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 @media (max-width: 600px) {

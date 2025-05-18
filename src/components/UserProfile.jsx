@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { userAPI } from '../api/userAPI';
 import { breadAPI } from '../api/breadAPI';
 import { uploadAPI } from '../api/uploadAPI';
-import BreadListing from './bread/BreadListing';
+import BreadItem from './bread/BreadItem';
 import LoadingSpinner from './LoadingSpinner';
 import './UserProfile.css';
 
@@ -136,12 +136,12 @@ export default function UserProfile() {
       
       // Update global user state if it's own profile
       if (isOwnProfile) {
-        updateUser(prev => ({
-          ...prev,
+        updateUser({
+          ...currentUser,
           ...processedUser,
           photo_url: uploadedPhotoUrl,
           avatar: uploadAPI.getAvatarUrl({ ...processedUser, photo_url: uploadedPhotoUrl })
-        }));
+        });
       }
       
       setUploadProgress(100);
@@ -163,92 +163,37 @@ export default function UserProfile() {
     setUpdateSuccess('');
 
     try {
-      // Only include fields that have changed and are not empty
-      const updates = {};
-      if (editForm.username && editForm.username !== profileUser.username) {
-        updates.username = editForm.username.trim();
-      }
-      if (editForm.email && editForm.email !== profileUser.email) {
-        updates.email = editForm.email.trim();
-      }
-      if (editForm.phone !== profileUser.phone) {
-        updates.phone = editForm.phone ? editForm.phone.trim() : '';
-      }
+      const updates = {
+        username: editForm.username.trim(),
+        email: editForm.email.trim(),
+        phone: editForm.phone ? editForm.phone.trim() : ''
+      };
 
-      // Only proceed if there are actual changes
-      if (Object.keys(updates).length === 0) {
-        setUpdateError('No changes to update');
-        return;
-      }
-
-      console.log('Current profile data:', profileUser);
-      console.log('Submitting updates:', updates);
-      
       const updatedUser = await userAPI.updateProfile(updates);
-      console.log('Update response received:', updatedUser);
-
-      if (!updatedUser.username && updatedUser.name) {
-        updatedUser.username = updatedUser.name;
-      }
-
-      // Update local state with the new user data
+      
+      // Update local state
       setProfileUser(prev => ({
         ...prev,
         ...updatedUser,
-        // Ensure we use the correct field names
         username: updatedUser.username || updatedUser.name,
-        phone: updatedUser.phone || updatedUser.phone_number,
-        avatar: uploadAPI.getAvatarUrl(updatedUser)
+        email: updatedUser.email,
+        phone: updatedUser.phone
       }));
 
-      // Update global user state if it's the current user's profile
+      // Update global user state if it's own profile
       if (isOwnProfile) {
-        updateUser(prev => ({
-          ...prev,
-          ...updatedUser,
-          // Ensure we use the correct field names
-          username: updatedUser.username || updatedUser.name,
-          phone: updatedUser.phone || updatedUser.phone_number,
-          avatar: uploadAPI.getAvatarUrl(updatedUser)
-        }));
+        updateUser({
+          ...currentUser,
+          ...updatedUser
+        });
       }
 
       setUpdateSuccess('Profile updated successfully!');
-      
-      // Reset form with new values
-      setEditForm({
-        username: updatedUser.username || updatedUser.name || '',
-        email: updatedUser.email || '',
-        phone: updatedUser.phone || updatedUser.phone_number || ''
-      });
+      setIsEditing(false);
 
-      // Reload profile after a short delay to verify changes
-      setTimeout(async () => {
-        try {
-          await loadProfile();
-        } catch (err) {
-          console.error('Failed to reload profile:', err);
-        }
-      }, 1000);
-
-      setTimeout(() => setUpdateSuccess(''), 3000);
-      } catch (err) {
-      console.error('Profile update error:', {
-        error: err,
-        message: err.message,
-        response: err.response?.data
-      });
-      
-      let errorMessage;
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.message.includes('No user data received')) {
-        errorMessage = 'Server error: Failed to get updated profile data';
-      } else {
-        errorMessage = 'Failed to update profile. Please try again.';
-      }
-      
-      setUpdateError(errorMessage);
+    } catch (err) {
+      console.error('Profile update error:', err);
+      setUpdateError(err.response?.data?.message || 'Failed to update profile. Please try again.');
     }
   };
 
@@ -276,6 +221,17 @@ export default function UserProfile() {
       setTimeout(() => setUpdateSuccess(''), 3000);
     } catch (err) {
       setUpdateError(err.response?.data?.message || 'Failed to update password');
+    }
+  };
+
+  const handleDelete = async (post) => {
+    try {
+      await breadAPI.deletePost(post._id);
+      // Refresh the posts list after deletion
+      loadUserPosts(activeTab);
+    } catch (err) {
+      console.error('Failed to delete post:', err);
+      setError('Failed to delete post. Please try again.');
     }
   };
 
@@ -348,36 +304,55 @@ export default function UserProfile() {
               )}
             </div>
             <div className="user-profile-details">
-              <h1>{profileUser.username}</h1>
-              <p className="user-profile-email">{profileUser.email}</p>
-              {profileUser.phone && (
-                <p className="user-profile-phone">{profileUser.phone}</p>
-              )}
+              <h1>
+                <span className="material-symbols-outlined">account_circle</span>
+                {profileUser.username}
+              </h1>
+              <div className="user-profile-email">
+                <span className="material-symbols-outlined">mail</span>
+                {profileUser.email}
+              </div>
               <p className="user-profile-date">
+                <span className="material-symbols-outlined">calendar_today</span>
                 Member since {new Date(profileUser.createdAt).toLocaleDateString()}
               </p>
             </div>
           </div>
           {isOwnProfile && (
-            <button
-              className="user-profile-edit-button"
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              {isEditing ? 'Cancel Editing' : 'Edit Profile'}
-            </button>
+            <div className="user-profile-edit-wrapper">
+              <button
+                className="user-profile-edit-button"
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                <span className="material-symbols-outlined">
+                  {isEditing ? 'close' : 'edit'}
+                </span>
+                {isEditing ? 'Cancel Editing' : 'Edit Profile'}
+              </button>
+            </div>
           )}
         </div>
 
         {isOwnProfile && isEditing && (
           <div className="user-profile-edit-section">
-            {(updateSuccess || updateError) && (
-              <div className={`user-profile-message ${updateError ? 'error' : 'success'}`}>
-                {updateError || updateSuccess}
+            {updateSuccess && (
+              <div className="user-profile-message success">
+                <span className="material-symbols-outlined">check_circle</span>
+                {updateSuccess}
+              </div>
+            )}
+            {updateError && (
+              <div className="user-profile-message error">
+                <span className="material-symbols-outlined">error</span>
+                {updateError}
               </div>
             )}
             
             <form onSubmit={handleEditSubmit} className="user-profile-form">
-              <h2>Edit Profile Information</h2>
+              <h2>
+                <span className="material-symbols-outlined">person</span>
+                Edit Profile Information
+              </h2>
               <div className="form-group">
                 <label htmlFor="username">Username</label>
                 <input
@@ -498,10 +473,28 @@ export default function UserProfile() {
               <LoadingSpinner />
             </div>
           ) : posts.length === 0 ? (
-            <p className="user-profile-no-posts">No posts found</p>
+            <div className="user-profile-no-posts">
+              <span className="material-symbols-outlined">inventory_2</span>
+              <p>No posts found</p>
+              {isOwnProfile && (
+                <Link to="/posts/create" className="filter-btn filter-btn-primary">
+                  <span className="material-symbols-outlined">add_circle</span>
+                  Create Your First Post
+                </Link>
+              )}
+            </div>
           ) : (
             <div className="user-profile-posts-grid">
-              <BreadListing posts={posts} onUpdate={() => loadUserPosts(activeTab)} />
+              {posts.map(post => (
+                <div key={post._id} className="user-profile-post-card">
+                  <BreadItem
+                    post={post}
+                    onDelete={handleDelete}
+                    onEdit={() => {}}
+                    onUpdate={() => loadUserPosts(activeTab)}
+                  />
+                </div>
+              ))}
             </div>
           )}
         </div>

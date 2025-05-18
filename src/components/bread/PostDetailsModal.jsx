@@ -52,10 +52,10 @@ export default function PostDetailsModal({ post, onClose }) {
               <SwiperSlide key={img._id || idx}>
                 <img
                   src={img.url || (img.filename ? `/uploads/${img.filename}` : fallbackImg)}
-                  alt={post.title || 'Bread post'}
-                  className="post-modal-image"
-                  onError={e => { e.target.onerror = null; e.target.src = fallbackImg; }}
-                />
+            alt={post.title || 'Bread post'}
+            className="post-modal-image"
+            onError={e => { e.target.onerror = null; e.target.src = fallbackImg; }}
+          />
               </SwiperSlide>
             ))}
           </Swiper>
@@ -69,7 +69,7 @@ export default function PostDetailsModal({ post, onClose }) {
               {post.title || (post.post_type === 'sell' ? 'Bread for Sale' : 'Bread Request')}
             </h2>
             
-            <div className="post-modal-badges">
+          <div className="post-modal-badges">
               <span className="post-modal-badge post-modal-badge-type">
                 <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>
                   {post.post_type === 'sell' ? 'sell' : 'shopping_cart'}
@@ -145,7 +145,7 @@ export default function PostDetailsModal({ post, onClose }) {
               className="post-modal-avatar"
             />
             <div>
-              <span className="post-modal-username">{post.user?.username || 'Anonymous'}</span>
+            <span className="post-modal-username">{post.user?.username || 'Anonymous'}</span>
               {post.user?.email && (
                 <div style={{ fontSize: '0.95rem', color: '#6b7280', marginTop: '0.2rem' }}>
                   {post.user.email}

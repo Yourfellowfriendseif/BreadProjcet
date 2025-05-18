@@ -5,7 +5,6 @@ import './NavBar.css';
 
 export default function NavBar() {
   const { user, logout, notifications, unreadMessages, setGlobalSearchTerm, globalSearchTerm } = useApp();
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showHamburger, setShowHamburger] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
@@ -29,11 +28,6 @@ export default function NavBar() {
     setGlobalSearchTerm(e.target.value);
   };
 
-  // Notification dropdown toggle
-  const handleNotificationClick = () => {
-    setShowNotifications((prev) => !prev);
-  };
-
   // User menu dropdown toggle
   const handleUserClick = () => {
     setShowUserMenu((prev) => !prev);
@@ -42,7 +36,6 @@ export default function NavBar() {
   // Close dropdowns on outside click
   const handleBlur = (e) => {
     if (!e.currentTarget.contains(e.relatedTarget)) {
-      setShowNotifications(false);
       setShowUserMenu(false);
     }
   };
@@ -118,29 +111,16 @@ export default function NavBar() {
               </div>
               {user && (
                 <>
-                  <div className="navbar-hamburger-dropdown-wrapper">
-                    <button className="navbar-icon-button" onClick={() => handleHamburgerDropdown('notifications')} tabIndex={0}>
-                      <span className="material-symbols-outlined">notifications</span>
-                      {unreadNotifications > 0 && (
-                        <span className="navbar-badge">{unreadNotifications}</span>
-                      )}
-                    </button>
-                    {hamburgerDropdown === 'notifications' && (
-                      <div className="navbar-dropdown navbar-dropdown-notifications">
-                        <div className="navbar-dropdown-header">Notifications</div>
-                        {notifications.length === 0 ? (
-                          <div className="navbar-dropdown-empty">No notifications</div>
-                        ) : (
-                          notifications.slice(0, 5).map((n) => (
-                            <div key={n._id} className={`navbar-dropdown-item${n.read ? '' : ' navbar-dropdown-item-unread'}`}>{n.message}</div>
-                          ))
-                        )}
-                        <Link to="/notifications" className="navbar-dropdown-footer" onClick={()=>{setHamburgerDropdown(null); setHamburgerOpen(false);}}>
-                          View all
-                        </Link>
-                      </div>
+                  <Link 
+                    to="/notifications" 
+                    className="navbar-icon-button"
+                    onClick={() => setHamburgerOpen(false)}
+                  >
+                    <span className="material-symbols-outlined">notifications</span>
+                    {unreadNotifications > 0 && (
+                      <span className="navbar-badge">{unreadNotifications}</span>
                     )}
-                  </div>
+                  </Link>
                   <div className="navbar-hamburger-dropdown-wrapper">
                     <button className="navbar-icon-button" onClick={() => handleHamburgerDropdown('profile')} tabIndex={0}>
                       <span className="material-symbols-outlined">person</span>
@@ -166,103 +146,90 @@ export default function NavBar() {
         </>
       ) : (
         <>
-      <div className="navbar-actions">
-        <button
-          className={`navbar-button ${isActive('/') ? 'navbar-button-active' : ''}`}
-          onClick={() => navigate('/')}
-        >
-          <span className="material-symbols-outlined navbar-button-icon">home</span>
-          Home
-        </button>
-        <button
-          className={`navbar-button ${isActive('/posts/create') ? 'navbar-button-active' : ''}`}
-          onClick={() => navigate('/posts/create')}
-        >
-          <span className="material-symbols-outlined navbar-button-icon">add_circle</span>
-          Post Item
-        </button>
-        <button
-          className={`navbar-button ${isActive('/my-posts') ? 'navbar-button-active' : ''}`}
-          onClick={() => navigate('/my-posts')}
-        >
-          <span className="material-symbols-outlined navbar-button-icon">list_alt</span>
-          My Posts
-        </button>
-        <button
-          className={`navbar-button ${isActive('/reserved-posts') ? 'navbar-button-active' : ''}`}
-          onClick={() => navigate('/reserved-posts')}
-        >
-          <span className="material-symbols-outlined navbar-button-icon">bookmark</span>
-          Reserved Posts
-        </button>
-      </div>
-      <div className="navbar-actions-right">
-        <div className="navbar-search">
-          <span className="material-symbols-outlined navbar-search-icon">search</span>
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search marketplace..."
-            value={globalSearchTerm || ''}
-            onChange={handleSearchChange}
-          />
-        </div>
-        {user && (
-          <>
-            <div className="navbar-dropdown-wrapper">
-              <button className="navbar-icon-button navbar-icon-notification" onClick={handleNotificationClick} tabIndex={0}>
-                <span className="material-symbols-outlined">notifications</span>
-                {unreadNotifications > 0 && (
-                  <span className="navbar-badge">{unreadNotifications}</span>
-                )}
-              </button>
-              {showNotifications && (
-                <div className="navbar-dropdown navbar-dropdown-notifications">
-                  <div className="navbar-dropdown-header">Notifications</div>
-                  {notifications.length === 0 ? (
-                    <div className="navbar-dropdown-empty">No notifications</div>
-                  ) : (
-                    notifications.slice(0, 5).map((n) => (
-                      <div key={n._id} className={`navbar-dropdown-item${n.read ? '' : ' navbar-dropdown-item-unread'}`}>{n.message}</div>
-                    ))
+          <div className="navbar-actions">
+            <button
+              className={`navbar-button ${isActive('/') ? 'navbar-button-active' : ''}`}
+              onClick={() => navigate('/')}
+            >
+              <span className="material-symbols-outlined navbar-button-icon">home</span>
+              Home
+            </button>
+            <button
+              className={`navbar-button ${isActive('/posts/create') ? 'navbar-button-active' : ''}`}
+              onClick={() => navigate('/posts/create')}
+            >
+              <span className="material-symbols-outlined navbar-button-icon">add_circle</span>
+              Post Item
+            </button>
+            <button
+              className={`navbar-button ${isActive('/my-posts') ? 'navbar-button-active' : ''}`}
+              onClick={() => navigate('/my-posts')}
+            >
+              <span className="material-symbols-outlined navbar-button-icon">list_alt</span>
+              My Posts
+            </button>
+            <button
+              className={`navbar-button ${isActive('/reserved-posts') ? 'navbar-button-active' : ''}`}
+              onClick={() => navigate('/reserved-posts')}
+            >
+              <span className="material-symbols-outlined navbar-button-icon">bookmark</span>
+              Reserved Posts
+            </button>
+          </div>
+          <div className="navbar-actions-right">
+            <div className="navbar-search">
+              <span className="material-symbols-outlined navbar-search-icon">search</span>
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search marketplace..."
+                value={globalSearchTerm || ''}
+                onChange={handleSearchChange}
+              />
+            </div>
+            {user && (
+              <>
+                <Link 
+                  to="/notifications" 
+                  className="navbar-icon-button navbar-icon-notification"
+                  title="Notifications"
+                >
+                  <span className="material-symbols-outlined">notifications</span>
+                  {unreadNotifications > 0 && (
+                    <span className="navbar-badge">{unreadNotifications}</span>
                   )}
-                  <Link to="/notifications" className="navbar-dropdown-footer" onClick={()=>setShowNotifications(false)}>
-                    View all
-                  </Link>
+                </Link>
+                <Link 
+                  to="/messages" 
+                  className="navbar-icon-button navbar-icon-messages"
+                  title="Messages"
+                >
+                  <span className="material-symbols-outlined">chat</span>
+                  {unreadMessages > 0 && (
+                    <span className="navbar-badge">{unreadMessages}</span>
+                  )}
+                </Link>
+              </>
+            )}
+            <div className="navbar-dropdown-wrapper">
+              <button className="navbar-icon-button navbar-icon-profile" onClick={handleUserClick} tabIndex={0}>
+                <span className="material-symbols-outlined">person</span>
+              </button>
+              {showUserMenu && (
+                <div className="navbar-dropdown navbar-dropdown-user">
+                  <div className="navbar-dropdown-header">{user ? user.username : 'Guest'}</div>
+                  {user ? (
+                    <>
+                      <Link to="/profile" className="navbar-dropdown-item" onClick={()=>setShowUserMenu(false)}>Profile</Link>
+                      <button className="navbar-dropdown-item" onClick={handleLogout}>Logout</button>
+                    </>
+                  ) : (
+                    <Link to="/login" className="navbar-dropdown-item" onClick={()=>setShowUserMenu(false)}>Login</Link>
+                  )}
                 </div>
               )}
             </div>
-            <Link 
-              to="/messages" 
-              className="navbar-icon-button navbar-icon-messages"
-              title="Messages"
-            >
-              <span className="material-symbols-outlined">chat</span>
-              {unreadMessages > 0 && (
-                <span className="navbar-badge">{unreadMessages}</span>
-              )}
-            </Link>
-          </>
-        )}
-        <div className="navbar-dropdown-wrapper">
-          <button className="navbar-icon-button navbar-icon-profile" onClick={handleUserClick} tabIndex={0}>
-            <span className="material-symbols-outlined">person</span>
-          </button>
-          {showUserMenu && (
-            <div className="navbar-dropdown navbar-dropdown-user">
-              <div className="navbar-dropdown-header">{user ? user.username : 'Guest'}</div>
-              {user ? (
-                <>
-                  <Link to="/profile" className="navbar-dropdown-item" onClick={()=>setShowUserMenu(false)}>Profile</Link>
-                  <button className="navbar-dropdown-item" onClick={handleLogout}>Logout</button>
-                </>
-              ) : (
-                <Link to="/login" className="navbar-dropdown-item" onClick={()=>setShowUserMenu(false)}>Login</Link>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+          </div>
         </>
       )}
     </nav>

@@ -70,7 +70,7 @@ export default function Home() {
       const postsData = response?.data?.posts || response?.posts || [];
       
       if (Array.isArray(postsData)) {
-        setPosts(postsData);
+      setPosts(postsData);
       } else {
         console.error('Invalid posts data:', postsData);
         setError('Failed to load posts: Invalid data format');

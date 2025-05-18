@@ -3,6 +3,8 @@ import { chatAPI } from "../../api/chatAPI";
 import { socketService } from "../../api/socketService";
 import { useApp } from "../../context/AppContext";
 import LoadingSpinner from "../LoadingSpinner";
+import DefaultAvatar from "../common/DefaultAvatar";
+import ReactDOM from "react-dom/client";
 import "./ChatWindow.css";
 
 export default function ChatWindow({ recipientId, onClose }) {
@@ -206,8 +208,8 @@ export default function ChatWindow({ recipientId, onClose }) {
         // Only add the message if we haven't processed it yet
         if (!processedMessageIds.current.has(response.data._id)) {
           processedMessageIds.current.add(response.data._id);
-          setMessages((prev) => [...prev, response.data]);
-          scrollToBottom();
+      setMessages((prev) => [...prev, response.data]);
+      scrollToBottom();
         }
       }
     } catch (error) {
@@ -262,11 +264,28 @@ export default function ChatWindow({ recipientId, onClose }) {
       {/* Chat Header */}
       <div className="chat-window-header">
         <div className="chat-window-header-user">
-          <img
-            src={recipient?.photo_url || "/default-avatar.png"}
-            alt={recipient?.username || "User"}
-            className="chat-window-avatar"
-          />
+          <div className="chat-window-avatar-container">
+            {recipient?.photo_url ? (
+              <img
+                src={recipient.photo_url}
+                alt={recipient?.username || "User"}
+                className="chat-window-avatar"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  const defaultAvatar = document.createElement('div');
+                  defaultAvatar.className = 'default-avatar-wrapper';
+                  e.target.parentElement.appendChild(defaultAvatar);
+                  const root = ReactDOM.createRoot(defaultAvatar);
+                  root.render(<DefaultAvatar size={56} className="chat-window-avatar" />);
+                }}
+              />
+            ) : (
+              <DefaultAvatar size={56} className="chat-window-avatar" />
+            )}
+            {recipient?.isOnline && (
+              <span className="chat-window-online-indicator" />
+            )}
+          </div>
           <div>
             <h3 className="chat-window-username">{recipient?.username || "User"}</h3>
             <p className="chat-window-status">
@@ -337,15 +356,15 @@ export default function ChatWindow({ recipientId, onClose }) {
             placeholder="Type a message..."
             className="chat-window-input"
           />
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="chat-window-send-button"
             disabled={!newMessage.trim() || sending}
           >
             <span className="material-symbols-outlined">send</span>
           </button>
         </form>
-      </div>
+        </div>
     </div>
   );
 }

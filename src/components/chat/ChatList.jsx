@@ -4,8 +4,11 @@ import { useApp } from "../../context/AppContext";
 import { chatAPI } from "../../api/chatAPI";
 import { socketService } from "../../api/socketService";
 import { formatDistanceToNow } from "date-fns";
+import { uploadAPI } from "../../api/uploadAPI";
 import LoadingSpinner from "../LoadingSpinner";
+import DefaultAvatar from "../common/DefaultAvatar";
 import "./ChatList.css";
+import ReactDOM from "react-dom/client";
 
 const ChatList = ({ selectedChat, onSelectChat }) => {
   const [conversations, setConversations] = useState([]);
@@ -128,6 +131,11 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
     navigate(`/messages/${otherUser._id}`);
   };
 
+  const getAvatarUrl = (otherUser) => {
+    if (!otherUser) return null;
+    return uploadAPI.getAvatarUrl(otherUser) || otherUser.photo_url || null;
+  };
+
   if (loading) {
     return (
       <div className="chat-list-loading">
@@ -174,6 +182,8 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
           ? formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: true })
           : "";
 
+        const avatarUrl = getAvatarUrl(otherUser);
+
         return (
           <div
             key={conversation._id}
@@ -182,36 +192,46 @@ const ChatList = ({ selectedChat, onSelectChat }) => {
             }`}
             onClick={() => handleChatSelect(conversation)}
           >
-            <div className="chat-list-item-content">
-              <div className="chat-list-avatar-container">
+            <div className="chat-list-avatar-container">
+              {avatarUrl ? (
                 <img
-                  src={otherUser.photo_url || "/default-avatar.png"}
+                  src={avatarUrl}
                   alt={otherUser.username || "User"}
                   className="chat-list-avatar-image"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    const defaultAvatar = document.createElement('div');
+                    defaultAvatar.className = 'default-avatar-wrapper';
+                    e.target.parentElement.appendChild(defaultAvatar);
+                    const root = ReactDOM.createRoot(defaultAvatar);
+                    root.render(<DefaultAvatar size={56} className="chat-list-avatar-image" />);
+                  }}
                 />
-                {otherUser.isOnline && (
-                  <span className="chat-list-online-indicator" />
-                )}
+              ) : (
+                <DefaultAvatar size={56} className="chat-list-avatar-image" />
+              )}
+              {otherUser.isOnline && (
+                <span className="chat-list-online-indicator" />
+              )}
+            </div>
+            <div className="chat-list-details">
+              <div className="chat-list-header">
+                <span className="chat-list-username">
+                  {otherUser.username || "Unknown user"}
+                </span>
+                <span className="chat-list-date">
+                  {lastMessageTime}
+                </span>
               </div>
-              <div className="chat-list-details">
-                <div className="chat-list-header">
-                  <span className="chat-list-username">
-                    {otherUser.username || "Unknown user"}
+              <div className="chat-list-message">
+                <span className="chat-list-message-text">
+                  {lastMessage?.content || "No messages yet"}
+                </span>
+                {conversation.unreadCount > 0 && (
+                  <span className="chat-list-unread">
+                    {conversation.unreadCount}
                   </span>
-                  <span className="chat-list-date">
-                    {lastMessageTime}
-                  </span>
-                </div>
-                <div className="chat-list-message">
-                  <span className="chat-list-message-text">
-                    {lastMessage?.content || "No messages yet"}
-                  </span>
-                  {conversation.unreadCount > 0 && (
-                    <span className="chat-list-unread">
-                      {conversation.unreadCount}
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           </div>
