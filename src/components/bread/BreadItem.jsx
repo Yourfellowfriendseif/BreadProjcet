@@ -191,10 +191,10 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
           <div className="bread-card-user">
             <div className="bread-card-avatar-container">
               {post.user?.photo_url ? (
-                <img
+            <img
                   src={post.user.photo_url}
-                  alt={post.user?.username || 'User'}
-                  className="bread-card-avatar"
+              alt={post.user?.username || 'User'}
+              className="bread-card-avatar"
                   onError={(e) => {
                     e.target.style.display = 'none';
                     const defaultAvatar = document.createElement('div');

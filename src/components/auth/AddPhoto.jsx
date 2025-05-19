@@ -73,24 +73,26 @@ const AddPhoto = () => {
           <div className="register-photo-section">
             <div className="register-photo-container">
               <img
-                src={photoPreview || photoUrl || "/default-avatar.png"}
+                src={photoPreview || photoUrl || "/no-image.png"}
                 alt="Profile preview"
                 className="register-photo-preview"
               />
-              <label className="register-photo-upload">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="register-photo-input"
-                />
-                <span className="register-photo-upload-text">
-                  {photo ? "Change Photo" : "Add Photo"}
-                </span>
-              </label>
             </div>
+            <label className="register-photo-upload">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
+                className="register-photo-input"
+              />
+              <span className="register-photo-upload-text">
+                <span className="material-symbols-outlined register-btn-icon">photo_camera</span>
+                {photo ? "Change Photo" : "Add Photo"}
+              </span>
+            </label>
           </div>
           <button type="submit" disabled={loading} className="register-submit">
+            <span className="material-symbols-outlined register-btn-icon">check_circle</span>
             {loading ? "Saving..." : "Save and Continue"}
           </button>
           <button
@@ -98,6 +100,7 @@ const AddPhoto = () => {
             className="register-submit"
             onClick={() => navigate("/")}
           >
+            <span className="material-symbols-outlined register-btn-icon">skip_next</span>
             Skip
           </button>
         </form>

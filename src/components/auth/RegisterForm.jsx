@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
-import { uploadAPI } from "../../api/uploadAPI";
 import "./RegisterForm.css";
 
 const RegisterForm = () => {
@@ -15,9 +14,6 @@ const RegisterForm = () => {
     phone_number: "",
     address: "",
   });
-  const [photo, setPhoto] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(null);
-  const [photoUrl, setPhotoUrl] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -27,33 +23,6 @@ const RegisterForm = () => {
       ...prev,
       [name]: value,
     }));
-  };
-
-  const handlePhotoChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      if (photoUrl) {
-        const filename = photoUrl.split("/").pop();
-        await uploadAPI.deleteImage(filename);
-      }
-
-      const response = await uploadAPI.uploadSingleImage(file);
-      const uploadedPhotoUrl = response.data.url;
-
-      setPhoto(file);
-      setPhotoUrl(uploadedPhotoUrl);
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    } catch (err) {
-      console.error("Error handling photo upload:", err);
-      setError("Failed to upload photo. Please try again.");
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -87,7 +56,6 @@ const RegisterForm = () => {
         password: formData.password,
         phone_number: formData.phone_number || undefined,
         address: formData.address || undefined,
-        photo_url: photoUrl || undefined,
       };
 
       const response = await register(registrationData);
@@ -102,21 +70,6 @@ const RegisterForm = () => {
         err.message ||
         "Failed to register";
       setError(errorMessage);
-
-      if (photoUrl) {
-        try {
-          const filename = photoUrl.split("/").pop();
-          await uploadAPI.deleteImage(filename);
-          setPhoto(null);
-          setPhotoUrl(null);
-          setPhotoPreview(null);
-        } catch (deleteErr) {
-          console.error(
-            "Error cleaning up photo after failed registration:",
-            deleteErr
-          );
-        }
-      }
     } finally {
       setLoading(false);
     }
@@ -126,7 +79,10 @@ const RegisterForm = () => {
     <div className="register-container">
       <div className="register-form-container">
         <div className="register-header">
-          <h1 className="register-title">Create your account</h1>
+          <h1 className="register-title">
+            <span className="register-title-icon material-symbols-outlined">person_add</span>
+            Create your account
+          </h1>
           <p className="register-subtitle">
             Already have an account?{" "}
             <a href="/login" className="register-link">
@@ -142,27 +98,6 @@ const RegisterForm = () => {
         )}
 
         <form onSubmit={handleSubmit} className="register-form">
-          <div className="register-photo-section">
-            <div className="register-photo-container">
-              <img
-                src={photoPreview || "/default-avatar.png"}
-                alt="Profile preview"
-                className="register-photo-preview"
-              />
-              <label className="register-photo-upload">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="register-photo-input"
-                />
-                <span className="register-photo-upload-text">
-                  {photo ? "Change Photo" : "Add Photo"}
-                </span>
-              </label>
-            </div>
-          </div>
-
           <div className="register-input-group">
             <input
               type="text"
@@ -201,11 +136,11 @@ const RegisterForm = () => {
               className="register-input"
             />
             <input
-              type="tel"
+              type="text"
               name="phone_number"
               value={formData.phone_number}
               onChange={handleChange}
-              placeholder="Phone Number"
+              placeholder="Phone Number (optional)"
               className="register-input"
             />
             <input
@@ -213,13 +148,16 @@ const RegisterForm = () => {
               name="address"
               value={formData.address}
               onChange={handleChange}
-              placeholder="Address"
+              placeholder="Address (optional)"
               className="register-input"
             />
           </div>
-
-          <button type="submit" disabled={loading} className="register-submit">
-            {loading ? "Creating account..." : "Create account"}
+          <button
+            type="submit"
+            className="register-submit-btn"
+            disabled={loading}
+          >
+            {loading ? "Registering..." : "Register"}
           </button>
         </form>
       </div>
