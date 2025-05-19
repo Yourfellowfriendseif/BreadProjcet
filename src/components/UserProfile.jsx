@@ -16,7 +16,6 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("active");
-  const [avatar, setAvatar] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -62,7 +61,6 @@ export default function UserProfile() {
       if (isOwnProfile) {
         setProfileUser({
           ...currentUser,
-          avatar: uploadAPI.getAvatarUrl(currentUser),
         });
       } else {
         const userData = await userAPI.getUserById(userId);
@@ -70,7 +68,6 @@ export default function UserProfile() {
 
         setProfileUser({
           ...user,
-          avatar: uploadAPI.getAvatarUrl(user),
         });
       }
     } catch (err) {
@@ -119,14 +116,10 @@ export default function UserProfile() {
         photo_url: uploadedPhotoUrl,
       });
 
-      // Process the updated user data
+      // Use the updated user data directly
       const processedUser = {
         ...updatedUser,
         photo_url: uploadedPhotoUrl,
-        avatar: uploadAPI.getAvatarUrl({
-          ...updatedUser,
-          photo_url: uploadedPhotoUrl,
-        }),
       };
 
       setProfileUser(processedUser);
@@ -137,10 +130,6 @@ export default function UserProfile() {
           ...currentUser,
           ...processedUser,
           photo_url: uploadedPhotoUrl,
-          avatar: uploadAPI.getAvatarUrl({
-            ...processedUser,
-            photo_url: uploadedPhotoUrl,
-          }),
         });
       }
 
@@ -274,7 +263,7 @@ export default function UserProfile() {
           <div className="user-profile-info">
             <div className="user-profile-avatar-container">
               <img
-                src={profileUser.avatar}
+                src={profileUser.photo_url || "/no-image.png"}
                 alt={profileUser.username}
                 className="user-profile-avatar"
                 onError={(e) => {
