@@ -38,7 +38,7 @@ export function AppProvider({ children }) {
     const user = userData.user || userData;
 
     if (user.avatar && !user.avatar.startsWith("http")) {
-      user.avatar = `${import.meta.env.VITE_API_URL}/${user.avatar}`;
+      user.avatar = `${import.meta.env.VITE_API_BASE_URL}/${user.avatar}`;
     }
 
     return user;
@@ -54,23 +54,31 @@ export function AppProvider({ children }) {
 
           if (userData) {
             setUser(processUserData(userData));
-          
+
             // Load initial notifications and unread messages count
             try {
-              const [notificationsData, unreadMessagesData] = await Promise.all([
-                notificationAPI.getNotifications().then(processApiResponse),
-                userAPI.getUnreadMessagesCount()
-              ]);
-              
-              console.log("Loaded initial unread messages count:", unreadMessagesData);
-              
-              const fetchedNotifications = Array.isArray(notificationsData) 
-                ? notificationsData 
+              const [notificationsData, unreadMessagesData] = await Promise.all(
+                [
+                  notificationAPI.getNotifications().then(processApiResponse),
+                  userAPI.getUnreadMessagesCount(),
+                ]
+              );
+
+              console.log(
+                "Loaded initial unread messages count:",
+                unreadMessagesData
+              );
+
+              const fetchedNotifications = Array.isArray(notificationsData)
+                ? notificationsData
                 : notificationsData?.notifications || [];
               setNotifications(fetchedNotifications);
-              
+
               setUnreadMessages(unreadMessagesData?.count || 0);
-              console.log("Set unread messages count to:", unreadMessagesData?.count || 0);
+              console.log(
+                "Set unread messages count to:",
+                unreadMessagesData?.count || 0
+              );
             } catch (error) {
               console.error("Error loading initial data:", error);
             }

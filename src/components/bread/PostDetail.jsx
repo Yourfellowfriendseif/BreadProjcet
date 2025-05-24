@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
-import { breadAPI } from '../../api/breadAPI';
-import LoadingSpinner from '../LoadingSpinner';
-import './PostDetail.css';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useApp } from "../../context/AppContext";
+import { breadAPI } from "../../api/breadAPI";
+import LoadingSpinner from "../LoadingSpinner";
+import "./PostDetail.css";
 
 export default function PostDetail() {
   const { id } = useParams();
@@ -25,7 +25,7 @@ export default function PostDetail() {
       const response = await breadAPI.getPostById(id);
       setPost(response);
     } catch (err) {
-      setError(err.message || 'Failed to load post details');
+      setError(err.message || "Failed to load post details");
     } finally {
       setLoading(false);
     }
@@ -33,7 +33,7 @@ export default function PostDetail() {
 
   const handleReserve = async () => {
     if (post.is_reserved) {
-      setError('This post has already been reserved by someone else');
+      setError("This post has already been reserved by someone else");
       return;
     }
 
@@ -43,12 +43,12 @@ export default function PostDetail() {
       await breadAPI.reservePost(id);
       await loadPost();
     } catch (err) {
-      if (err.response?.data?.message === 'Post already reserved') {
-        setError('This post has just been reserved by someone else');
+      if (err.response?.data?.message === "Post already reserved") {
+        setError("This post has just been reserved by someone else");
         // Reload to get the latest state
         loadPost();
       } else {
-      setError(err.message || 'Failed to reserve bread');
+        setError(err.message || "Failed to reserve bread");
       }
     } finally {
       setIsReserving(false);
@@ -61,17 +61,17 @@ export default function PostDetail() {
       setError(null);
       await breadAPI.cancelReservation(id);
       await loadPost();
-      window.showToast('Reservation cancelled successfully', 'info');
+      window.showToast("Reservation cancelled successfully", "info");
     } catch (err) {
-      setError(err.message || 'Failed to cancel reservation');
-      window.showToast(err.message || 'Failed to cancel reservation', 'error');
+      setError(err.message || "Failed to cancel reservation");
+      window.showToast(err.message || "Failed to cancel reservation", "error");
     } finally {
       setIsReserving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this post?')) {
+    if (!window.confirm("Are you sure you want to delete this post?")) {
       return;
     }
 
@@ -79,11 +79,11 @@ export default function PostDetail() {
       setLoading(true);
       setError(null);
       await breadAPI.deletePost(id);
-      window.showToast('Post deleted successfully', 'success');
-      navigate('/');
+      window.showToast("Post deleted successfully", "success");
+      navigate("/");
     } catch (err) {
-      setError(err.message || 'Failed to delete post');
-      window.showToast(err.message || 'Failed to delete post', 'error');
+      setError(err.message || "Failed to delete post");
+      window.showToast(err.message || "Failed to delete post", "error");
       setLoading(false);
     }
   };
@@ -121,7 +121,9 @@ export default function PostDetail() {
         {post.images && post.images.length > 0 && (
           <div className="post-detail-image-container">
             <img
-              src={`${import.meta.env.VITE_API_BASE_URL}/uploads/${post.images[0]}`}
+              src={`${import.meta.env.VITE_API_BASE_URL}/uploads/${
+                post.images[0]
+              }`}
               alt={post.title}
               className="post-detail-image"
             />
@@ -133,17 +135,25 @@ export default function PostDetail() {
             <div>
               <h1 className="post-detail-title">{post.title}</h1>
               <div className="post-detail-badges">
-                <span className={`post-detail-badge ${
-                  post.status === 'fresh' ? 'post-detail-badge-fresh' :
-                  post.status === 'day_old' ? 'post-detail-badge-day-old' :
-                  'post-detail-badge-stale'
-                }`}>
-                  {post.status.replace('_', ' ')}
+                <span
+                  className={`post-detail-badge ${
+                    post.status === "fresh"
+                      ? "post-detail-badge-fresh"
+                      : post.status === "day_old"
+                      ? "post-detail-badge-day-old"
+                      : "post-detail-badge-stale"
+                  }`}
+                >
+                  {post.status.replace("_", " ")}
                 </span>
-                <span className={`post-detail-badge ${
-                  post.type === 'offer' ? 'post-detail-badge-offer' : 'post-detail-badge-request'
-                }`}>
-                  {post.type === 'offer' ? 'Offering' : 'Requesting'}
+                <span
+                  className={`post-detail-badge ${
+                    post.type === "offer"
+                      ? "post-detail-badge-offer"
+                      : "post-detail-badge-request"
+                  }`}
+                >
+                  {post.type === "offer" ? "Offering" : "Requesting"}
                 </span>
               </div>
             </div>
@@ -185,7 +195,7 @@ export default function PostDetail() {
 
           <div className="post-detail-user">
             <img
-              src={post.user.avatar || '/default-avatar.png'}
+              src={post.user.avatar || "/default-avatar.png"}
               alt={post.user.username}
               className="post-detail-avatar"
             />
@@ -213,7 +223,7 @@ export default function PostDetail() {
                     disabled={isReserving}
                     className="post-detail-reserve-button post-detail-reserve-button-danger"
                   >
-                    {isReserving ? 'Canceling...' : 'Cancel Reservation'}
+                    {isReserving ? "Canceling..." : "Cancel Reservation"}
                   </button>
                 ) : (
                   <div className="post-detail-reserved-status">
@@ -232,7 +242,7 @@ export default function PostDetail() {
                   disabled={isReserving || post.is_reserved}
                   className="post-detail-reserve-button"
                 >
-                  {isReserving ? 'Reserving...' : 'Reserve'}
+                  {isReserving ? "Reserving..." : "Reserve"}
                 </button>
               )}
             </div>

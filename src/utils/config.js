@@ -5,7 +5,8 @@ class AppConfig {
     this.validateEnv();
 
     // Setup configuration properties
-    this.apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    this.apiUrl =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
     this.socket = {
       reconnectionDelay: 1000,
