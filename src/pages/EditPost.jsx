@@ -15,7 +15,7 @@ export default function EditPost() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
-    post_type: "sell",
+    post_type: "giveaway",
     description: "",
     quantity: 1,
     quantity_unit: "pieces",
@@ -202,7 +202,7 @@ export default function EditPost() {
             }
             className="create-post-select"
           >
-            <option value="sell">Sell</option>
+            <option value="giveaway">Giveaway</option>
             <option value="request">Request</option>
           </select>
         </div>
@@ -420,4 +420,4 @@ export default function EditPost() {
       </form>
     </div>
   );
-} 
+}

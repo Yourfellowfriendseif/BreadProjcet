@@ -18,7 +18,7 @@ const STATUS_OPTIONS = [
 
 const TYPE_OPTIONS = [
   { value: '', label: 'All Types', icon: 'category' },
-  { value: 'sell', label: 'For Sale', icon: 'sell' },
+  { value: 'giveaway', label: 'Giveaway', icon: 'redeem' },
   { value: 'request', label: 'Request', icon: 'shopping_cart' }
 ];
 
@@ -90,7 +90,7 @@ export default function FilterSection({ filters, setFilters, onApply, onReset, a
               </div>
               <div>
                 <label>
-                  <span className="material-symbols-outlined">sell</span>
+                  <span className="material-symbols-outlined">redeem</span>
                   Post Type
                 </label>
                 <select 
@@ -143,4 +143,4 @@ export default function FilterSection({ filters, setFilters, onApply, onReset, a
       </div>
     </div>
   );
-} 
+}

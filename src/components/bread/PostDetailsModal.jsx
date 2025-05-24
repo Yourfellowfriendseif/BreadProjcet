@@ -66,15 +66,15 @@ export default function PostDetailsModal({ post, onClose }) {
           
           <div>
             <h2 className="post-modal-title">
-              {post.title || (post.post_type === 'sell' ? 'Bread for Sale' : 'Bread Request')}
+              {post.title || (post.post_type === 'giveaway' ? 'Bread Giveaway' : 'Bread Request')}
             </h2>
             
           <div className="post-modal-badges">
               <span className="post-modal-badge post-modal-badge-type">
                 <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>
-                  {post.post_type === 'sell' ? 'sell' : 'shopping_cart'}
+                  {post.post_type === 'giveaway' ? 'redeem' : 'shopping_cart'}
                 </span>
-                {post.post_type === 'sell' ? 'For Sale' : 'Request'}
+                {post.post_type === 'giveaway' ? 'Giveaway' : 'Request'}
               </span>
               <span className={`post-modal-badge post-modal-badge-${post.status}`}>
                 <span className="material-symbols-outlined" style={{ fontSize: '1.1rem' }}>
@@ -157,4 +157,4 @@ export default function PostDetailsModal({ post, onClose }) {
       </div>
     </div>
   );
-} 
+}

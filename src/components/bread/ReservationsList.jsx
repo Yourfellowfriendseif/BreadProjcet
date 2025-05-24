@@ -98,11 +98,11 @@ export default function ReservationsList() {
                   </p>
                 </div>
                 <span className={`reservation-badge ${
-                  post.post_type === 'sell'
-                    ? 'reservation-badge-sell'
+                  post.post_type === 'giveaway'
+                    ? 'reservation-badge-giveaway'
                     : 'reservation-badge-request'
                 }`}>
-                  {post.post_type === 'sell' ? 'For Sale' : 'Request'}
+                  {post.post_type === 'giveaway' ? 'Giveaway' : 'Request'}
                 </span>
               </div>
 

@@ -61,12 +61,12 @@ export default function CreatePost() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
-    post_type: "sell", // Changed from 'offer' to match backend
+    post_type: "giveaway", // Changed from 'sell' to 'giveaway'
     description: "",
     quantity: 1,
-    quantity_unit: "pieces", // Changed default to match backend
+    quantity_unit: "pieces",
     status: "fresh",
-    category: "bread", // Added category field
+    category: "bread",
     images: [],
     address: "",
     province: "",
@@ -214,7 +214,7 @@ export default function CreatePost() {
       setLoading(true);
       setError(null);
       const postData = {
-        post_type: formData.post_type,
+        post_type: formData.post_type, // now can be 'giveaway' or 'request'
         status: formData.status,
         category: formData.category,
         description: formData.description,
@@ -260,7 +260,7 @@ export default function CreatePost() {
             }
             className="create-post-select"
           >
-            <option value="sell">Sell</option>
+            <option value="giveaway">Giveaway</option>
             <option value="request">Request</option>
           </select>
         </div>

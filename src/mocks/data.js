@@ -12,7 +12,7 @@ export const mockUsers = [
 export const mockBreads = [
   {
     _id: '507f1f77bcf86cd799439011',
-    post_type: 'sell',
+    post_type: 'giveaway',
     bread_status: 'day_old',
     photo_url: 'baguette.jpg',
     quantity: 2,

@@ -112,9 +112,9 @@
   font-weight: 600;
 }
 
-.reservation-badge-sell {
-  background-color: #dcfce7;
-  color: #166534;
+.reservation-badge-giveaway {
+  background: #4caf50;
+  color: #fff;
 }
 
 .reservation-badge-request {

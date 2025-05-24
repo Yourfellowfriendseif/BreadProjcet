@@ -15,7 +15,7 @@ const statusLabels = {
 };
 
 const typeLabels = {
-  sell: { label: 'For Sale', className: 'bread-badge-sell' },
+  giveaway: { label: 'Giveaway', className: 'bread-badge-giveaway' },
   request: { label: 'Request', className: 'bread-badge-request' },
 };
 
@@ -164,7 +164,7 @@ const BreadItem = ({ post, onUpdate, onReserve, onDelete, onEdit, hideReserveBut
             {typeLabels[post.post_type]?.label || post.post_type}
           </span>
         </div>
-        <h3 className="bread-card-title">{post.title || (post.post_type === 'sell' ? 'Bread for Sale' : 'Bread Request')}</h3>
+        <h3 className="bread-card-title">{post.title || (post.post_type === 'giveaway' ? 'Bread Giveaway' : 'Bread Request')}</h3>
         <div style={{ position: 'relative' }}>
           <p 
             ref={descriptionRef}

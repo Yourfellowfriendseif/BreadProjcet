@@ -12,7 +12,7 @@ const statusOptions = [
 ];
 const typeOptions = [
   { value: 'all', label: 'All Types' },
-  { value: 'sell', label: 'Sell' },
+  { value: 'giveaway', label: 'Giveaway' },
   { value: 'request', label: 'Request' },
 ];
 
@@ -104,4 +104,4 @@ const MyPosts = () => {
   );
 };
 
-export default MyPosts; 
+export default MyPosts;

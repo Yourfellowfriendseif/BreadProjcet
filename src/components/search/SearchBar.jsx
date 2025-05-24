@@ -121,7 +121,7 @@ export default function SearchBar() {
                 className="search-bar-select"
               >
                 <option value="">All</option>
-                <option value="sell">For Sale</option>
+                <option value="giveaway">Giveaway</option>
                 <option value="request">Requests</option>
               </select>
             </div>

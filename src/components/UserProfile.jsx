@@ -109,7 +109,7 @@ export default function UserProfile() {
 
       // Upload the new image
       const response = await uploadAPI.uploadSingleImage(file);
-      const uploadedPhotoUrl = response.data.url;
+      const uploadedPhotoUrl = response.data.image.url;
 
       // Update user profile with new photo URL
       const updatedUser = await userAPI.updateProfile({
